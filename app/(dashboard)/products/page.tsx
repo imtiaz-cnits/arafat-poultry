@@ -1896,9 +1896,9 @@ export default function ProductsPage() {
         <div className="border-b-2 border-slate-900 pb-2 mb-3">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-xl font-black tracking-tight text-slate-900 m-0">RUNA TRADERS</h1>
+              <h1 className="text-xl font-black tracking-tight text-slate-900 m-0">ARAFAT POULTRY &amp; FISHERIES</h1>
               <p className="text-xs text-slate-600 font-medium m-0">
-                Tiles, Sanitary &amp; Bath Fitting Wholesale &amp; Retail
+                Quality Products. Trusted Service.
               </p>
               <h2 className="text-sm font-bold text-slate-800 mt-1 uppercase tracking-wider">
                 Product Inventory Price &amp; Stock List

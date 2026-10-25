@@ -1,103 +1,205 @@
-# Runa Traders - Project Rules & Agent Instructions
-## Based on Marss Corp Architecture Guidelines
+# Arafat Poultry & Fisheries - Project Rules & Agent Instructions
+## Architecture, Brand Standards & Business Scope
 
 > [!IMPORTANT]
-> This document specifies strict architectural, styling, and behavioral rules for all AI agents and developers working on the **Runa Traders Retail Shop Management App**. Every single rule from the original Marss Corp system must be strictly preserved.
+> This document specifies strict architectural, styling, branding, and behavioral rules for all AI agents and developers working on the **Arafat Poultry & Fisheries Management System & POS**.
+> Unrelated functionality, existing database schemas, models, migrations, or application logic must NEVER be changed without explicit authorization.
 
 ---
 
-### 1. Project Structure Rules [STRICT]
-1. **NO `src` FOLDER**: The project root must directly contain `app/`, `components/`, `lib/`, `prisma/`, `public/`, etc. Under no circumstances should a `src/` directory be created or used.
-2. **Framework & Engine**: Next.js 15+ (App Router), TypeScript, Prisma ORM, MySQL 8.
-3. **Dedicated Database**: `runa_traders_db` (never overwrite or mix with `marsscorpdb`).
+### 1. Project Identity & Verified Tech Stack [STRICT]
+1. **Business Name**: Arafat Poultry & Fisheries
+2. **Tagline**: Quality Products. Trusted Service.
+3. **Repository**: `https://github.com/imtiaz-cnits/arafat-poultry`
+4. **Project Structure (NO `src` FOLDER)**:
+   - The project root directly contains `app/`, `components/`, `lib/`, `prisma/`, `public/`, etc.
+   - Under no circumstances should a `src/` directory be created or used.
+5. **Verified Engine & Frameworks**:
+   - **Framework**: Next.js 16+ (App Router with Turbopack)
+   - **Language**: TypeScript (`tsconfig.json` with strict mode and `@/*` path aliases)
+   - **ORM**: Prisma ORM (`prisma/schema.prisma`)
+   - **Database**: MySQL 8+ (connecting via `DATABASE_URL` in `.env`)
+   - **Styling**: Tailwind CSS v4 (`@tailwindcss/turbopack`, `@import "tailwindcss";` in `app/globals.css`)
+   - **Icons**: Lucide React (`lucide-react`)
+   - **State**: Zustand (`zustand`)
+   - **Auth**: JWT (`jsonwebtoken`) & Bcrypt (`bcryptjs`)
+6. **Verified Development & Verification Commands**:
+   - `npm run dev` : Starts Next.js development server with Turbopack (`http://localhost:3000`)
+   - `npm run build` : Builds production bundle and runs strict type-checks
+   - `npm run start` : Launches production server
+   - `npm run lint` : Runs ESLint verification
+   - `npx prisma generate` : Generates Prisma client types
 
 ---
 
-### 2. Styling & CSS Framework Standards [STRICT]
-1. **Tailwind CSS Mandatory, Bootstrap Strictly Forbidden**:
-   - Every single component, page, modal, and control must be built exclusively with Tailwind CSS utility classes.
-   - Absolutely zero Bootstrap classes or stylesheets.
-2. **Curated Color Palette**:
-   - **Brand Primary Green**: `emerald-700` (`#15803d`), `emerald-600` (`#16a34a`)
-   - **Hover Green**: `emerald-800` (`#166534`), `emerald-900` (`#14532d`)
-   - **Subtle Tint Backgrounds**: `emerald-50` (`#f0fdf4`)
-   - **Page Background (Dark Mode)**: `#0b0f19`
-   - **Card / Modal Background (Dark Mode)**: `#0f172a` (`slate-900`)
-   - **Input / Select Background (Dark Mode)**: `#1e293b` (`slate-800/90`)
-   - **Unified Border Colors**:
-     - Light Mode: `#cbd5e1` (`border: 1.5px solid #cbd5e1 !important;`)
-     - Dark Mode: `#334155` (`border-color: #334155 !important;`)
-3. **Typography & Font Standards**:
-   - **English & Numeric Text**: Must use **`Valley Sans`** (`sans-serif`).
-   - **Bangla Text**: Must use **`Baloo Da 2`** (`sans-serif`).
-   - Google Font URLs:
-     - `Valley Sans`: `300..800`
-     - `Baloo Da 2`: `400..800`
-   - Strict ban on `Poppins` or fallback serif fonts.
+### 2. Exact Logo File Mapping & Favicon Integration [STRICT]
+All three official brand image assets are located directly in the `public/` directory:
+
+1. **Main Application Logo (`logo1.png`)**:
+   - **File Path**: `/logo1.png` (`public/logo1.png`)
+   - **Locations Used**:
+     - Dashboard sidebar header branding (`components/sidebar.tsx`)
+     - Main topbar header branding (`components/topbar.tsx`)
+     - Cash sales thermal receipt header (`components/pos/thermal-receipt.tsx`)
+     - Delivery challan print header (`components/challan/challan-print-receipt.tsx`)
+     - Sales invoice detail & print header (`app/(dashboard)/invoices/[id]/page.tsx`)
+     - Purchase invoice detail & print header (`app/(dashboard)/purchases/[id]/page.tsx`)
+     - Goods received voucher modal header (`app/(dashboard)/purchases/page.tsx`)
+     - Purchase return voucher header (`app/(dashboard)/purchase-returns/page.tsx`)
+     - Customer return voucher header (`app/(dashboard)/returns/page.tsx`)
+   - *Rule*: Never substitute `logo2.png` into the main application or dashboard areas.
+
+2. **Authentication Logo (`logo2.png`)**:
+   - **File Path**: `/logo2.png` (`public/logo2.png`)
+   - **Locations Used**:
+     - Login page desktop hero branding (`app/login/page.tsx`)
+     - Login page mobile responsive header (`app/login/page.tsx`)
+     - Any future dedicated customer/staff authentication or registration screens.
+   - *Rule*: Dedicated strictly to authentication screens; do not replace dashboard logos with `logo2.png`.
+
+3. **Application Favicon (`fav-icon.png`)**:
+   - **File Path**: `/fav-icon.png` (`public/fav-icon.png`)
+   - **Locations Used**:
+     - Browser favicon and tab icon via `app/layout.tsx` metadata `icons` and `<head>` links.
+     - Apple touch icon link in `app/layout.tsx`.
+   - *Rule*: Do not substitute `logo1.png` or `logo2.png` for `fav-icon.png`. Obsolete `favicon.ico` in `app/` is removed to prevent Next.js from conflicting with `/fav-icon.png`.
 
 ---
 
-### 3. POS Architecture Standards [STRICT]
+### 3. Brand Color Palette & Design Tokens [STRICT]
+
+| Purpose | Name | Hex Code | Tailwind / CSS Token |
+| :--- | :--- | :--- | :--- |
+| **Primary** | Deep Forest Green | `#166534` | `--color-primary: #166534`, `emerald-800` / `green-800` |
+| **Secondary** | Aqua Blue | `#0284C7` | `--color-secondary: #0284c7`, `sky-600` |
+| **Accent** | Harvest Orange | `#EA580C` | `--color-accent: #ea580c`, `orange-600` |
+| **Background** | Soft White | `#F8FAFC` | `--background: #f8fafc`, `slate-50` |
+| **Text** | Slate Charcoal | `#1F2937` | `--foreground: #1f2937`, `gray-800` |
+
+#### Styling Guidelines:
+1. **Dominant Palette**:
+   - **Green** is the primary brand color across sidebar, topbar, primary action buttons, table headers, and modal headers.
+   - **Blue** is the secondary brand color for secondary badges, filters, indicators, and user avatars.
+   - **Orange** is a limited accent reserved for special highlights, badges, held/pending tags, and attention counters.
+2. **Preserve Semantic Status Colors**:
+   - Do NOT overwrite semantic colors. Danger/Delete actions must remain Red (`#dc2626`), Success remains Emerald/Green (`#16a34a`), and Warning remains Amber (`#d97706`).
+3. **Dark Mode Tokens**:
+   - Background: `#0b0f19`
+   - Card / Modal Background: `#0f172a` (`slate-900`)
+   - Input / Control Background: `#1e293b` (`slate-800/90`)
+   - Border Colors: Light mode `#cbd5e1`, Dark mode `#334155`
+4. **Typography Standards**:
+   - English & Numeric: **`Valley Sans`** (`sans-serif`)
+   - Bangla Text: **`Baloo Da 2`** (`sans-serif`)
+
+---
+
+### 4. POS Architecture & Operational Standards [STRICT]
 1. **POS 100vh Full Screen Rule**:
-   - The POS interface must fill `100vh` without page scrolling.
+   - The POS screen (`/pos`) must fill `100vh` without page scrolling.
    - Cart item list must scroll independently (`overflow-y: auto`) with a sticky header.
-   - Checkout actions, payment buttons, and total amounts must remain pinned to the bottom.
-2. **Product Domain Standard (Tiles, Sanitary & Fittings)**:
-   - Runa Traders primary business domain is **Tiles, Sanitary, and Fittings items**.
-   - All door-related setups and door handedness (Left/Right/Both) are strictly decommissioned.
-   - Catalog management optimized for tiles, sanitary ware, and pipe/bath fittings.
-3. **Fast Barcode & Scanner Input**:
+   - Payment buttons, checkout actions, discount controls, and totals must remain pinned at the bottom.
+2. **Barcode Scanning**:
    - Support both physical USB barcode scanner guns (keypress buffer) and Camera scanning (`html5-qrcode`).
-   - Multi-barcode search support (matching any code within JSON array `product_code`).
+   - Support multi-barcode lookup against product code arrays.
+3. **Data Ordering Standards**:
+   - All list queries and backend APIs must sort descending: `orderBy: { id: 'desc' }`.
+   - Post-creation state updates must reset pagination to page 1 (`page = 1`).
+4. **Currency Formatting**:
+   - All monetary figures must use Bangladeshi comma formatting via `formatBdCurrency()` (e.g. `৳ 24,800.00`).
 
 ---
 
-### 4. Table & Data Ordering Standards [STRICT]
-1. **Newest Records on Top (Latest First)**:
-   - All backend queries (`products`, `categories`, `brands`, `purchases`, `expenses`, `suppliers`, `customers`, `orders`) must sort descending: `orderBy: { id: 'desc' }`.
-   - DataTables / Client-side lists must default to descending ID order.
-2. **Post-Creation Reset**:
-   - Adding a new record must immediately refresh the table and reset pagination to page 1 (`page = 1`).
-3. **Currency Formatting**:
-   - All monetary figures must use dynamic Bangladeshi comma formatting: `formatBdCurrency()` (e.g. `৳ 24,800.00`).
-
----
-
-### 5. List Page & Table Master Layout
+### 5. Layout & Modal Component Dimensions
 1. **Header & Top Actions**:
    - Icon badge: `w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800`.
-   - Page Title: `h1` in bold text, no bottom margin, no clutter.
-   - Export buttons: Exactly `38px × 38px`, rounded-xl, 1.5px border (`#cbd5e1` light, `#334155` dark).
-2. **Search & Filter Controls**:
-   - Height: Exactly `38px`.
-   - Focus ring: Emerald `#15803d` with subtle green glow.
-   - Show entries selector: Default value `15` or `50` (`15, 50, 100, 200, 500`).
-   - Flatpickr date filters: `d/m/Y` display, `Y-m-d` internal value, static month navigation.
-3. **Desktop & Mobile Responsive Modes**:
-   - Desktop: `hidden md:block` table with solid emerald header `#15803d` (`text-white`, `nowrap`).
-   - Mobile: `block md:hidden` card list with 2-column financial grid (`grid grid-cols-2 gap-2`).
+   - Page Title: Clean `h1` in bold text, no bottom margin, no clutter.
+   - Action / Export buttons: Exactly `38px` height, rounded-xl.
+2. **Form Controls & Modals**:
+   - Form Inputs & Selects: Standard height `42px` (`height: 42px !important; width: 100% !important;`).
+   - Unified Modal Container: `border-radius: 16px`, max height `90vh` or `95vh`, single container.
+   - Modal Header: Deep Forest Green `#166534` gradient with circular red close button (`#dc2626`).
+   - Sticky Footer: Cancel button (Red `#dc2626`), Submit/Save button (Deep Forest Green `#166534`).
+3. **Sticky Page Footer**:
+   - Full height wrapper: `.min-h-screen flex flex-col justify-between`.
+   - Pinned at bottom: `© <Year> ARAFAT POULTRY & FISHERIES | Software By: CodeNext IT`.
+   - Suppressed on `/pos` full-screen view.
 
 ---
 
-### 6. Modal Architecture Standards
-1. **Container**:
-   - Single unified container, `border-radius: 16px`, max height `90vh`, zero duplicate boxes.
-2. **Sticky Header**:
-   - Solid emerald `#15803d`, white title in pure English, circular red close button (`28px × 28px`, `#dc2626`).
-3. **Form Controls**:
-   - Standard height: Exactly `42px` (`height: 42px !important; width: 100% !important;`).
-4. **Sticky Footer**:
-   - Cancel button: Red `#dc2626`.
-   - Save / Submit button: Emerald `#15803d`.
+### 6. Database & Transaction Safety Rules [CRITICAL]
+1. **Strict Database Immutability for Rebranding**:
+   - Do NOT drop, alter, rename, or truncate tables, columns, indexes, or constraints.
+   - Do NOT create, apply, rewrite, or delete migrations.
+   - Do NOT reset, seed, or delete database records.
+   - Do NOT delete or modify SQL backups (`.sql` files).
+   - Rebranding is purely UI/presentation and does not require database changes.
+2. **Safe Transaction Protocol**:
+   - Any future database modifications must use Prisma transactions (`prisma.$transaction`).
+   - Inward stock adjustments must maintain referential integrity with inventory and ledgers.
+   - Never commit `.env` credentials or secrets.
 
 ---
 
-### 7. Sticky Footer & Zoom Protection
-1. **Full-height wrapper**: `.min-h-screen flex flex-col justify-between` on page wrappers.
-2. **Sticky Copyright Footer**:
-   - Bottom pinned with `mt-auto`.
-   - Dynamic year, clean branding:
-     `© <Year> RUNA TRADERS | Software By: CodeNext IT`
+### 7. Future Business Scope Specification
+*(Note: Documentation of scope only. Do NOT implement new business logic or database schemas without authorization.)*
+
+#### A. Chicken Feed Management
+The system will manage the chicken feed lifecycle:
+1. **Feed Procurement & Purchases**:
+   - Purchases from feed millers and distributors.
+   - Product name, brand/manufacturer, bag size (e.g., 25kg, 50kg), units, quantities, and cost price per bag.
+2. **Inventory Tracking**:
+   - Stock received, sold, returned to supplier, damaged, and manual stock adjustments.
+3. **Sales & Distribution**:
+   - Customer sales, wholesale vs. retail pricing, bag discounts, and payment terms.
+4. **Financial Ledgers & Reports**:
+   - Customer dues and supplier outstanding balances.
+   - Feed purchase, sales volume, stock valuation, and gross/net profitability reports.
+
+#### B. Chicken Egg Sales
+The system will manage egg production and commercial trade:
+1. **Collection & Inward Stock**:
+   - Eggs collected directly from own poultry sheds or purchased from external suppliers.
+2. **Configurable Units**:
+   - Configurable units including trays, pieces (hali/dozen), and cartons.
+   - *Requirement*: Tray capacity must NOT be assumed constant (support 30-egg trays, 24-egg trays, etc.). Unit conversions must be fully configurable.
+3. **Loss & Breakage Tracking**:
+   - Record egg stock received, sold, broken/cracked during transit or storage, spoiled, returned, and adjusted.
+4. **Commercial Sales & Reporting**:
+   - Customer sales, tiered price per piece/tray, discounts, and payments.
+   - Customer dues and supplier balances.
+   - Date-wise egg sales, stock balance, breakage loss, and net profitability reports.
+
+#### C. Fish Farming, Purchasing, and Sales
+The system will manage aquaculture operations and fish trading:
+1. **Fish Farming (Pond Operations)**:
+   - Pond identification, size, depth, and farming location records.
+   - Stocking records: fish species (Rohu, Catla, Pangas, Tilapia, etc.), stocking dates, fingerling counts, and fingerling purchase costs.
+   - Feed consumption tracking (floating/sinking feed bags fed per pond).
+   - Operational expenses: labor wages, medicines/chemicals, lime, aeration, pond maintenance, netting, and transportation.
+   - Mortality tracking and partial/full harvest records.
+   - Accurate computation of total production cost, cost per kilogram, harvest revenue, and net profit per pond cycle.
+2. **Fish Purchasing & Stock Trading**:
+   - Purchases from other fish farmers, suppliers, and local fish landing centers (arot).
+   - Species, fish count, total weight in kg, purchase price per kg, icing/packaging, and direct haulage costs.
+   - Stock management, spoilage/dead fish deduction, returns, and adjustments.
+   - Supplier ledgers and payables.
+3. **Fish Sales & Commercial Distribution**:
+   - Sales by fish species, weight in kg, grade/size, selling price per kg, customer, and date.
+   - Configurable units supporting kilogram-based precision weighing.
+   - Delivery charges, customer discounts, immediate cash/bank payments, and dues.
+   - Inward vs. sold fish reconciliation and live tank/holding inventory.
+   - Comprehensive reports covering purchases, sales, farming costs, harvest yield, and overall profitability.
+
+#### D. Shared Financial & Accounting Requirements
+1. **Unified Ledgers**: Comprehensive customer and supplier ledgers with debit, credit, balance, and transaction history.
+2. **Receivables & Payables**: Real-time tracking of partial payments, collections, aging dues, and supplier liabilities.
+3. **Financial Calculations**: Mathematically consistent tax, discount, commission, delivery charge, and return adjustments.
+4. **Audit Trail**: Complete date-wise transaction history, audit logs, and user activity records.
+5. **Multi-dimensional Reporting**: Date-wise, product-wise, category-wise, customer-wise, and supplier-wise analytics.
+
+---
 
 <!-- BEGIN:nextjs-agent-rules -->
 

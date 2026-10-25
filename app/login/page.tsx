@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Lock,
   Mail,
@@ -70,65 +71,72 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex w-full bg-slate-50 dark:bg-[#0b0f19]">
       {/* Left Hero Panel (Desktop) */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#7f1d1d] via-[#991b1b] to-[#881337] text-white p-12 flex-col justify-between">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#0f3d20] via-[#166534] to-[#14532d] text-white p-12 flex-col justify-between">
         {/* Glow Blobs */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-rose-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-red-400/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg">
-            <ShoppingBag className="w-6 h-6 text-rose-200" />
+        <div className="relative z-10 flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1.5 flex items-center justify-center shadow-lg shrink-0">
+            <Image
+              src="/logo2.png"
+              alt="Arafat Poultry & Fisheries"
+              width={42}
+              height={42}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <div>
             <h2 className="text-xl font-black tracking-tight text-white leading-none">
-              RUNA TRADERS
+              Arafat Poultry &amp; Fisheries
             </h2>
-            <p className="text-xs text-rose-200/85 mt-1 font-medium">Retail Shop Management & POS</p>
+            <p className="text-xs text-emerald-200/90 mt-1 font-medium">Quality Products. Trusted Service.</p>
           </div>
         </div>
 
         {/* Middle Feature Content */}
         <div className="relative z-10 my-auto py-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-rose-100 text-xs font-semibold uppercase tracking-wider mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-rose-200" />
-            Next-Generation Retail Automation
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-emerald-100 text-xs font-semibold uppercase tracking-wider mb-6">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
+            Poultry &amp; Fisheries Management
           </div>
 
           <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-tight text-white mb-6">
-            Smart Retail & Point of Sale Operations.
+            Smart Poultry &amp; Fisheries Operations.
           </h1>
 
-          <p className="text-rose-100/90 text-sm xl:text-base leading-relaxed max-w-lg mb-8 font-normal">
-            Streamlined high-speed checkout, barcode scanning, live inventory alerts, tiles box & unit calculations, and comprehensive financial reports.
+          <p className="text-emerald-100/90 text-sm xl:text-base leading-relaxed max-w-lg mb-8 font-normal">
+            Streamlined high-speed checkout, feed &amp; egg inventory tracking, fish farming operations, live stock alerts, and comprehensive financial reports.
           </p>
 
           <div className="space-y-3.5">
-            <div className="flex items-center gap-3 text-sm text-rose-50">
-              <div className="w-6 h-6 rounded-full bg-rose-500/30 border border-rose-400/40 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-rose-200" />
+            <div className="flex items-center gap-3 text-sm text-emerald-50">
+              <div className="w-6 h-6 rounded-full bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-emerald-200" />
               </div>
               <span>100vh Ultra-fast POS with Instant Thermal Receipt</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-rose-50">
-              <div className="w-6 h-6 rounded-full bg-rose-500/30 border border-rose-400/40 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-rose-200" />
+            <div className="flex items-center gap-3 text-sm text-emerald-50">
+              <div className="w-6 h-6 rounded-full bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-emerald-200" />
               </div>
-              <span>Optimized for Tiles, Sanitary & Sanitary Fittings</span>
+              <span>Optimized for Chicken Feed, Egg Sales &amp; Fish Farming</span>
             </div>
-            <div className="flex items-center gap-3 text-sm text-rose-50">
-              <div className="w-6 h-6 rounded-full bg-rose-500/30 border border-rose-400/40 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-rose-200" />
+            <div className="flex items-center gap-3 text-sm text-emerald-50">
+              <div className="w-6 h-6 rounded-full bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center">
+                <CheckCircle className="w-4 h-4 text-emerald-200" />
               </div>
-              <span>Automated Daily Ledgers & Customer Due Collections</span>
+              <span>Automated Daily Ledgers, Receivables &amp; Due Collections</span>
             </div>
           </div>
         </div>
 
         {/* Bottom Security Badge */}
-        <div className="relative z-10 flex items-center gap-2 text-xs text-rose-200/80">
-          <ShieldCheck className="w-4 h-4 text-rose-300" />
-          <span>Protected with Role-Based Access Control (RBAC) & Next.js 15 Engine</span>
+        <div className="relative z-10 flex items-center gap-2 text-xs text-emerald-200/80">
+          <ShieldCheck className="w-4 h-4 text-emerald-300" />
+          <span>Protected with Role-Based Access Control (RBAC) &amp; Next.js Engine</span>
         </div>
       </div>
 
@@ -137,14 +145,21 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] text-white flex items-center justify-center shadow-md">
-              <ShoppingBag className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-xl bg-white p-1 border border-slate-200 shadow-md flex items-center justify-center shrink-0">
+              <Image
+                src="/logo2.png"
+                alt="Arafat Poultry & Fisheries"
+                width={36}
+                height={36}
+                className="w-full h-full object-contain"
+                priority
+              />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-slate-800 dark:text-white">
-                RUNA TRADERS
+              <h2 className="text-lg font-extrabold text-slate-800 dark:text-white leading-tight">
+                Arafat Poultry &amp; Fisheries
               </h2>
-              <p className="text-xs text-slate-500">Retail Shop Management</p>
+              <p className="text-xs text-slate-500">Quality Products. Trusted Service.</p>
             </div>
           </div>
 
@@ -207,7 +222,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-[42px] pl-10 pr-10 rounded-xl bg-white dark:bg-slate-800/90 text-sm text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 transition-all"
+                  className="w-full h-[42px] pl-10 pr-10 rounded-xl bg-white dark:bg-slate-800/90 text-sm text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
                 />
                 <button
                   type="button"
@@ -222,7 +237,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-[42px] rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-70 cursor-pointer"
+              className="w-full h-[42px] rounded-xl bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-70 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -240,9 +255,9 @@ export default function LoginPage() {
 
           {/* Quick Demo Credentials helper */}
           <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800">
-            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-center justify-between">
+            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wide">
+                <p className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
                   Quick Demo Access
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
@@ -252,7 +267,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={fillDemo}
-                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
               >
                 Auto Fill
               </button>

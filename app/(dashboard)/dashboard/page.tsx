@@ -80,7 +80,7 @@ export default async function DashboardPage() {
       {/* Top Header & Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50 flex items-center justify-center shadow-xs">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center shadow-xs">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
@@ -88,7 +88,7 @@ export default async function DashboardPage() {
               Overview Dashboard
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Welcome back to Runa Traders POS Management
+              Welcome back to Arafat Poultry &amp; Fisheries Management
             </p>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/pos"
-            className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-2 shadow-xs hover:shadow-sm transition-all"
+            className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white font-bold text-xs flex items-center gap-2 shadow-xs hover:shadow-sm transition-all"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Open POS Terminal</span>

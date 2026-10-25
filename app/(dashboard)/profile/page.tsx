@@ -226,17 +226,17 @@ export default function ProfilePage() {
 
           <div className="h-[36px] px-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50 text-xs font-bold flex items-center gap-1.5">
             <Store className="w-3.5 h-3.5" />
-            <span>RUNA TRADERS</span>
+            <span>Arafat Poultry &amp; Fisheries</span>
           </div>
         </div>
 
         <div>
           <h1 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white m-0 flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-emerald-600" />
-            <span>Account Profile & Settings</span>
+            <span>Account Profile &amp; Settings</span>
           </h1>
           <p className="text-[11px] text-slate-500 m-0 text-right sm:text-left">
-            RUNA TRADERS - {roleLabel} & Security Settings
+            Arafat Poultry &amp; Fisheries - {roleLabel} &amp; Security Settings
           </p>
         </div>
       </div>
@@ -346,7 +346,7 @@ export default function ProfilePage() {
                     STORE LOCATION
                   </span>
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    RUNA TRADERS
+                    Arafat Poultry &amp; Fisheries
                   </span>
                 </div>
               </div>

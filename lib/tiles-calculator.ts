@@ -1,6 +1,6 @@
 /**
  * Tiles Specification, Geometry & POS Packaging Helper
- * Specially tailored for Runa Traders (Tiles, Sanitary & Fittings)
+ * Specially tailored for Arafat Poultry & Fisheries
  */
 
 export interface TileSizeOption {

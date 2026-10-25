@@ -2,6 +2,7 @@
 
 import { formatBdCurrency } from "@/lib/utils";
 import { formatTileOrItemQty } from "@/lib/tiles-calculator";
+import Image from "next/image";
 import { Printer, X, Truck, Phone, MapPin, Calendar, FileText } from "lucide-react";
 
 interface ReceiptProps {
@@ -78,14 +79,14 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
       {/* Modal Container: Wider modal (max-w-2xl) per user instruction */}
       <div className="w-full max-w-2xl bg-white text-slate-900 rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] flex flex-col border border-slate-300 print:border-none print:shadow-none print:max-w-none print:m-0 print:p-0">
         {/* Modal Controls Header - Hidden on print */}
-        <div className="print:hidden bg-gradient-to-r from-[#991b1b] to-[#dc2626] px-5 py-3.5 flex items-center justify-between text-white shrink-0 shadow-sm">
+        <div className="print:hidden bg-gradient-to-r from-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0 shadow-sm">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
             <div>
               <h3 className="text-sm font-bold m-0 leading-tight">Cash Sales Receipt / ইনভয়েস</h3>
-              <p className="text-[11px] text-rose-100/80 leading-none mt-0.5">
+              <p className="text-[11px] text-emerald-100/80 leading-none mt-0.5">
                 Invoice No: {receiptData.order_no}
               </p>
             </div>
@@ -103,7 +104,7 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
             )}
             <button
               onClick={handlePrint}
-              className="px-3.5 py-1.5 rounded-xl bg-white text-rose-900 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+              className="px-3.5 py-1.5 rounded-xl bg-white text-emerald-900 hover:bg-emerald-50 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Printer className="w-4 h-4" />
               <span>Print A4</span>
@@ -121,16 +122,26 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
         <div id="printable-invoice" className="flex-1 overflow-y-auto p-6 sm:p-8 font-sans text-xs text-slate-800 thermal-sheet print:p-0">
           {/* Store Branding Header */}
           <div className="text-center pb-4 border-b-2 border-slate-900">
-            <h1 className="text-2xl font-black text-rose-900 tracking-wider uppercase m-0 leading-tight">
-              RUNA TRADERS
+            <div className="flex justify-center mb-1.5">
+              <Image
+                src="/logo1.png"
+                alt="Arafat Poultry & Fisheries"
+                width={48}
+                height={48}
+                className="w-12 h-12 object-contain"
+                priority
+              />
+            </div>
+            <h1 className="text-2xl font-black text-emerald-900 tracking-wider uppercase m-0 leading-tight">
+              ARAFAT POULTRY &amp; FISHERIES
             </h1>
             <p className="text-xs text-slate-600 font-medium mt-1">
-              Wholesale & Retail: Exclusive Tiles, Sanitary Ware & Modern Bath Fittings
+              Quality Products. Trusted Service.
             </p>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Bus Terminal Main Road, Pabna | Hotline: 01975-703216, 01711-968720
+              Poultry Feed, Egg Sales &amp; Fish Farming | Wholesale &amp; Retail
             </p>
-            <div className="mt-2.5 inline-block px-3.5 py-0.5 rounded-md bg-[#991b1b] text-white font-bold text-[11px] tracking-wider uppercase">
+            <div className="mt-2.5 inline-block px-3.5 py-0.5 rounded-md bg-[#166534] text-white font-bold text-[11px] tracking-wider uppercase">
               CASH SALES RECEIPT / ক্যাশ রসিদ
             </div>
           </div>
@@ -309,7 +320,7 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
 
           {/* Footer Branding */}
           <div className="text-center pt-5 text-[10px] text-slate-400 border-t border-slate-200 mt-4">
-            Thank you for shopping with Runa Traders &bull; Software by: CodeNext IT
+            Thank you for shopping with Arafat Poultry &amp; Fisheries &bull; Software by: CodeNext IT
           </div>
         </div>
       </div>

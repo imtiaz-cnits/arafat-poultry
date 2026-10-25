@@ -7,9 +7,14 @@
 :root {
   --font-primary: 'Valley Sans', 'Baloo Da 2', sans-serif;
   --background: #f8fafc;
-  --foreground: #0f172a;
+  --foreground: #1f2937;
   --card: #ffffff;
   --card-border: #cbd5e1;
+  --color-primary: #166534;
+  --color-secondary: #0284c7;
+  --color-accent: #ea580c;
+  --color-bg: #f8fafc;
+  --color-text: #1f2937;
   color-scheme: light;
 }
 
@@ -21,6 +26,11 @@ html[data-theme="dark"] {
   --foreground: #f8fafc;
   --card: #0f172a;
   --card-border: #334155;
+  --color-primary: #166534;
+  --color-secondary: #0284c7;
+  --color-accent: #ea580c;
+  --color-bg: #0b0f19;
+  --color-text: #f8fafc;
   color-scheme: dark;
 }
 
@@ -38,7 +48,7 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Strict Unified UI Borders from Marss Corp standards */
+/* Strict Unified UI Borders */
 .unified-ui-border {
   border: 1.5px solid #cbd5e1 !important;
 }
@@ -49,11 +59,11 @@ body {
   border-color: #334155 !important;
 }
 
-/* Table Header Standard: Cool Crimson/Ruby Red Gradient */
+/* Table Header Standard: Deep Forest Green Gradient */
 table thead tr,
 .table-header-brand,
 .table-header-emerald {
-  background: linear-gradient(135deg, #881337 0%, #991b1b 50%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%) !important;
   color: #ffffff !important;
   white-space: nowrap !important;
 }
@@ -62,78 +72,99 @@ table thead th {
   color: #ffffff !important;
 }
 
-/* Modal sticky header: Cool Crimson/Ruby Red Gradient */
+/* Modal sticky header: Deep Forest Green Gradient */
 .modal-header-brand,
 .modal-header-emerald {
-  background: linear-gradient(135deg, #881337 0%, #991b1b 50%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%) !important;
   color: #ffffff !important;
 }
 
-/* Custom Cool Red Gradient Utilities */
+/* Brand Palette Gradient & Button Utilities */
+.bg-brand-gradient,
 .bg-cool-red-gradient {
-  background: linear-gradient(145deg, #7f1d1d 0%, #991b1b 40%, #b91c1c 75%, #be123c 100%) !important;
+  background: linear-gradient(145deg, #14532d 0%, #166534 40%, #15803d 75%, #16a34a 100%) !important;
 }
 
+.bg-brand-btn,
 .bg-cool-red-btn {
-  background: linear-gradient(135deg, #991b1b 0%, #b91c1c 60%, #dc2626 100%) !important;
+  background: linear-gradient(135deg, #166534 0%, #15803d 60%, #16a34a 100%) !important;
 }
 
+.bg-brand-btn:hover,
 .bg-cool-red-btn:hover {
-  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 60%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, #14532d 0%, #166534 60%, #15803d 100%) !important;
 }
 
-/* Global Brand Overrides to Cool Crimson / Ruby Red Gradient */
+/* Secondary Aqua Blue Utilities */
+.bg-secondary-gradient {
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 60%, #38bdf8 100%) !important;
+}
+
+.bg-secondary-btn {
+  background-color: #0284c7 !important;
+}
+
+.bg-secondary-btn:hover {
+  background-color: #0369a1 !important;
+}
+
+/* Accent Harvest Orange Utilities */
+.bg-accent-tag {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+}
+
+/* Brand Primary Overrides: Deep Forest Green (#166534) */
 [class*="15803d"] {
-  background: linear-gradient(135deg, #881337 0%, #991b1b 50%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%) !important;
   color: #ffffff !important;
 }
 
 [class*="15803d"]:hover {
-  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 60%, #b91c1c 100%) !important;
+  background: linear-gradient(135deg, #052e16 0%, #14532d 60%, #166534 100%) !important;
 }
 
-/* Global Badge Overrides */
+/* Brand Tints & Badge Colors */
 [class~="bg-emerald-50"],
 .bg-emerald-50 {
-  background-color: #fff1f2 !important;
+  background-color: #f0fdf4 !important;
 }
 
-
 [class*="text-emerald-600"] {
-  color: #e11d48 !important;
+  color: #166534 !important;
 }
 
 [class*="border-emerald-100"] {
-  border-color: #ffe4e6 !important;
+  border-color: #dcfce7 !important;
 }
 
 [class*="focus:border-emerald-600"]:focus {
-  border-color: #e11d48 !important;
+  border-color: #166534 !important;
 }
 
 [class*="focus-within:border-emerald-600"]:focus-within {
-  border-color: #e11d48 !important;
+  border-color: #166534 !important;
 }
 
 [class*="bg-emerald-100"] {
-  background-color: #ffe4e6 !important;
+  background-color: #dcfce7 !important;
 }
 
 [class*="text-emerald-700"] {
-  color: #be123c !important;
+  color: #14532d !important;
 }
 
 [class*="text-emerald-800"] {
-  color: #9f1239 !important;
+  color: #14532d !important;
 }
 
 .dark [class*="bg-emerald-950"] {
-  background-color: rgba(76, 5, 25, 0.4) !important;
+  background-color: rgba(5, 46, 22, 0.4) !important;
 }
 
 .dark [class*="text-emerald-300"],
 .dark [class*="text-emerald-400"] {
-  color: #fb7185 !important;
+  color: #4ade80 !important;
 }
 
 /* Sleek Modern Dropdown & Panel Scrollbar (Webkit / Chromium without scrollbar-width overriding) */

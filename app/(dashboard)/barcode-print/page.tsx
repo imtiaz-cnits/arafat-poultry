@@ -175,7 +175,7 @@ export default function BarcodePrintPage() {
             >
               {/* Store Name Header */}
               <p className="text-[10px] font-black tracking-wider text-slate-900 uppercase leading-none">
-                RUNA TRADERS
+                ARAFAT POULTRY &amp; FISHERIES
               </p>
 
               {/* Product Name */}

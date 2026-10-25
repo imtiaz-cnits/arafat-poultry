@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   RotateCcw,
   Plus,
@@ -430,7 +431,7 @@ function ReturnsManagementContent() {
               Sales Return Management
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              RUNA TRADERS - Customer Sales Return &amp; Refund Processing
+              Arafat Poultry &amp; Fisheries - Customer Sales Return &amp; Refund Processing
             </p>
           </div>
         </div>
@@ -1610,16 +1611,26 @@ function ReturnsManagementContent() {
             <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-5 print:p-0 print:overflow-visible">
               {/* Company Header */}
               <div className="text-center pb-3 border-b-2 border-slate-800">
-                <h1 className="text-2xl font-black tracking-wider uppercase text-rose-900">
-                  RUNA TRADERS
+                <div className="flex justify-center mb-1.5">
+                  <Image
+                    src="/logo1.png"
+                    alt="Arafat Poultry & Fisheries"
+                    width={44}
+                    height={44}
+                    className="w-11 h-11 object-contain"
+                    priority
+                  />
+                </div>
+                <h1 className="text-2xl font-black tracking-wider uppercase text-emerald-900">
+                  ARAFAT POULTRY &amp; FISHERIES
                 </h1>
                 <p className="text-xs font-semibold text-slate-600 mt-0.5">
-                  Tiles, Sanitary &amp; Bath Fittings
+                  Quality Products. Trusted Service.
                 </p>
                 <p className="text-[11px] text-slate-500">
-                  Success Super Market, Pabna | Mobile: 01975-703216, 01715-842083
+                  Poultry Feed, Egg Sales &amp; Fish Farming | Mobile: 01975-703216, 01715-842083
                 </p>
-                <div className="inline-block mt-2 px-3 py-0.5 bg-rose-100 text-rose-900 border border-rose-300 font-bold text-xs uppercase tracking-wider rounded">
+                <div className="inline-block mt-2 px-3 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-xs uppercase tracking-wider rounded">
                   {selectedReturnForPrint.type === "purchase"
                     ? "Supplier Purchase Return Voucher"
                     : "Customer Sales Return Voucher"}
@@ -1752,7 +1763,7 @@ function ReturnsManagementContent() {
               </div>
 
               <div className="text-center text-[10px] text-slate-400 pt-2 border-t border-dashed border-slate-200">
-                Software By: CodeNext IT | RUNA TRADERS POS System
+                Software By: CodeNext IT | Arafat Poultry &amp; Fisheries POS System
               </div>
             </div>
           </div>

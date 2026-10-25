@@ -19,6 +19,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatBdCurrency } from "@/lib/utils";
 import { formatBoxAndPcs, formatTileOrItemQty } from "@/lib/tiles-calculator";
 import { CustomDatePicker } from "@/components/ui/date-picker";
@@ -935,10 +936,20 @@ export default function PurchasesPage() {
             <div className="flex-1 overflow-y-auto p-6 space-y-4 print:p-0">
               {/* Voucher Header */}
               <div className="text-center pb-3 border-b border-dashed border-slate-300 dark:border-slate-700">
-                <h2 className="text-lg font-black tracking-wider uppercase text-rose-800 dark:text-rose-400">
-                  RUNA TRADERS
+                <div className="flex justify-center mb-1">
+                  <Image
+                    src="/logo1.png"
+                    alt="Arafat Poultry & Fisheries"
+                    width={36}
+                    height={36}
+                    className="w-9 h-9 object-contain"
+                    priority
+                  />
+                </div>
+                <h2 className="text-lg font-black tracking-wider uppercase text-emerald-800 dark:text-emerald-400">
+                  ARAFAT POULTRY &amp; FISHERIES
                 </h2>
-                <p className="text-xs text-slate-500">Tiles, Sanitary & Fittings</p>
+                <p className="text-xs text-slate-500">Quality Products. Trusted Service.</p>
                 <h3 className="text-xs font-bold uppercase tracking-wider mt-1 text-slate-700 dark:text-slate-300">
                   GOODS RECEIVED VOUCHER (PURCHASE INWARD)
                 </h3>

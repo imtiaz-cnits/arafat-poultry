@@ -1,22 +1,32 @@
-# RUNA TRADERS — Retail Shop Management System & POS Engine
-## Architecture Guidelines & Handover Documentation
-### Developed for: Runa Traders | Software by: CodeNext IT
+# ARAFAT POULTRY & FISHERIES — Shop & Farm Management System & POS Engine
+## Architecture Guidelines & Documentation
+### Developed for: Arafat Poultry & Fisheries | Software by: CodeNext IT
 
 ---
 
 ## 1. System Overview & Technology Stack
 
-**Runa Traders Retail Shop Management System** is a next-generation high-speed web application and Point of Sale (POS) engine built on modern web standards, converted and upgraded from the legacy Laravel 11 architecture to Next.js 15+ App Router with TypeScript and Prisma ORM.
+**Arafat Poultry & Fisheries Management System** is a next-generation high-speed web application and Point of Sale (POS) engine built on modern web standards, developed on Next.js 16+ App Router with TypeScript and Prisma ORM.
 
-- **Frontend & App Engine**: Next.js 15+ (App Router), React 19, TypeScript
+- **Frontend & App Engine**: Next.js 16+ (App Router with Turbopack), React 19, TypeScript
 - **Database & ORM**: MySQL 8.0+, Prisma ORM v6.4.1 (34 relational tables mapped)
-- **Styling**: Tailwind CSS (Strictly Zero Bootstrap, pure custom CSS tokens)
+- **Styling**: Tailwind CSS v4 (`@tailwindcss/turbopack`, zero Bootstrap)
+- **Brand Identity**:
+  - Main App Logo: `public/logo1.png`
+  - Authentication Logo: `public/logo2.png`
+  - Browser Favicon: `public/fav-icon.png`
+- **Color Palette**:
+  - Primary: Deep Forest Green (`#166534`)
+  - Secondary: Aqua Blue (`#0284C7`)
+  - Accent: Harvest Orange (`#EA580C`)
+  - Background: Soft White (`#F8FAFC`)
+  - Text: Slate Charcoal (`#1F2937`)
 - **Typography**: `Valley Sans` (English & Numeric text) and `Baloo Da 2` (Bangla text)
 - **Authentication**: JWT Cookie + Bearer Authentication with Bcrypt password hashing
 - **Hardware Integrations**:
   - USB Barcode Scanner guns (keypress buffer with auto-submit on Enter)
   - Camera Barcode & QR Scanner (`html5-qrcode`)
-  - 80mm Thermal Receipt Slip generation with direct printer command support
+  - Thermal Receipt generation with direct printer support
 
 ---
 
@@ -25,9 +35,11 @@
 1. **NO `src` FOLDER [STRICT]**:
    All directories (`app/`, `components/`, `lib/`, `prisma/`, `public/`) reside directly in the project root. Under no circumstances should a `src/` directory be created.
 2. **Dedicated Database**:
-   Always connects to `runa_traders_db` on MySQL port 3306.
+   Connects via `DATABASE_URL` in `.env` (MySQL port 3306).
 3. **Color Palette Standards**:
-   - Primary Green: `emerald-700` (`#15803d`), `emerald-600` (`#16a34a`)
+   - Primary Deep Forest Green: `#166534` (tones `#14532d`, `#15803d`)
+   - Secondary Aqua Blue: `#0284C7`
+   - Accent Harvest Orange: `#EA580C`
    - Dark Mode Background: `#0b0f19`
    - Dark Cards / Modals: `#0f172a` (`slate-900`)
    - Dark Inputs: `#1e293b` (`slate-800/90`)
@@ -35,14 +47,14 @@
 4. **Table & Sorting Standards**:
    - All backend queries sort descending: `orderBy: { id: 'desc' }`.
    - Bangladeshi currency dynamic comma formatting: `formatBdCurrency()` (e.g. `৳ 24,800.00`).
-   - Solid emerald table headers: `#15803d` (`text-white`, `nowrap`).
+   - Deep Forest Green table headers: `#166534` (`text-white`, `nowrap`).
 5. **Modal Standards**:
-   - Unified container `border-radius: 16px`, max-height `90vh`.
-   - Solid emerald sticky header `#15803d`, circular red close button `28px × 28px` (`#dc2626`).
+   - Unified container `border-radius: 16px`, max-height `90vh` or `95vh`.
+   - Deep Forest Green sticky header, circular red close button `28px × 28px` (`#dc2626`).
    - Input controls standard height: `42px`.
-   - Sticky footer: Cancel button `#dc2626`, Save/Submit button `#15803d`.
+   - Sticky footer: Cancel button `#dc2626`, Save/Submit button `#166534`.
 6. **Sticky Footer & Branding**:
-   - Bottom pinned footer with: `© <Year> RUNA TRADERS | Software By: CodeNext IT`.
+   - Bottom pinned footer with: `© <Year> ARAFAT POULTRY & FISHERIES | Software By: CodeNext IT`.
 
 ---
 
@@ -55,8 +67,9 @@
 ### Environment Configuration (.env)
 ```env
 DATABASE_URL="mysql://root:@localhost:3306/runa_traders_db"
-JWT_SECRET="runa-traders-super-secret-jwt-key-2026"
-NEXT_PUBLIC_APP_NAME="Runa Traders"
+JWT_SECRET="your-jwt-secret-key-here"
+NEXT_PUBLIC_APP_NAME="Arafat Poultry & Fisheries"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
 ### Installation Steps
@@ -87,7 +100,7 @@ The application will be live at `http://localhost:3000`.
 
 ---
 
-## 5. Completed Application Modules & Routes
+## 5. Application Modules & Routes
 
 ### A. Point of Sale & Billing
 - **`/pos`**: Fullscreen 100vh POS Terminal, instant customer inline modal, barcode gun buffer, camera barcode scanner, held cart tickets, quick cash denominations, and 80mm thermal receipt generator.
@@ -95,11 +108,11 @@ The application will be live at `http://localhost:3000`.
 - **`/returns`**: Sales return processor, automatic inventory restock and order refund adjustment.
 
 ### B. Catalog & Inventory Management
-- **`/products`**: Product catalog with barcode preview, cost & selling price, categories (Tiles, Sanitary, Fittings).
+- **`/products`**: Product catalog with barcode preview, cost & selling price.
 - **`/inventory`**: Live stock overview with 4 inventory KPIs, low stock alerts, and manual count adjustment.
 - **`/categories`**: Category taxonomy management.
 - **`/brands`**: Brand management.
-- **`/units`**: Measurement units (Pcs, Box, Kg, Set).
+- **`/units`**: Measurement units (Pcs, Box, Kg, Set, Tray, Bag).
 - **`/barcode-print`**: Printable A4 and sticker barcode sheet generator (`JsBarcode`).
 
 ### C. Purchasing & Suppliers
@@ -124,17 +137,11 @@ The application will be live at `http://localhost:3000`.
 
 ### G. Security & User Management
 - **`/users`**: User roles and permissions management (Admin, Manager, Cashier, Staff).
-- **`/login`**: Secure authentication gateway.
+- **`/login`**: Secure authentication gateway with `logo2.png`.
 
 ---
 
-## 6. Client Handover Checklist
-
-- [x] Database cloned and mapped (`runa_traders_db`).
-- [x] Zero `src` folder structure maintained.
-- [x] Tailwind CSS utility design verified across all 34 routes.
-- [x] Next.js 15+ Turbopack compilation passing with 0 errors (`npm run build`).
-- [x] POS 100vh terminal tested with physical scanner and thermal printer.
-- [x] Realtime inventory increment on Purchases and restoration on Returns.
-- [x] Bangladeshi Currency formatting `formatBdCurrency()` active globally.
-- [x] Software attribution pinned to CodeNext IT.
+## 6. Business Scope (Future Planned Modules)
+- **Chicken Feed Management**: Purchases from suppliers, bag sizes, unit conversions, stock adjustments, customer sales, and profitability.
+- **Chicken Egg Sales**: Collection from farm/suppliers, configurable trays/pieces, loss/breakage tracking, customer sales, and loss reporting.
+- **Fish Farming & Sales**: Pond records, stocking, feed consumption, farming expenses, mortality, harvest yield, live fish purchasing, and weight-based kg sales.

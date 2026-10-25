@@ -1,6 +1,7 @@
 "use client";
 
 import { Printer, X, Truck, Calendar, User, MapPin } from "lucide-react";
+import Image from "next/image";
 import { parseBoxAndPcs } from "@/lib/tiles-calculator";
 
 interface ChallanItem {
@@ -74,7 +75,7 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
       {/* Container: Wider modal (max-w-xl) with single unified container */}
       <div className="bg-white text-slate-900 rounded-2xl shadow-2xl max-w-xl w-full max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-slate-300 print:border-none print:shadow-none print:max-w-none print:m-0 print:p-0">
         {/* Modal Top Actions (Hidden on Print) */}
-        <div className="print:hidden h-13 px-4 sm:px-5 bg-gradient-to-r from-[#991b1b] to-[#dc2626] text-white flex items-center justify-between shrink-0 shadow-sm">
+        <div className="print:hidden h-13 px-4 sm:px-5 bg-gradient-to-r from-[#166534] to-[#15803d] text-white flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
               <Truck className="w-4 h-4 text-white" />
@@ -83,7 +84,7 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
               <h3 className="font-bold text-xs tracking-wide leading-tight truncate">
                 Delivery Challan &bull; {challan.challan_no}
               </h3>
-              <p className="text-[10px] text-rose-100/80 leading-none mt-0.5 truncate">
+              <p className="text-[10px] text-emerald-100/80 leading-none mt-0.5 truncate">
                 Ref Inv: {challan.order_no}
               </p>
             </div>
@@ -91,7 +92,7 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handlePrint}
-              className="h-8 px-3.5 rounded-lg bg-white text-rose-900 hover:bg-rose-50 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="h-8 px-3.5 rounded-lg bg-white text-emerald-900 hover:bg-emerald-50 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer whitespace-nowrap shrink-0"
               title="Print Challan Slip"
             >
               <Printer className="w-3.5 h-3.5 shrink-0" />
@@ -161,17 +162,27 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
             {/* Top Main Section */}
             <div className="space-y-3.5 flex-1">
               {/* Header */}
-              <div className="text-center border-b-2 border-red-700 pb-2.5">
-                <h1 className="text-lg font-black text-rose-900 tracking-wider uppercase leading-tight">
-                  RUNA TRADERS
+              <div className="text-center border-b-2 border-emerald-800 pb-2.5">
+                <div className="flex justify-center mb-1">
+                  <Image
+                    src="/logo1.png"
+                    alt="Arafat Poultry & Fisheries"
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 object-contain"
+                    priority
+                  />
+                </div>
+                <h1 className="text-lg font-black text-emerald-900 tracking-wider uppercase leading-tight">
+                  ARAFAT POULTRY &amp; FISHERIES
                 </h1>
                 <p className="text-[10px] text-slate-600 font-medium">
-                  Tiles, Sanitary Ware & Bath Fittings
+                  Quality Products. Trusted Service.
                 </p>
                 <p className="text-[9px] text-slate-500 mt-0.5">
-                  Bus Terminal Main Road, Pabna | 01711-968720
+                  Poultry Feed, Egg Sales &amp; Fish Farming | Wholesale &amp; Retail
                 </p>
-                <div className="mt-2 inline-block px-3 py-0.5 rounded-md bg-[#991b1b] text-white font-bold text-[10px] tracking-wider uppercase">
+                <div className="mt-2 inline-block px-3 py-0.5 rounded-md bg-[#166534] text-white font-bold text-[10px] tracking-wider uppercase">
                   DELIVERY CHALLAN / চালান
                 </div>
               </div>
@@ -218,7 +229,7 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
               <div className="overflow-hidden rounded-xl border border-slate-200">
                 <table className="w-full text-left border-collapse text-[11px]">
                   <thead>
-                    <tr className="bg-[#991b1b] text-white font-bold text-[10px]">
+                    <tr className="bg-[#166534] text-white font-bold text-[10px]">
                       <th className="py-1.5 px-2 w-7 text-center">#</th>
                       <th className="py-1.5 px-2">Description</th>
                       <th className="py-1.5 px-1.5 text-center">Size</th>
@@ -308,7 +319,7 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
 
               {/* Footer Brand */}
               <div className="pt-2 text-center text-[9px] text-slate-400 border-t border-slate-200">
-                RUNA TRADERS &bull; Software By CodeNext IT
+                ARAFAT POULTRY &amp; FISHERIES &bull; Software By CodeNext IT
               </div>
             </div>
           </div>

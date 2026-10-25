@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
 import { formatTileOrItemQty } from "@/lib/tiles-calculator";
@@ -193,32 +194,39 @@ export default function PurchaseBillPage({
           <div className="flex flex-col sm:flex-row print:flex-row justify-between items-center sm:items-start print:items-start gap-3 sm:gap-2 print:gap-0 pb-2 border-b border-slate-200">
             {/* Brand Logo & Name */}
             <div className="flex items-start gap-2.5">
-              <div className="w-11 h-11 rounded-lg border-2 border-[#15803d] flex items-center justify-center font-black text-xl text-[#991b1b] bg-white shrink-0 shadow-xs">
-                RT
+              <div className="w-12 h-12 rounded-lg border-2 border-[#166534] p-1 flex items-center justify-center bg-white shrink-0 shadow-xs">
+                <Image
+                  src="/logo1.png"
+                  alt="Arafat Poultry & Fisheries"
+                  width={42}
+                  height={42}
+                  className="w-full h-full object-contain"
+                  priority
+                />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-xl sm:text-2xl print:text-2xl font-black tracking-wide text-[#15803d] m-0 leading-tight">
-                  RUNA TRADERS
+                <h1 className="text-xl sm:text-2xl print:text-2xl font-black tracking-wide text-[#166534] m-0 leading-tight">
+                  ARAFAT POULTRY &amp; FISHERIES
                 </h1>
-                <div className="text-[10px] sm:text-[11px] print:text-[11px] font-bold text-[#166534] border-t border-[#15803d] pt-0.5 mt-0.5 whitespace-normal sm:whitespace-nowrap print:whitespace-nowrap">
-                  All Kinds of Tiles, Sanitary & Fittings Supplier
+                <div className="text-[10px] sm:text-[11px] print:text-[11px] font-bold text-[#15803d] border-t border-[#166534] pt-0.5 mt-0.5 whitespace-normal sm:whitespace-nowrap print:whitespace-nowrap">
+                  Quality Products. Trusted Service.
                 </div>
               </div>
             </div>
 
             {/* Middle "Purchase Bill" Badge */}
             <div className="self-center">
-              <span className="px-4 sm:px-5 py-0.5 sm:py-1 print:py-1 rounded bg-[#15803d] text-white font-serif font-black text-base sm:text-lg print:text-lg tracking-wider">
+              <span className="px-4 sm:px-5 py-0.5 sm:py-1 print:py-1 rounded bg-[#166534] text-white font-serif font-black text-base sm:text-lg print:text-lg tracking-wider">
                 Purchase Bill
               </span>
             </div>
 
             {/* Office Info */}
             <div className="text-center sm:text-right print:text-right text-[11px] text-slate-800 leading-tight max-w-[240px]">
-              <div><strong>Office:</strong> Success Super Market,</div>
-              <div>Sadar Police Fari, Ataikula Road, Pabna.</div>
+              <div><strong>Business:</strong> Arafat Poultry &amp; Fisheries</div>
+              <div>Quality Products. Trusted Service.</div>
               <div><strong>Mobile:</strong> 01975-703216, 01715-842083</div>
-              <div><strong>E-mail:</strong> runatraders2018@gmail.com</div>
+              <div><strong>E-mail:</strong> info@arafatpoultry.com</div>
             </div>
           </div>
 

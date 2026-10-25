@@ -674,17 +674,17 @@ export default function PosPage() {
         <div className="flex items-center gap-2.5">
           <Link
             href="/dashboard"
-            className="h-[32px] px-3 rounded-full bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
+            className="h-[32px] px-3 rounded-full bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Back to Dashboard</span>
             <span className="sm:hidden">Back</span>
           </Link>
 
-          <div className="flex items-center gap-2 px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 rounded-full border border-rose-200 dark:border-rose-900/40">
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-            <span className="text-xs font-black tracking-wider text-rose-800 dark:text-rose-400 uppercase">
-              RUNA TRADERS POS
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 rounded-full border border-emerald-200 dark:border-emerald-900/40">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span className="text-xs font-black tracking-wider text-emerald-800 dark:text-emerald-400 uppercase">
+              ARAFAT POULTRY &amp; FISHERIES POS
             </span>
           </div>
         </div>
