@@ -8,12 +8,12 @@ export const metadata: Metadata = {
   description: "Arafat Poultry & Fisheries Management System & POS, Powered by CodeNext IT",
   icons: {
     icon: [
-      { url: "/fav.jpg", type: "image/png" },
+      { url: "/fav-icon.png", type: "image/png" },
     ],
     apple: [
-      { url: "/fav.jpg", type: "image/png" },
+      { url: "/fav-icon.png", type: "image/png" },
     ],
-    shortcut: ["/fav.jpg"],
+    shortcut: ["/fav-icon.png"],
   },
 };
 
@@ -25,8 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/fav.jpg" type="image/png" />
-        <link rel="apple-touch-icon" href="/fav.jpg" />
+        <link rel="icon" href="/fav-icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/fav-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

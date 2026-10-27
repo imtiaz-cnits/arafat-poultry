@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Search,
@@ -682,6 +683,13 @@ export default function PosPage() {
           </Link>
 
           <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 rounded-full border border-emerald-200 dark:border-emerald-900/40">
+            <Image
+              src="/logo1.png"
+              alt="Logo"
+              width={20}
+              height={20}
+              className="w-5 h-5 object-contain rounded-full"
+            />
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             <span className="text-xs font-black tracking-wider text-emerald-800 dark:text-emerald-400 uppercase">
               ARAFAT POULTRY &amp; FISHERIES POS

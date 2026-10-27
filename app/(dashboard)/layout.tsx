@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { Footer } from "@/components/footer";
 
 export default function DashboardLayout({
   children,
@@ -72,6 +73,9 @@ export default function DashboardLayout({
         <main className="flex-1 p-2.5 sm:p-4 md:p-6 transition-all">
           {children}
         </main>
+
+        {/* Global Footer */}
+        <Footer />
       </div>
     </div>
   );

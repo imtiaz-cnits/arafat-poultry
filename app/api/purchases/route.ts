@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
+import { recordStockMovement } from "@/lib/stock-service";
+import { recordPartyTransaction } from "@/lib/party-ledger-service";
+import { recordFinancialTransaction, getAccountByPaymentMethod } from "@/lib/financial-service";
+import { logAudit } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -133,9 +137,12 @@ export async function GET(req: NextRequest) {
 // POST: Create Purchase Inward (Atomic Transaction & Stock Increment)
 export async function POST(req: NextRequest) {
   try {
-    const user = await getAuthUser(req);
-    const fallbackUser = await prisma.users.findFirst({ select: { id: true } });
-    const userId = user?.id || (fallbackUser ? Number(fallbackUser.id) : 7);
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+    const user = authResult.user;
+    const userId = Number(user.id);
 
     const body = await req.json();
     const {
@@ -234,24 +241,22 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // INCREMENT PRODUCT STOCK (Stock Inward)
-        const [currentProd]: any = await tx.$queryRawUnsafe(
-          "SELECT quantity FROM products WHERE id = ?",
-          prodId
+        // Atomic Stock Movement Engine: Add stock and record in stock_movements
+        await recordStockMovement(
+          {
+            productId: prodId,
+            movementType: "PURCHASE_INWARD",
+            quantity: qtyNum,
+            unitPrice: costNum,
+            referenceType: "PURCHASE",
+            referenceId: newPurchase.id,
+            referenceNo: purchaseCode,
+            date: purDate,
+            note: `Purchase Inward Bill #${purchaseCode}`,
+            userId,
+          },
+          tx
         );
-
-        if (currentProd) {
-          const currentStock = parseFloat(currentProd.quantity || "0");
-          const newStock = currentStock + qtyNum;
-
-          await tx.products.update({
-            where: { id: prodId },
-            data: {
-              quantity: String(newStock),
-              cost_price: String(costNum), // update latest cost price
-            },
-          });
-        }
       }
 
       // 4. Create Purchase Payment Details
@@ -267,15 +272,57 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 5. Update Supplier Balance if Due
-      if (dueNum > 0) {
-        await tx.suppliers.update({
-          where: { id: suppId },
-          data: {
-            purchase_payable_amount: String(totalPayable),
-          },
-        });
+      // 5. Update Supplier Party Ledger & Payable Balance
+      const totalBillAmount = grandSub + delivChg;
+      await recordPartyTransaction(
+        {
+          partyType: "SUPPLIER",
+          supplierId: suppId,
+          transactionType: "INVOICE",
+          referenceType: "PURCHASE",
+          referenceId: newPurchase.id,
+          referenceNo: purchaseCode,
+          credit: totalBillAmount,
+          debit: paidNum,
+          date: purDate,
+          note: `Purchase Bill #${purchaseCode}`,
+          userId,
+        },
+        tx
+      );
+
+      // 6. Record Financial Outflow if payment made
+      if (paidNum > 0) {
+        const financialAccount = await getAccountByPaymentMethod(payment_method, tx);
+        if (financialAccount) {
+          await recordFinancialTransaction(
+            {
+              accountId: financialAccount.id,
+              transactionType: "OUTFLOW",
+              amount: paidNum,
+              referenceType: "PURCHASE_PAYMENT",
+              referenceId: newPurchase.id,
+              referenceNo: purchaseCode,
+              date: purDate,
+              note: `Payment made to supplier for Purchase #${purchaseCode} (${payment_method || "Cash"})`,
+              userId,
+            },
+            tx
+          );
+        }
       }
+
+      // 7. Record Audit Log
+      await logAudit(
+        {
+          userId,
+          action: "CREATE",
+          entityType: "PURCHASE",
+          entityId: String(newPurchase.id),
+          newValues: { purchase_id: purchaseCode, total: totalBillAmount, paid: paidNum, supplier_id },
+        },
+        tx
+      );
 
       return newPurchase;
     });

@@ -23,6 +23,8 @@ import {
   X,
   AlertTriangle,
   User,
+  Egg,
+  Fish,
 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 
@@ -65,6 +67,24 @@ export const NAV_ITEMS: NavItem[] = [
       { label: "Units", href: "/units", icon: Boxes },
       { label: "Barcode Print", href: "/barcode-print", icon: Barcode },
     ],
+  },
+  {
+    id: "feed",
+    label: "Feed Trading",
+    href: "/feed",
+    icon: Boxes,
+  },
+  {
+    id: "eggs",
+    label: "Egg Production",
+    href: "/eggs",
+    icon: Egg,
+  },
+  {
+    id: "fish",
+    label: "Fish Farming",
+    href: "/fish",
+    icon: Fish,
   },
   {
     id: "sales",
@@ -288,7 +308,7 @@ export function Sidebar({
           >
             <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md border flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
               <Image
-                src="/fav.jpg"
+                src="/logo1.png"
                 alt="Arafat Poultry & Fisheries"
                 width={28}
                 height={28}

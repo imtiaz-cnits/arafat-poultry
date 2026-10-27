@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { requireAuth } from "@/lib/auth";
 import {
   getBangladeshDate,
   getProductCategoryMap,
   lockProductsAscending,
   getAvailableStockWithPendingReservations,
 } from "@/lib/challan-service";
+import { recordStockMovement } from "@/lib/stock-service";
+import { recordPartyTransaction } from "@/lib/party-ledger-service";
+import { recordFinancialTransaction, getAccountByPaymentMethod } from "@/lib/financial-service";
+import { logAudit } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +23,12 @@ function generateOrderNumber(): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getAuthUser(req);
-    const fallbackUser = await prisma.users.findFirst({ select: { id: true } });
-    const userId = user?.id || (fallbackUser ? Number(fallbackUser.id) : 7);
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+    const user = authResult.user;
+    const userId = Number(user.id);
 
     const body = await req.json();
     const {
@@ -160,19 +167,23 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Deduct stock immediately ONLY if NOT Tiles
+        // Atomic Stock Movement Engine: Deduct stock and record in stock_movements
         if (!isTiles) {
-          const [currentProd]: any = await tx.$queryRawUnsafe(
-            "SELECT quantity FROM products WHERE id = ?",
-            BigInt(item.product_id)
+          await recordStockMovement(
+            {
+              productId: item.product_id,
+              movementType: "SALE_OUTWARD",
+              quantity: decrementQty,
+              unitPrice: parseFloat(String(item.selling_price || item.price || "0")),
+              referenceType: "ORDER",
+              referenceId: newOrder.id,
+              referenceNo: orderNumber,
+              date: invDate,
+              note: `POS Sale Order #${orderNumber}`,
+              userId,
+            },
+            tx
           );
-          const currentQty = parseFloat(currentProd?.quantity || "0");
-          const newStock = Math.max(0, currentQty - decrementQty);
-
-          await tx.products.update({
-            where: { id: BigInt(item.product_id) },
-            data: { quantity: String(newStock) },
-          });
         }
       }
 
@@ -189,22 +200,63 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 7. Update customer previous due amount
-      if (Number(due_amount || 0) > 0) {
-        const customer = await tx.customers.findUnique({
-          where: { id: BigInt(customer_id) },
-          select: { previous_due_amount: true },
-        });
+      // 7. Update Customer Party Ledger & Due Balance
+      const totalOrderValue =
+        Number(sub_total || 0) +
+        Number(delivery_charge || 0) -
+        Number(discount_amount || 0) -
+        Number(return_adjustment_amount || 0);
+      const paidNum = Number(paid_amount || 0);
 
-        if (customer) {
-          const prevDue = parseFloat(customer.previous_due_amount || "0");
-          const addedDue = parseFloat(String(due_amount || "0"));
-          await tx.customers.update({
-            where: { id: BigInt(customer_id) },
-            data: { previous_due_amount: String(prevDue + addedDue) },
-          });
+      await recordPartyTransaction(
+        {
+          partyType: "CUSTOMER",
+          customerId: customer_id,
+          transactionType: "INVOICE",
+          referenceType: "ORDER",
+          referenceId: newOrder.id,
+          referenceNo: orderNumber,
+          debit: totalOrderValue,
+          credit: paidNum,
+          date: invDate,
+          note: `Order #${orderNumber}`,
+          userId,
+        },
+        tx
+      );
+
+      // 8. Record Financial Inflow if payment received
+      if (paidNum > 0) {
+        const financialAccount = await getAccountByPaymentMethod(payment_method, tx);
+        if (financialAccount) {
+          await recordFinancialTransaction(
+            {
+              accountId: financialAccount.id,
+              transactionType: "INFLOW",
+              amount: paidNum,
+              referenceType: "SALE_PAYMENT",
+              referenceId: newOrder.id,
+              referenceNo: orderNumber,
+              date: invDate,
+              note: `Cash received for Order #${orderNumber} (${payment_method || "Cash"})`,
+              userId,
+            },
+            tx
+          );
         }
       }
+
+      // 9. Record Audit Log
+      await logAudit(
+        {
+          userId,
+          action: "CREATE",
+          entityType: "ORDER",
+          entityId: String(newOrder.id),
+          newValues: { order_no: orderNumber, total: totalOrderValue, paid: paidNum, customer_id },
+        },
+        tx
+      );
 
       return {
         ...newOrder,

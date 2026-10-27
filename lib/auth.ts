@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 const JWT_SECRET = process.env.JWT_SECRET || "runa_traders_super_secret_jwt_key_2026_codenext_it";
@@ -64,8 +64,13 @@ export async function getAuthUser(req?: NextRequest) {
         token = req.cookies.get("token")?.value;
       }
     } else {
-      const cookieStore = await cookies();
-      token = cookieStore.get("token")?.value;
+      try {
+        const cookieStore = await cookies();
+        token = cookieStore.get("token")?.value;
+      } catch {
+        // When called outside Next.js request context (e.g. CLI/tests), return null gracefully
+        return null;
+      }
     }
 
     if (!token) return null;
@@ -98,4 +103,58 @@ export async function getAuthUser(req?: NextRequest) {
     console.error("Auth check failed:", error);
     return null;
   }
+}
+
+export interface RequireAuthOptions {
+  requiredRole?: string | string[];
+  requiredPermission?: string;
+}
+
+/**
+ * Enforce authentication and role/permission checks server-side.
+ * Rejects unauthenticated requests with 401 or forbidden with 403.
+ */
+export async function requireAuth(
+  req?: NextRequest,
+  options?: RequireAuthOptions
+): Promise<{ user: any; errorResponse?: NextResponse }> {
+  const user = await getAuthUser(req);
+  if (!user) {
+    return {
+      user: null,
+      errorResponse: NextResponse.json(
+        { status: "fail", message: "Unauthorized. Please log in to continue." },
+        { status: 401 }
+      ),
+    };
+  }
+
+  if (options?.requiredRole) {
+    const roles = Array.isArray(options.requiredRole)
+      ? options.requiredRole
+      : [options.requiredRole];
+    if (!roles.includes(user.role) && user.role !== "admin") {
+      return {
+        user,
+        errorResponse: NextResponse.json(
+          { status: "fail", message: "Forbidden. Insufficient role permissions." },
+          { status: 403 }
+        ),
+      };
+    }
+  }
+
+  if (options?.requiredPermission && user.role !== "admin") {
+    if (!user.permissions || !user.permissions[options.requiredPermission]) {
+      return {
+        user,
+        errorResponse: NextResponse.json(
+          { status: "fail", message: `Forbidden. Missing permission: ${options.requiredPermission}` },
+          { status: 403 }
+        ),
+      };
+    }
+  }
+
+  return { user };
 }
