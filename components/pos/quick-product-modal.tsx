@@ -162,7 +162,7 @@ export function QuickProductModal({
       {/* Unified Container: max-w-3xl sm:max-w-4xl matching product page */}
       <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
         {/* Sticky Header: Cool Crimson / Ruby Red Gradient, Circular Red Close */}
-        <div className="modal-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
+        <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
           <div className="flex items-center gap-2.5">
             <PlusCircle className="w-5 h-5 text-white" />
             <h3 className="text-base font-bold text-white tracking-tight m-0">
@@ -512,7 +512,7 @@ export function QuickProductModal({
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-70 shadow-sm"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-70 shadow-sm"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Save & Ring</span>

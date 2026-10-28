@@ -322,7 +322,7 @@ export default function PurchasesPage() {
       {/* 1. Header & Summary Cards */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-rose-100 dark:border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800 flex items-center justify-center shrink-0">
             <Truck className="w-5 h-5" />
           </div>
           <div>
@@ -347,11 +347,11 @@ export default function PurchasesPage() {
           </div>
 
           {/* Total Purchase Due */}
-          <div className="h-[38px] px-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 flex items-center gap-2">
-            <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase">
+          <div className="h-[38px] px-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center gap-2">
+            <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase">
               Due:
             </span>
-            <span className="text-xs font-black text-rose-800 dark:text-rose-300">
+            <span className="text-xs font-black text-amber-800 dark:text-amber-300">
               {formatBdCurrency(totalPurchasesDue)}
             </span>
           </div>
@@ -361,7 +361,7 @@ export default function PurchasesPage() {
               setNewItems([]);
               setIsNewPurchaseOpen(true);
             }}
-            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New Purchase</span>
@@ -394,7 +394,7 @@ export default function PurchasesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white font-bold whitespace-nowrap">
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
                 <th className="py-3 px-3 text-center w-[50px]">SL</th>
                 <th className="py-3 px-4">Purchase ID / Date</th>
                 <th className="py-3 px-3">Supplier / Company</th>
@@ -610,7 +610,7 @@ export default function PurchasesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-3 sm:p-6 animate-in fade-in duration-200">
           <div className="w-full max-w-4xl bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[92vh] flex flex-col">
             {/* Modal Header */}
-            <div className="modal-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+            <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
@@ -892,7 +892,7 @@ export default function PurchasesPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Save Purchase & Inward Stock</span>
@@ -907,7 +907,7 @@ export default function PurchasesPage() {
       {selectedPurchase && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-xl bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[90vh] flex flex-col print:border-none print:shadow-none print:max-w-none">
-            <div className="print:hidden bg-gradient-to-r from-[#991b1b] to-[#dc2626] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+            <div className="print:hidden bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">

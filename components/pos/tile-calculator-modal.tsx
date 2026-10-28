@@ -127,7 +127,7 @@ export function TileCalculatorModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-2xl sm:max-w-3xl bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[92vh] flex flex-col">
         {/* Header (Rule 6.2) */}
-        <div className="modal-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+        <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
           <div className="flex items-center gap-2">
             <Calculator className="w-5 h-5 text-white" />
             <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
@@ -331,7 +331,7 @@ export function TileCalculatorModal({
                   <button
                     type="button"
                     onClick={handleApplyRecommended}
-                    className="w-full h-[40px] rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                    className="w-full h-[40px] rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
                   >
                     <Check className="w-4 h-4" />
                     <span>
@@ -418,7 +418,7 @@ export function TileCalculatorModal({
                   <button
                     type="button"
                     onClick={handleApplyPcs}
-                    className="w-full h-[40px] rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                    className="w-full h-[40px] rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
                   >
                     <Check className="w-4 h-4" />
                     <span>
@@ -482,7 +482,7 @@ export function TileCalculatorModal({
                 <button
                   type="button"
                   onClick={handleApplyBoxes}
-                  className="w-full h-[40px] rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm mt-2 transition-all"
+                  className="w-full h-[40px] rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm mt-2 transition-all"
                 >
                   <Check className="w-4 h-4" />
                   <span>

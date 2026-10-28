@@ -116,3 +116,72 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { status: "fail", message: "Issue ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const issue = await prisma.internal_feed_issues.findUnique({
+      where: { id: BigInt(id) },
+    });
+
+    if (!issue) {
+      return NextResponse.json(
+        { status: "fail", message: "হস্তান্তর রেকর্ড পাওয়া যায়নি" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Restore product quantity
+      const prod = await tx.products.findUnique({ where: { id: issue.product_id } });
+      if (prod) {
+        const currentQty = parseFloat(prod.quantity || "0");
+        const restoredQty = currentQty + Number(issue.bags);
+        await tx.products.update({
+          where: { id: issue.product_id },
+          data: { quantity: restoredQty.toString() },
+        });
+      }
+
+      // 2. If destination was fish batch, decrement accumulated_feed_cost
+      if (issue.destination_type === "FISH_POND" && issue.destination_id) {
+        await tx.fish_batches.updateMany({
+          where: { id: issue.destination_id },
+          data: {
+            accumulated_feed_cost: { decrement: issue.total_cost },
+          },
+        });
+      }
+
+      // 3. Delete the issue record
+      await tx.internal_feed_issues.delete({
+        where: { id: BigInt(id) },
+      });
+    });
+
+    return NextResponse.json({
+      status: "success",
+      message: "হস্তান্তর রেকর্ড সফলভাবে বাতিল ও ফিড স্টক ফেরত দেওয়া হয়েছে",
+    });
+  } catch (error: any) {
+    console.error("Internal Feed Issue DELETE Error:", error);
+    return NextResponse.json(
+      { status: "fail", message: error?.message || "Failed to delete issue record" },
+      { status: 500 }
+    );
+  }
+}
+

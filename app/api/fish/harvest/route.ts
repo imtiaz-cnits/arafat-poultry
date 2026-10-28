@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 import { recordHarvest } from "@/lib/fish-service";
 
 export const dynamic = "force-dynamic";
@@ -58,3 +59,68 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ status: "fail", message: "Harvest ID is required" }, { status: 400 });
+    }
+
+    const harvest = await prisma.fish_harvests.findUnique({
+      where: { id: BigInt(id) },
+    });
+
+    if (!harvest) {
+      return NextResponse.json({ status: "fail", message: "আহরণ রেকর্ড পাওয়া যায়নি" }, { status: 404 });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Revert product stock
+      const prod = await tx.products.findUnique({ where: { id: harvest.product_id } });
+      if (prod) {
+        const currentQty = parseFloat(prod.quantity || "0");
+        const newQty = Math.max(0, currentQty - Number(harvest.total_weight_kg));
+        await tx.products.update({
+          where: { id: harvest.product_id },
+          data: { quantity: newQty.toString() },
+        });
+      }
+
+      // 2. Revert batch live fish count and harvested statistics
+      await tx.fish_batches.update({
+        where: { id: harvest.batch_id },
+        data: {
+          current_fish_count: { increment: harvest.fish_count },
+          total_harvested_count: { decrement: harvest.fish_count },
+          total_harvested_kg: { decrement: harvest.total_weight_kg },
+          total_harvested_cost: { decrement: harvest.cost_allocated },
+          status: "ACTIVE",
+        },
+      });
+
+      // 3. Delete harvest record
+      await tx.fish_harvests.delete({
+        where: { id: BigInt(id) },
+      });
+    });
+
+    return NextResponse.json({
+      status: "success",
+      message: "মাছ আহরণ রেকর্ড সফলভাবে বাতিল ও ইনভেন্টরি সংশোধন করা হয়েছে",
+    });
+  } catch (error: any) {
+    console.error("Fish Harvest DELETE Error:", error);
+    return NextResponse.json(
+      { status: "fail", message: error?.message || "Failed to delete harvest record" },
+      { status: 500 }
+    );
+  }
+}
+

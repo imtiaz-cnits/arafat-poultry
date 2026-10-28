@@ -50,13 +50,13 @@ export async function recordStockMovement(
 ) {
   const execute = async (client: Prisma.TransactionClient) => {
     const prodId = BigInt(params.productId);
-    const qty = Math.abs(Number(params.quantity || 0));
-    const price = Number(params.unitPrice || 0);
-    const totalVal = qty * price;
-
-    if (qty <= 0) {
+    const rawQty = Number(params.quantity);
+    if (isNaN(rawQty) || rawQty <= 0) {
       throw new Error("Movement quantity must be greater than zero");
     }
+    const qty = rawQty;
+    const price = Number(params.unitPrice || 0);
+    const totalVal = qty * price;
 
     // 1. Lock product row FOR UPDATE
     const [currentProd]: any = await client.$queryRawUnsafe(
@@ -116,7 +116,7 @@ export async function recordStockMovement(
         stock_after: new Prisma.Decimal(newStock.toFixed(3)),
         date: params.date || new Date(),
         note: params.note || null,
-        user_id: BigInt(params.userId),
+        user_id: BigInt(params.userId || 1),
       },
     });
 

@@ -607,7 +607,7 @@ export default function ProductsPage() {
           {/* Add Product Button */}
           <button
             onClick={handleOpenCreate}
-            className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+            className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Product</span>
@@ -629,7 +629,7 @@ export default function ProductsPage() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search product, barcode..."
+                placeholder="Search product name..."
                 className="w-full bg-transparent border-none outline-none text-xs text-slate-800 dark:text-white placeholder:text-slate-400"
               />
               {search && (
@@ -793,10 +793,9 @@ export default function ProductsPage() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                 <th className="p-[10px] text-center w-[45px] rounded-tl-xl">SL</th>
                 <th className="p-[10px]">Product Name</th>
-                <th className="p-[10px]">Barcodes</th>
                 <th className="p-[10px]">Category</th>
                 <th className="p-[10px]">Brand</th>
                 <th className="p-[10px] text-right">Cost Price</th>
@@ -809,14 +808,14 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={9} className="p-8 text-center text-slate-400 font-medium">
                     <Loader2 className="w-5 h-5 animate-spin inline mr-2 text-rose-600" />
                     Loading products...
                   </td>
                 </tr>
               ) : displayedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={9} className="p-8 text-center text-slate-400 font-medium">
                     No products found. Click "Add Product" to create your first item.
                   </td>
                 </tr>
@@ -857,21 +856,6 @@ export default function ProductsPage() {
                           )}
                         </div>
                       )}
-                    </td>
-                    <td className="p-[10px] font-mono text-[11px] text-slate-600 dark:text-slate-300">
-                      <div className="flex flex-wrap gap-1">
-                        {p.all_codes.slice(0, 2).map((c, i) => (
-                          <span
-                            key={i}
-                            className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-                          >
-                            {c}
-                          </span>
-                        ))}
-                        {p.all_codes.length > 2 && (
-                          <span className="text-slate-400 text-[10px]">+{p.all_codes.length - 2}</span>
-                        )}
-                      </div>
                     </td>
                     <td className="p-[10px] text-slate-700 dark:text-slate-300 font-medium">
                       {p.category}
@@ -1056,7 +1040,7 @@ export default function ProductsPage() {
             {/* Unified Container: border-radius: 16px, max-height 92vh, max-w-4xl for spacious view */}
             <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
               {/* Sticky Header: Cool Crimson / Ruby Red Gradient, Circular Red Close #dc2626 */}
-              <div className="modal-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
+              <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
                 <h3 className="text-base font-bold text-white tracking-tight m-0">
                   {editingProduct ? "Edit Product Details" : "Add New Product Item"}
                 </h3>
@@ -1400,7 +1384,7 @@ export default function ProductsPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-70 shadow-sm"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-70 shadow-sm"
                   >
                     {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>{editingProduct ? "Update Product" : "Save Product"}</span>
@@ -1417,7 +1401,7 @@ export default function ProductsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-150">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-150">
             {/* Sticky Header: Ruby Red / Crimson Gradient */}
-            <div className="modal-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-5 py-3.5 flex items-center justify-between shrink-0 shadow-xs">
+            <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between shrink-0 shadow-xs">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
                   <Package className="w-4 h-4 text-white" />
@@ -1606,7 +1590,7 @@ export default function ProductsPage() {
                   setViewingProduct(null);
                   handleOpenEdit(toEdit);
                 }}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 <span>Edit Product</span>
@@ -1637,7 +1621,7 @@ export default function ProductsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4">
           <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
               <div className="flex items-center gap-2 text-white">
                 <Percent className="w-5 h-5 text-rose-200" />
                 <h3 className="text-base font-bold text-white tracking-tight m-0">
@@ -1871,7 +1855,7 @@ export default function ProductsPage() {
                 <button
                   type="submit"
                   disabled={bulkSubmitting || bulkSelectedIds.size === 0 || !bulkPercentage}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {bulkSubmitting ? (
                     <>
@@ -1905,7 +1889,7 @@ export default function ProductsPage() {
               </h2>
             </div>
             <div className="text-right text-xs text-slate-600">
-              <p>Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</p>
+              <p suppressHydrationWarning>Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</p>
               <p>Total Products: <strong className="text-slate-900">{filteredProducts.length}</strong></p>
             </div>
           </div>
@@ -1916,7 +1900,7 @@ export default function ProductsPage() {
             <tr className="bg-slate-100 text-black font-bold border-b-2 border-slate-900">
               <th className="p-1.5 text-center w-8">SL</th>
               <th className="p-1.5">Product Name</th>
-              <th className="p-1.5">Code / Barcode</th>
+              <th className="p-1.5">Category & Brand</th>
               <th className="p-1.5">Category</th>
               <th className="p-1.5">Size / Brand</th>
               <th className="p-1.5 text-center">Stock</th>
@@ -1929,7 +1913,7 @@ export default function ProductsPage() {
               <tr key={p.id} className="border-b border-slate-300">
                 <td className="p-1.5 text-center font-bold">{idx + 1}</td>
                 <td className="p-1.5 font-bold">{p.product_name}</td>
-                <td className="p-1.5 font-mono text-[10px]">{p.display_codes}</td>
+                <td className="p-1.5">{p.category} - {p.brand}</td>
                 <td className="p-1.5">{p.category}</td>
                 <td className="p-1.5">{p.tile_size || p.brand || "-"}</td>
                 <td className="p-1.5 text-center font-bold">

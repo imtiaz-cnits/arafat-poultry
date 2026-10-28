@@ -101,19 +101,6 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         >
           <Menu className="w-5 h-5 stroke-[2]" />
         </button>
-
-        <div className="hidden sm:flex items-center gap-2.5">
-          <Image
-            src="/logo1.png"
-            alt="Arafat Poultry & Fisheries"
-            width={26}
-            height={26}
-            className="w-[26px] h-[26px] object-contain rounded-md"
-          />
-          <span className="font-extrabold text-sm sm:text-base text-slate-800 dark:text-white tracking-tight">
-            Arafat Poultry &amp; Fisheries
-          </span>
-        </div>
       </div>
 
       {/* Right: POS Quick Button, Mode, Fullscreen, User */}

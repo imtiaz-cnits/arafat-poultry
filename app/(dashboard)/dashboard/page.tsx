@@ -267,7 +267,7 @@ export default async function DashboardPage() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+              <tr className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                 <th className="p-[10px] text-center w-[45px]">SL</th>
                 <th className="p-[10px]">Order No</th>
                 <th className="p-[10px]">Customer</th>

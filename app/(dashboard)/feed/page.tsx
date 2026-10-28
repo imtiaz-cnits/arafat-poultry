@@ -19,10 +19,12 @@ import {
   ArrowRightLeft,
   Fish,
   Egg,
+  Eye,
+  Trash2,
+  Printer,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker } from "@/components/ui/date-picker";
-import { useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
 
 interface FeedProduct {
   id: number;
@@ -79,6 +81,11 @@ export default function FeedTradingPage() {
   const [bagWeightKg, setBagWeightKg] = useState<string>("50");
   const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
+
+  // Action Modals State
+  const [viewIssue, setViewIssue] = useState<InternalIssue | null>(null);
+  const [deleteIssue, setDeleteIssue] = useState<InternalIssue | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadData = async () => {
     try {
@@ -138,6 +145,39 @@ export default function FeedTradingPage() {
     setIssueDate(new Date().toISOString().split("T")[0]);
     setNote("");
     setIsModalOpen(true);
+  };
+
+  const handleOpenModalWithProduct = (p: FeedProduct) => {
+    setSelectedProductId(p.id);
+    setBagWeightKg(String(p.bag_weight_kg || 50));
+    setDestinationType("FISH_POND");
+    setDestinationName("");
+    setBags("1");
+    setIssueDate(new Date().toISOString().split("T")[0]);
+    setNote("");
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteIssue = async () => {
+    if (!deleteIssue) return;
+    try {
+      setDeleting(true);
+      const res = await fetch(`/api/feed/internal-issue?id=${deleteIssue.id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        toast.success(json.message || "হস্তান্তর রেকর্ড বাতিল করা হয়েছে", "সফল");
+        setDeleteIssue(null);
+        loadData();
+      } else {
+        toast.error(json.message || "বাতিল করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "নেটওয়ার্ক সমস্যা", "ত্রুটি");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleIssueSubmit = async (e: React.FormEvent) => {
@@ -201,7 +241,7 @@ export default function FeedTradingPage() {
   }, [data, searchTerm]);
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -300,21 +340,19 @@ export default function FeedTradingPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab("issues")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === "issues"
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === "issues"
                   ? "bg-emerald-700 text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               অভ্যন্তরীণ হস্তান্তর লগ ({data?.recent_internal_issues.length || 0})
             </button>
             <button
               onClick={() => setActiveTab("stocks")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === "stocks"
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === "stocks"
                   ? "bg-emerald-700 text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               ফিড তালিকা ও মজুত ({data?.feed_products?.length || 0})
             </button>
@@ -346,6 +384,7 @@ export default function FeedTradingPage() {
                   <th className="py-3 px-4 text-right">কেজি প্রতি দর</th>
                   <th className="py-3 px-4 text-right">স্থানান্তরিত ব্যয়</th>
                   <th className="py-3 px-4 text-center">তারিখ</th>
+                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
@@ -373,11 +412,10 @@ export default function FeedTradingPage() {
                       </td>
                       <td className="py-3 px-4">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${
-                            iss.destination_type === "FISH_POND"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${iss.destination_type === "FISH_POND"
                               ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800"
                               : "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 border border-orange-200 dark:border-orange-800"
-                          }`}
+                            }`}
                         >
                           {iss.destination_type === "FISH_POND" ? (
                             <Fish className="w-3 h-3" />
@@ -394,6 +432,26 @@ export default function FeedTradingPage() {
                         {formatBdCurrency(iss.total_cost)}
                       </td>
                       <td className="py-3 px-4 text-center text-slate-500">{iss.date}</td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setViewIssue(iss)}
+                            className="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center hover:bg-sky-100 transition-colors cursor-pointer"
+                            title="বিস্তারিত দেখুন"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteIssue(iss)}
+                            className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center hover:bg-rose-100 transition-colors cursor-pointer"
+                            title="হস্তান্তর বাতিল করুন"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -414,6 +472,7 @@ export default function FeedTradingPage() {
                   <th className="py-3 px-4 text-center">বর্তমান মজুত</th>
                   <th className="py-3 px-4 text-right">ক্রয় দর (বস্তা)</th>
                   <th className="py-3 px-4 text-right">ক্রয় দর (কেজি)</th>
+                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
@@ -447,6 +506,17 @@ export default function FeedTradingPage() {
                         </td>
                         <td className="py-3 px-4 text-right font-medium">{formatBdCurrency(p.cost_price)}</td>
                         <td className="py-3 px-4 text-right">৳{costPerKg.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenModalWithProduct(p)}
+                            className="h-[28px] px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold text-[11px] flex items-center gap-1 mx-auto transition-all cursor-pointer shadow-xs"
+                            title="খামার বা পুকুরে হস্তান্তর করুন"
+                          >
+                            <ArrowRightLeft className="w-3 h-3" />
+                            <span>হস্তান্তর</span>
+                          </button>
+                        </td>
                       </tr>
                     );
                   })
@@ -482,19 +552,18 @@ export default function FeedTradingPage() {
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   খাদ্য পণ্য নির্বাচন করুন <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={selectedProductId}
-                  onChange={(e) => setSelectedProductId(Number(e.target.value))}
-                  required
-                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
-                >
-                  <option value="">-- ফিড পণ্য বেছে নিন --</option>
-                  {data?.feed_products?.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.product_name} (মজুত: {p.quantity} বস্তা | দর: ৳{p.cost_price})
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.feed_products?.map((p) => ({
+                      value: p.id,
+                      label: p.product_name,
+                      subLabel: `মজুত: ${p.quantity} বস্তা | দর: ৳${p.cost_price}`,
+                    })) || []
+                  }
+                  value={selectedProductId || ""}
+                  onChange={(v) => setSelectedProductId(Number(v))}
+                  placeholder="-- ফিড পণ্য বেছে নিন --"
+                />
               </div>
 
               {/* Destination Type Radio */}
@@ -506,11 +575,10 @@ export default function FeedTradingPage() {
                   <button
                     type="button"
                     onClick={() => setDestinationType("FISH_POND")}
-                    className={`h-[42px] px-3 rounded-xl border flex items-center justify-center gap-2 font-medium text-xs transition-all ${
-                      destinationType === "FISH_POND"
+                    className={`h-[42px] px-3 rounded-xl border flex items-center justify-center gap-2 font-medium text-xs transition-all ${destinationType === "FISH_POND"
                         ? "bg-sky-50 dark:bg-sky-950/50 border-sky-500 text-sky-700 dark:text-sky-300 shadow-xs"
                         : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
-                    }`}
+                      }`}
                   >
                     <Fish className="w-4 h-4 text-sky-600" />
                     <span>মৎস্য খামার / পুকুর</span>
@@ -518,11 +586,10 @@ export default function FeedTradingPage() {
                   <button
                     type="button"
                     onClick={() => setDestinationType("POULTRY_FARM")}
-                    className={`h-[42px] px-3 rounded-xl border flex items-center justify-center gap-2 font-medium text-xs transition-all ${
-                      destinationType === "POULTRY_FARM"
+                    className={`h-[42px] px-3 rounded-xl border flex items-center justify-center gap-2 font-medium text-xs transition-all ${destinationType === "POULTRY_FARM"
                         ? "bg-orange-50 dark:bg-orange-950/50 border-orange-500 text-orange-700 dark:text-orange-300 shadow-xs"
                         : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
-                    }`}
+                      }`}
                   >
                     <Egg className="w-4 h-4 text-orange-600" />
                     <span>পোল্ট্রি খামার / শেড</span>
@@ -601,11 +668,10 @@ export default function FeedTradingPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">তারিখ</label>
-                  <input
-                    type="date"
+                  <CustomDatePicker
                     value={issueDate}
-                    onChange={(e) => setIssueDate(e.target.value)}
-                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                    onChange={setIssueDate}
+                    placeholder="তারিখ নির্বাচন করুন"
                   />
                 </div>
                 <div>
@@ -639,6 +705,136 @@ export default function FeedTradingPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* View Issue Voucher Modal */}
+      {viewIssue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                  <ArrowRightLeft className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm tracking-tight">অভ্যন্তরীণ হস্তান্তর ভাউচার</h3>
+                  <p className="text-[11px] text-emerald-100 font-mono mt-0.5">{viewIssue.issue_no}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewIssue(null)}
+                className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">খাদ্যের নাম:</span>
+                  <span className="font-bold text-slate-800 dark:text-white">{viewIssue.product_name || "ফিড পণ্য"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">গন্তব্য / প্রাপক:</span>
+                  <span className="font-bold px-2 py-0.5 rounded-full text-[11px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    {viewIssue.destination}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">হস্তান্তরের তারিখ:</span>
+                  <span className="font-mono text-slate-800 dark:text-slate-200">{viewIssue.date}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
+                  <span className="text-slate-500 block text-[11px]">স্থানান্তরিত বস্তা</span>
+                  <span className="text-lg font-black text-slate-800 dark:text-white mt-1 block">
+                    {viewIssue.bags} <span className="text-xs font-normal">বস্তা</span>
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-mono">মোট {viewIssue.total_kg} কেজি</span>
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60">
+                  <span className="text-emerald-700 dark:text-emerald-400 block text-[11px] font-bold">স্থানান্তরিত মোট ব্যয়</span>
+                  <span className="text-lg font-black text-emerald-800 dark:text-emerald-300 mt-1 block">
+                    {formatBdCurrency(viewIssue.total_cost)}
+                  </span>
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono">
+                    ৳{viewIssue.unit_cost_per_kg.toFixed(2)} / কেজি
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="h-[38px] px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>প্রিন্ট ভাউচার</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewIssue(null)}
+                className="h-[38px] px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Issue Confirmation Modal */}
+      {deleteIssue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-rose-600 text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Trash2 className="w-5 h-5" />
+                <h3 className="font-bold text-sm">হস্তান্তর রেকর্ড বাতিল ও স্টক রিভার্স</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteIssue(null)}
+                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 text-xs text-slate-700 dark:text-slate-300 space-y-3">
+              <p>
+                আপনি কি নিশ্চিত যে চালান নম্বর <strong className="font-mono text-rose-600">{deleteIssue.issue_no}</strong>-এর হস্তান্তর বাতিল করতে চান?
+              </p>
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 font-medium">
+                বাতিল করলে <strong>{deleteIssue.bags} বস্তা ফিড</strong> স্বয়ংক্রিয়ভাবে সেন্ট্রাল ইনভেন্টরি স্টকে ফেরত যোগ হবে এবং সংশ্লিষ্ট খামার/পুকুরের বরাদ্দকৃত ব্যয় সমন্বয় হবে।
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setDeleteIssue(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeleteIssue}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>হ্যাঁ, বাতিল নিশ্চিত করুন</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

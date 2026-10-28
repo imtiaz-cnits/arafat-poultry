@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const categories = await prisma.categories.findMany({
-      orderBy: { id: "desc" },
+      orderBy: { id: "asc" },
     });
 
     const serialized = categories.map((c) => ({

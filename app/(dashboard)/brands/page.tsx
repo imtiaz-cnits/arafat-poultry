@@ -151,7 +151,7 @@ export default function BrandsPage() {
 
         <button
           onClick={handleOpenCreate}
-          className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer self-start md:self-auto"
+          className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer self-start md:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add Brand</span>
@@ -183,7 +183,7 @@ export default function BrandsPage() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                 <th className="p-[10px] text-center w-[45px] rounded-tl-xl">SL</th>
                 <th className="p-[10px]">Brand Name</th>
                 <th className="p-[10px] text-center">Status</th>
@@ -316,7 +316,7 @@ export default function BrandsPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
-            <div className="sticky top-0 z-20 modal-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-5 py-3.5 flex items-center justify-between shrink-0">
+            <div className="sticky top-0 z-20 modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between shrink-0">
               <h3 className="text-base font-bold text-white tracking-tight m-0">
                 {editingItem ? "Edit Brand" : "Add New Brand"}
               </h3>
@@ -376,7 +376,7 @@ export default function BrandsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#991b1b] to-[#dc2626] text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-70"
+                  className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-70"
                 >
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Save</span>

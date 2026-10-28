@@ -441,7 +441,7 @@ function ReturnsManagementContent() {
           <button
             type="button"
             onClick={() => openModalForRecord("")}
-            className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] active:scale-[0.98] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+            className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] active:scale-[0.98] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New Sales Return</span>
@@ -449,13 +449,13 @@ function ReturnsManagementContent() {
         </div>
       </div>
 
-      {/* 3. Quick Search Box (Fixed 38px, MARSS reference layout with brand red left border) */}
+      {/* 3. Quick Search Box (Fixed 38px layout with Deep Forest Green brand border) */}
       <div
-        className="rounded-2xl border border-[#cbd5e1] dark:border-[#334155] bg-rose-50/40 dark:bg-slate-900/40 p-4 shadow-xs"
-        style={{ borderLeft: "4.5px solid #991b1b" }}
+        className="rounded-2xl border border-[#cbd5e1] dark:border-[#334155] bg-emerald-50/40 dark:bg-slate-900/40 p-4 shadow-xs"
+        style={{ borderLeft: "4.5px solid #166534" }}
       >
         <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2">
-          <Search className="w-4 h-4 text-rose-600" />
+          <Search className="w-4 h-4 text-emerald-700" />
           <span>
             {activeTab === "purchase"
               ? "Quick Purchase Memo Search & Process Return"
@@ -469,7 +469,7 @@ function ReturnsManagementContent() {
         </p>
 
         <form onSubmit={handleQuickSearchSubmit} className="flex flex-row items-stretch gap-2.5">
-          <div className="flex-1 min-w-0 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-rose-600 focus-within:ring-2 focus-within:ring-rose-600/20 shadow-xs transition-all">
+          <div className="flex-1 min-w-0 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 shadow-xs transition-all">
             <input
               type="text"
               value={quickSearchInput}
@@ -485,7 +485,7 @@ function ReturnsManagementContent() {
 
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-1.5 px-4 h-[38px] rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] active:scale-[0.98] text-white text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-4 h-[38px] rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] active:scale-[0.98] text-white text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer"
           >
             <ArrowRight className="w-3.5 h-3.5" />
             <span>Search & Return</span>
@@ -560,7 +560,7 @@ function ReturnsManagementContent() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
                 <th className="p-3 text-center w-[45px]">SL</th>
                 <th className="p-3 w-[120px] whitespace-nowrap">Return Date</th>
                 <th className="p-3 min-w-[170px] whitespace-nowrap">
@@ -916,7 +916,7 @@ function ReturnsManagementContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4">
           <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
             {/* Header: Brand Gradient & Circular Close Button */}
-            <div className="bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-white/20 text-white flex items-center justify-center shrink-0">
                   <RotateCcw className="w-4 h-4" />
@@ -965,7 +965,7 @@ function ReturnsManagementContent() {
                     type="button"
                     onClick={() => searchRecordForReturn(modalSearchQuery)}
                     disabled={modalSearching}
-                    className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                   >
                     {modalSearching ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1048,7 +1048,7 @@ function ReturnsManagementContent() {
                   <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-2xs">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white text-[11px] font-semibold uppercase tracking-wider">
+                        <tr className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-[11px] font-semibold uppercase tracking-wider">
                           <th className="p-2.5 text-center w-[40px]">
                             <input
                               type="checkbox"
@@ -1208,7 +1208,7 @@ function ReturnsManagementContent() {
                   type="button"
                   onClick={handleSubmitReturn}
                   disabled={submittingReturn || grandRefundTotal <= 0}
-                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {submittingReturn ? (
                     <>
@@ -1233,7 +1233,7 @@ function ReturnsManagementContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4">
           <div className="w-full max-w-3xl sm:max-w-4xl bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
             {/* Header: Brand Gradient & Circular Close Button */}
-            <div className="bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <div className="w-8 h-8 rounded-lg bg-white/20 text-white flex items-center justify-center shrink-0">
                   <Eye className="w-4 h-4" />
@@ -1581,7 +1581,7 @@ function ReturnsManagementContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-3 sm:p-5 overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto">
           <div className="bg-white text-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] print:max-h-none print:border-none print:shadow-none print:w-full">
             {/* Top Bar - Hidden in Print */}
-            <div className="bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white px-5 py-3.5 flex items-center justify-between shrink-0 print:hidden">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white px-5 py-3.5 flex items-center justify-between shrink-0 print:hidden">
               <div className="flex items-center gap-2">
                 <Printer className="w-4 h-4 text-white" />
                 <h3 className="text-sm font-bold tracking-tight text-white m-0 uppercase">

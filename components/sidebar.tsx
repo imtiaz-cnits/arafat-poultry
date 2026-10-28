@@ -25,6 +25,7 @@ import {
   User,
   Egg,
   Fish,
+  Scale,
 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 
@@ -56,19 +57,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ShoppingCart,
   },
   {
-    id: "inventory",
-    label: "Inventory",
-    icon: Package,
-    children: [
-      { label: "Stock Overview", href: "/inventory", icon: Boxes },
-      { label: "Product List", href: "/products", icon: Package },
-      { label: "Categories", href: "/categories", icon: Layers },
-      { label: "Brands", href: "/brands", icon: Tag },
-      { label: "Units", href: "/units", icon: Boxes },
-      { label: "Barcode Print", href: "/barcode-print", icon: Barcode },
-    ],
-  },
-  {
     id: "feed",
     label: "Feed Trading",
     href: "/feed",
@@ -87,12 +75,22 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Fish,
   },
   {
+    id: "inventory",
+    label: "Inventory",
+    icon: Package,
+    children: [
+      { label: "Stock Overview", href: "/inventory", icon: Boxes },
+      { label: "Product List", href: "/products", icon: Package },
+      { label: "Categories", href: "/categories", icon: Layers },
+      { label: "Brands", href: "/brands", icon: Tag },
+    ],
+  },
+  {
     id: "sales",
     label: "Sales & Invoices",
     icon: Receipt,
     children: [
       { label: "Invoices List", href: "/invoices", icon: Receipt },
-      { label: "Challan List", href: "/challans", icon: FileSpreadsheet },
       { label: "Sales Return", href: "/returns", icon: RotateCcw },
     ],
   },
@@ -131,9 +129,10 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Reports",
     icon: FileSpreadsheet,
     children: [
+      { label: "Consolidated P&L", href: "/reports/accounting", icon: Scale },
+      { label: "Income & Expense", href: "/reports/income-expense", icon: Wallet },
       { label: "Sales Report", href: "/reports/sales", icon: FileSpreadsheet },
       { label: "Daily Ledger", href: "/reports/daily-ledger", icon: FileSpreadsheet },
-      { label: "Income & Expense", href: "/reports/income-expense", icon: Wallet },
       { label: "Stock-Out Report", href: "/reports/stock-out", icon: AlertTriangle },
     ],
   },
@@ -306,9 +305,9 @@ export function Sidebar({
             className={`flex items-center gap-2.5 ${isCollapsed ? "justify-center w-full" : ""
               }`}
           >
-            <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md border flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+            <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
               <Image
-                src="/logo1.png"
+                src="/fav.jpg"
                 alt="Arafat Poultry & Fisheries"
                 width={28}
                 height={28}

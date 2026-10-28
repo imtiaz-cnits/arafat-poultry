@@ -19,9 +19,13 @@ import {
   Home,
   Tag,
   BadgeAlert,
+  Eye,
+  Trash2,
+  Printer,
+  RefreshCw,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
 
 interface Flock {
   id: number;
@@ -113,6 +117,11 @@ export default function EggProductionPage() {
   const [flockBreed, setFlockBreed] = useState("BV-300 Layer");
   const [flockChicksCount, setFlockChicksCount] = useState("1000");
 
+  // Action Modals State
+  const [viewCollection, setViewCollection] = useState<EggCollection | null>(null);
+  const [deleteCollection, setDeleteCollection] = useState<EggCollection | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -133,6 +142,38 @@ export default function EggProductionPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleOpenCollectionForFlock = (flock: Flock) => {
+    setSelectedFlockId(flock.id);
+    setIsCollectionModalOpen(true);
+  };
+
+  const handleOpenRegradeForProduct = (p: GradeProduct) => {
+    setSourceProductId(p.id);
+    setIsRegradeModalOpen(true);
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!deleteCollection) return;
+    try {
+      setDeleting(true);
+      const res = await fetch(`/api/egg/collections?id=${deleteCollection.id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        toast.success(json.message || "ডিম সংগ্রহ বাতিল করা হয়েছে", "সফল");
+        setDeleteCollection(null);
+        loadData();
+      } else {
+        toast.error(json.message || "বাতিল করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "নেটওয়ার্ক সমস্যা", "ত্রুটি");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Real-time calculations for Collection
   const computedAccepted = useMemo(() => {
@@ -337,7 +378,7 @@ export default function EggProductionPage() {
   }, [data, searchTerm]);
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -455,31 +496,28 @@ export default function EggProductionPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab("collections")}
-              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-                activeTab === "collections"
+              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${activeTab === "collections"
                   ? "bg-emerald-700 text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               দৈনিক সংগ্রহ হিস্ট্রি ({data?.recent_collections.length || 0})
             </button>
             <button
               onClick={() => setActiveTab("grades")}
-              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-                activeTab === "grades"
+              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${activeTab === "grades"
                   ? "bg-emerald-700 text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               গ্রেড অনুযায়ী মজুত ({data?.grade_products.length || 0})
             </button>
             <button
               onClick={() => setActiveTab("flocks")}
-              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
-                activeTab === "flocks"
+              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${activeTab === "flocks"
                   ? "bg-emerald-700 text-white shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               শেড ও ফ্লক সমূহ ({data?.flocks.length || 0})
             </button>
@@ -511,6 +549,7 @@ export default function EggProductionPage() {
                   <th className="py-3 px-4">গ্রেড বণ্টন</th>
                   <th className="py-3 px-4 text-right">উৎপাদন খরচ/ডিম</th>
                   <th className="py-3 px-4 text-center">তারিখ</th>
+                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
@@ -557,6 +596,26 @@ export default function EggProductionPage() {
                         ৳{c.cost_per_accepted_egg.toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-center text-slate-500">{c.date}</td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setViewCollection(c)}
+                            className="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center hover:bg-sky-100 transition-colors cursor-pointer"
+                            title="বিস্তারিত দেখুন"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteCollection(c)}
+                            className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center hover:bg-rose-100 transition-colors cursor-pointer"
+                            title="সংগ্রহ বাতিল করুন"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -577,6 +636,7 @@ export default function EggProductionPage() {
                   <th className="py-3 px-4 text-center">মজুত (খাঁচি - ৩০ পিস)</th>
                   <th className="py-3 px-4 text-right">উৎপাদন খরচ</th>
                   <th className="py-3 px-4 text-right">বিক্রয় দর</th>
+                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
@@ -602,6 +662,17 @@ export default function EggProductionPage() {
                       <td className="py-3 px-4 text-right font-mono font-bold text-gray-900 dark:text-white">
                         ৳{p.sell_price.toFixed(2)}
                       </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenRegradeForProduct(p)}
+                          className="h-[28px] px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold text-[11px] flex items-center gap-1 mx-auto transition-all cursor-pointer shadow-xs"
+                          title="গ্রেড রূপান্তর / বাছাই"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          <span>পুনঃগ্রেডিং</span>
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -621,6 +692,7 @@ export default function EggProductionPage() {
                   <th className="py-3 px-4">মুরগির জাত (Breed)</th>
                   <th className="py-3 px-4 text-center">বর্তমান মুরগির সংখ্যা</th>
                   <th className="py-3 px-4 text-center">স্ট্যাটাস</th>
+                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
@@ -645,6 +717,17 @@ export default function EggProductionPage() {
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                           {f.status}
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenCollectionForFlock(f)}
+                          className="h-[28px] px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold text-[11px] flex items-center gap-1 mx-auto transition-all cursor-pointer shadow-xs"
+                          title="এই ফ্লক থেকে ডিম সংগ্রহ করুন"
+                        >
+                          <Egg className="w-3 h-3" />
+                          <span>ডিম সংগ্রহ</span>
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -680,19 +763,18 @@ export default function EggProductionPage() {
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   শেড / ফ্লক নির্বাচন করুন <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={selectedFlockId}
-                  onChange={(e) => setSelectedFlockId(Number(e.target.value))}
-                  required
-                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
-                >
-                  <option value="">-- ফ্লক বেছে নিন --</option>
-                  {data?.flocks.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {f.shed_name} ({f.breed} - {f.current_birds} মুরগি)
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.flocks.map((f) => ({
+                      value: f.id,
+                      label: `${f.shed_name} (${f.breed})`,
+                      subLabel: `${f.current_birds} মুরগি`,
+                    })) || []
+                  }
+                  value={selectedFlockId || ""}
+                  onChange={(v) => setSelectedFlockId(Number(v))}
+                  placeholder="-- ফ্লক বেছে নিন --"
+                />
               </div>
 
               {/* Collection Counts */}
@@ -739,9 +821,8 @@ export default function EggProductionPage() {
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-gray-900 dark:text-white text-xs">গ্রেড অনুযায়ী বণ্টন</span>
                   <span
-                    className={`text-[11px] font-bold ${
-                      gradesMatchAccepted ? "text-emerald-600" : "text-rose-600"
-                    }`}
+                    className={`text-[11px] font-bold ${gradesMatchAccepted ? "text-emerald-600" : "text-rose-600"
+                      }`}
                   >
                     বণ্টনকৃত: {computedGradesSum} / {computedAccepted} টি
                   </span>
@@ -801,14 +882,14 @@ export default function EggProductionPage() {
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                     খাঁচি সাইজ (Tray Size)
                   </label>
-                  <select
+                  <CustomSelect
+                    options={[
+                      { value: 30, label: "৩০ পিসের স্ট্যান্ডার্ড খাঁচি (30 Eggs Tray)" },
+                      { value: 24, label: "২৪ পিসের খাঁচি (24 Eggs Tray)" },
+                    ]}
                     value={trayCapacity}
-                    onChange={(e) => setTrayCapacity(Number(e.target.value))}
-                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
-                  >
-                    <option value={30}>৩০ পিসের স্ট্যান্ডার্ড খাঁচি (30 Eggs Tray)</option>
-                    <option value={24}>২৪ পিসের খাঁচি (24 Eggs Tray)</option>
-                  </select>
+                    onChange={(v) => setTrayCapacity(Number(v))}
+                  />
                 </div>
               </div>
 
@@ -824,11 +905,10 @@ export default function EggProductionPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">তারিখ</label>
-                  <input
-                    type="date"
+                  <CustomDatePicker
                     value={collectionDate}
-                    onChange={(e) => setCollectionDate(e.target.value)}
-                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                    onChange={setCollectionDate}
+                    placeholder="তারিখ নির্বাচন করুন"
                   />
                 </div>
                 <div>
@@ -892,38 +972,36 @@ export default function EggProductionPage() {
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   উৎস গ্রেড (Source Grade) <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={sourceProductId}
-                  onChange={(e) => setSourceProductId(Number(e.target.value))}
-                  required
-                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-sky-600"
-                >
-                  <option value="">-- উৎস গ্রেড বেছে নিন --</option>
-                  {data?.grade_products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.product_name} (মজুত: {p.pieces} পিস)
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.grade_products.map((p) => ({
+                      value: p.id,
+                      label: p.product_name,
+                      subLabel: `মজুত: ${p.pieces} পিস`,
+                    })) || []
+                  }
+                  value={sourceProductId || ""}
+                  onChange={(v) => setSourceProductId(Number(v))}
+                  placeholder="-- উৎস গ্রেড বেছে নিন --"
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   গন্তব্য গ্রেড (Destination Grade) <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={destinationProductId}
-                  onChange={(e) => setDestinationProductId(Number(e.target.value))}
-                  required
-                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-sky-600"
-                >
-                  <option value="">-- গন্তব্য গ্রেড বেছে নিন --</option>
-                  {data?.grade_products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.product_name} (বর্তমান: {p.pieces} পিস)
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.grade_products.map((p) => ({
+                      value: p.id,
+                      label: p.product_name,
+                      subLabel: `বর্তমান: ${p.pieces} পিস`,
+                    })) || []
+                  }
+                  value={destinationProductId || ""}
+                  onChange={(v) => setDestinationProductId(Number(v))}
+                  placeholder="-- গন্তব্য গ্রেড বেছে নিন --"
+                />
               </div>
 
               <div>
@@ -1039,6 +1117,149 @@ export default function EggProductionPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* View Collection Details Voucher Modal */}
+      {viewCollection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                  <Egg className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm tracking-tight">ডিম সংগ্রহ ভাউচার</h3>
+                  <p className="text-[11px] text-emerald-100 font-mono mt-0.5">{viewCollection.collection_no}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewCollection(null)}
+                className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">ফ্লক / শেড:</span>
+                  <span className="font-bold text-slate-800 dark:text-white">{viewCollection.flock_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">সংগ্রহের তারিখ:</span>
+                  <span className="font-mono text-slate-800 dark:text-slate-200">{viewCollection.date}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">উৎপাদন খরচ (প্রতি ডিম):</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                    ৳{viewCollection.cost_per_accepted_egg.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-500 block text-[10px]">মোট ডিম</span>
+                  <span className="text-base font-black text-slate-800 dark:text-white">{viewCollection.total_collected}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800">
+                  <span className="text-rose-600 block text-[10px] font-bold">ভাঙা / নষ্ট</span>
+                  <span className="text-base font-black text-rose-600">{viewCollection.rejected_breakage}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-emerald-700 dark:text-emerald-400 block text-[10px] font-bold">গ্রহণযোগ্য</span>
+                  <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{viewCollection.accepted_quantity}</span>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-slate-800 dark:text-white mb-2">গ্রেড অনুযায়ী খাঁচি ও পিস বণ্টন</h4>
+                <div className="space-y-1.5">
+                  {viewCollection.grades.map((g, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex justify-between items-center"
+                    >
+                      <span className="font-bold text-slate-700 dark:text-slate-200">{g.grade_name}</span>
+                      <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                        {g.pieces} টি ({g.trays} খাঁচি)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="h-[38px] px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>প্রিন্ট ভাউচার</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewCollection(null)}
+                className="h-[38px] px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Collection Confirmation Modal */}
+      {deleteCollection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-rose-600 text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Trash2 className="w-5 h-5" />
+                <h3 className="font-bold text-sm">ডিম সংগ্রহ রেকর্ড বাতিল ও স্টক রিভার্স</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteCollection(null)}
+                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 text-xs text-slate-700 dark:text-slate-300 space-y-3">
+              <p>
+                আপনি কি নিশ্চিত যে ভাউচার নম্বর <strong className="font-mono text-rose-600">{deleteCollection.collection_no}</strong>-এর সংগ্রহ রেকর্ড বাতিল করতে চান?
+              </p>
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 font-medium">
+                বাতিল করলে এই সংগ্রহ থেকে ইনভেন্টরিতে যোগ হওয়া <strong>{deleteCollection.accepted_quantity} টি ডিম</strong> গ্রেড স্টক থেকে স্বয়ংক্রিয়ভাবে বিয়োগ হয়ে যাবে।
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setDeleteCollection(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeleteCollection}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>হ্যাঁ, বাতিল নিশ্চিত করুন</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -51,6 +51,7 @@ export function convertEggUnits(
   fromUnit: "piece" | "dozen" | "tray",
   trayCapacity: number = 30
 ): EggConversionResult {
+  const cap = trayCapacity > 0 ? trayCapacity : 30;
   const q = Math.max(0, quantity);
   let totalPieces = 0;
 
@@ -59,13 +60,13 @@ export function convertEggUnits(
   } else if (fromUnit === "dozen") {
     totalPieces = q * 12;
   } else if (fromUnit === "tray") {
-    totalPieces = q * trayCapacity;
+    totalPieces = q * cap;
   }
 
   return {
     pieces: totalPieces,
     dozens: parseFloat((totalPieces / 12).toFixed(2)),
-    trays: parseFloat((totalPieces / trayCapacity).toFixed(2)),
+    trays: parseFloat((totalPieces / cap).toFixed(2)),
   };
 }
 

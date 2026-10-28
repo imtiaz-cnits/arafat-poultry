@@ -153,7 +153,7 @@ export function ChallanModal({
       <div className="fixed inset-0 z-[70] bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div className="bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-[#cbd5e1] dark:border-[#334155]/60 animate-in fade-in zoom-in-95 duration-150">
           {/* Sticky Header: Red Project Theme */}
-          <div className="h-[52px] px-5 bg-gradient-to-r from-[#991b1b] to-[#dc2626] text-white flex items-center justify-between shrink-0 shadow-xs">
+          <div className="h-[52px] px-5 bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-white">
                 <Truck className="w-4 h-4" />
@@ -243,7 +243,7 @@ export function ChallanModal({
                 </div>
                 <button
                   onClick={handleViewExistingChallan}
-                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white font-bold text-xs inline-flex items-center gap-2 shadow-xs cursor-pointer transition-colors"
+                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs inline-flex items-center gap-2 shadow-xs cursor-pointer transition-colors"
                 >
                   <Printer className="w-4 h-4" />
                   <span>View & Reprint Challan</span>
@@ -466,7 +466,7 @@ export function ChallanModal({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="h-[42px] px-6 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="h-[42px] px-6 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   {submitting ? (
                     <>

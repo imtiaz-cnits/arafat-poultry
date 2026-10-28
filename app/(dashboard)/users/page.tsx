@@ -24,7 +24,7 @@ import {
   Camera,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { Pagination, DeleteConfirmModal } from "@/components/ui";
+import { Pagination, DeleteConfirmModal, CustomSelect } from "@/components/ui";
 
 interface UserItem {
   id: number;
@@ -924,32 +924,32 @@ export default function UsersPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     System Role <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <CustomSelect
+                    options={[
+                      { value: "admin", label: "👑 Admin / Super Admin" },
+                      { value: "manager", label: "💼 Store Manager" },
+                      { value: "cashier", label: "🧾 Cashier / POS Operator" },
+                      { value: "accountant", label: "📊 Accountant" },
+                      { value: "staff", label: "👤 Staff" },
+                      { value: "users", label: "👤 General User" },
+                    ]}
                     value={formData.role}
-                    onChange={(e) => handleRoleChange(e.target.value)}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  >
-                    <option value="admin">👑 Admin / Super Admin</option>
-                    <option value="manager">💼 Store Manager</option>
-                    <option value="cashier">🧾 Cashier / POS Operator</option>
-                    <option value="accountant">📊 Accountant</option>
-                    <option value="staff">👤 Staff</option>
-                    <option value="users">👤 General User</option>
-                  </select>
+                    onChange={(v) => handleRoleChange(String(v))}
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     Account Status <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <CustomSelect
+                    options={[
+                      { value: "approved", label: "Approved / Active" },
+                      { value: "pending", label: "Pending Approval" },
+                    ]}
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  >
-                    <option value="approved">Approved / Active</option>
-                    <option value="pending">Pending Approval</option>
-                  </select>
+                    onChange={(v) => setFormData({ ...formData, status: String(v) })}
+                  />
                 </div>
 
                 <div className="sm:col-span-2 space-y-1">

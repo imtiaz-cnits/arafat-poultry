@@ -86,11 +86,57 @@ export default function StockOutReportPage() {
   const displayedProducts = products.slice(startIndex, startIndex + pageSize);
 
   return (
-    <div className="space-y-4">
+    <div>
+      {/* Print-Only Styles and Dedicated Report Template */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 10px !important;
+          }
+          body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          aside,
+          header,
+          nav,
+          footer,
+          .no-print {
+            display: none !important;
+          }
+          .print-only {
+            display: block !important;
+            padding: 10px !important;
+            margin: 0 !important;
+          }
+          .print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 10px !important;
+          }
+          .print-table th,
+          .print-table td {
+            border: 1px solid #94a3b8 !important;
+            padding: 4px 6px !important;
+          }
+          .print-table tr {
+            page-break-inside: avoid !important;
+          }
+        }
+        @media screen {
+          .print-only {
+            display: none !important;
+          }
+        }
+      `}</style>
+      <div className="no-print space-y-4">
       {/* 1. Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-rose-900/50 flex items-center justify-center shrink-0">
             <PackageX className="w-5 h-5" />
           </div>
           <div>
@@ -106,7 +152,7 @@ export default function StockOutReportPage() {
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <Link
             href="/purchases"
-            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
           >
             <Plus className="w-4 h-4" />
             <span>Create Purchase Order</span>
@@ -250,7 +296,7 @@ export default function StockOutReportPage() {
             onClick={() => setActiveTab("all")}
             className={`h-[38px] px-3.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === "all"
-                ? "bg-gradient-to-r from-[#991b1b] to-[#dc2626] text-white shadow-xs"
+                ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             }`}
           >
@@ -274,7 +320,7 @@ export default function StockOutReportPage() {
       <div className="hidden md:block bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs overflow-hidden">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="table-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white font-bold whitespace-nowrap">
+            <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
               <th className="py-3 px-4 w-12 text-center">SL</th>
               <th className="py-3 px-4">Product Name</th>
               <th className="py-3 px-3">Category & Brand</th>
@@ -440,6 +486,93 @@ export default function StockOutReportPage() {
           }}
           pageSizeOptions={[20, 50, 100, 200, 500]}
         />
+      </div>
+      </div>
+
+      {/* DEDICATED PRINT-ONLY LAYOUT (Strict 10px margin, heading details & tables only) */}
+      <div className="print-only text-black bg-white">
+        <div className="border-b-2 border-slate-900 pb-2 mb-3">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">
+                ARAFAT POULTRY &amp; FISHERIES
+              </h1>
+              <p className="text-[11px] text-slate-600 font-medium m-0">
+                Quality Products. Trusted Service.
+              </p>
+              <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
+                Stock-Out & Low Inventory Warning Report
+              </h2>
+            </div>
+            <div className="text-right text-[10px] text-slate-600">
+              <p suppressHydrationWarning>
+                Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </p>
+              <p>Filter: <strong className="text-slate-900">{activeTab === "all" ? "All Warnings" : activeTab === "out_of_stock" ? "Out of Stock" : "Low Stock"}</strong></p>
+              <p>Items Listed: <strong className="text-slate-900">{products.length}</strong></p>
+            </div>
+          </div>
+        </div>
+
+        {/* Printable Table */}
+        <table className="print-table mb-4">
+          <thead>
+            <tr className="bg-slate-100 font-bold text-left">
+              <th className="text-center w-8">SL</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Brand</th>
+              <th className="text-center">Current Stock</th>
+              <th className="text-center">Status</th>
+              <th className="text-right">Cost Price (৳)</th>
+              <th className="text-right">Sell Price (৳)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((p, idx) => (
+              <tr key={p.id}>
+                <td className="text-center font-bold">{idx + 1}</td>
+                <td className="font-bold">{p.product_name}</td>
+                <td>{p.category}</td>
+                <td>{p.brand}</td>
+                <td className="text-center font-black">
+                  {p.stock} {p.unit}
+                </td>
+                <td className="text-center font-bold">
+                  {p.stock <= 0 ? "Out of Stock" : "Low Stock"}
+                </td>
+                <td className="text-right font-medium">{formatBdCurrency(p.product_cost)}</td>
+                <td className="text-right font-bold">{formatBdCurrency(p.price)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
+              <td colSpan={4} className="text-right font-bold py-1.5 px-2">
+                Total Listed Depleted Items:
+              </td>
+              <td colSpan={4} className="text-left font-black py-1.5 px-2">
+                {products.length} SKUs requiring restocking
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        {/* Signatures */}
+        <div className="flex justify-between items-end mt-12 pt-6 text-[10px] text-slate-600">
+          <div className="text-center">
+            <div className="w-36 border-t border-slate-400 mb-1"></div>
+            <span>Prepared By</span>
+          </div>
+          <div className="text-center">
+            <div className="w-36 border-t border-slate-400 mb-1"></div>
+            <span>Inventory Officer</span>
+          </div>
+          <div className="text-center">
+            <div className="w-36 border-t border-slate-400 mb-1"></div>
+            <span>Authorized Signature</span>
+          </div>
+        </div>
       </div>
     </div>
   );

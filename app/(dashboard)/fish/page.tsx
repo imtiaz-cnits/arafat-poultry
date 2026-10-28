@@ -18,9 +18,12 @@ import {
   Droplets,
   PackageCheck,
   ShieldAlert,
+  Eye,
+  Trash2,
+  Printer,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
 
 interface Pond {
   id: number;
@@ -114,6 +117,12 @@ export default function FishFarmingPage() {
   const [isPondModalOpen, setIsPondModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Quick Action & Detail Modals State
+  const [viewBatch, setViewBatch] = useState<FishBatch | null>(null);
+  const [viewHarvest, setViewHarvest] = useState<FishHarvest | null>(null);
+  const [deleteHarvest, setDeleteHarvest] = useState<FishHarvest | null>(null);
+  const [deletingHarvest, setDeletingHarvest] = useState(false);
+
   // Batch Form State
   const [batchPondId, setBatchPondId] = useState<number | "">("");
   const [batchSpeciesId, setBatchSpeciesId] = useState<number | "">("");
@@ -181,6 +190,53 @@ export default function FishFarmingPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleQuickHarvest = (b: FishBatch) => {
+    setHarvestBatchId(b.id);
+    setIsHarvestModalOpen(true);
+  };
+
+  const handleQuickSampling = (b: FishBatch) => {
+    setSamplingBatchId(b.id);
+    setIsSamplingModalOpen(true);
+  };
+
+  const handleQuickMortality = (b: FishBatch) => {
+    setMortalityBatchId(b.id);
+    setIsMortalityModalOpen(true);
+  };
+
+  const handleQuickExpense = (b: FishBatch) => {
+    setExpenseBatchId(b.id);
+    setIsExpenseModalOpen(true);
+  };
+
+  const handleQuickStockPond = (p: Pond) => {
+    setBatchPondId(p.id);
+    setIsBatchModalOpen(true);
+  };
+
+  const handleDeleteHarvest = async () => {
+    if (!deleteHarvest) return;
+    try {
+      setDeletingHarvest(true);
+      const res = await fetch(`/api/fish/harvest?id=${deleteHarvest.id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        toast.success(json.message || "আহরণ রেকর্ড বাতিল করা হয়েছে", "সফল");
+        setDeleteHarvest(null);
+        fetchData();
+      } else {
+        toast.error(json.message || "বাতিল করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "নেটওয়ার্ক সমস্যা", "ত্রুটি");
+    } finally {
+      setDeletingHarvest(false);
+    }
+  };
 
   // Filtered Batches
   const filteredBatches = useMemo(() => {
@@ -655,6 +711,7 @@ export default function FishFarmingPage() {
                   <th className="p-3.5 text-right">মোট আহরণ (কেজি)</th>
                   <th className="p-3.5 text-right">মোট উৎপাদন ব্যয়</th>
                   <th className="p-3.5 text-center">স্ট্যাটাস</th>
+                  <th className="p-3.5 text-center w-36">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -716,6 +773,35 @@ export default function FishFarmingPage() {
                           {b.status}
                         </span>
                       </td>
+                      <td className="p-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleQuickHarvest(b)}
+                            className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold text-[10px] flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                            title="মাছ আহরণ করুন"
+                          >
+                            <Scale className="w-3 h-3" />
+                            <span>আহরণ</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setViewBatch(b)}
+                            className="w-6 h-6 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center hover:bg-sky-100 transition-colors cursor-pointer"
+                            title="ব্যাচ বিবরণ ও খতিয়ান"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickSampling(b)}
+                            className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center justify-center hover:bg-amber-100 transition-colors cursor-pointer"
+                            title="নমুনা ওজন এন্ট্রি"
+                          >
+                            <Activity className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -739,6 +825,7 @@ export default function FishFarmingPage() {
                   <th className="p-3.5 text-right">গড় ওজন (কেজি)</th>
                   <th className="p-3.5 text-right">উৎপাদন খরচ / কেজি</th>
                   <th className="p-3.5 text-right">মোট বরাদ্দকৃত ব্যয়</th>
+                  <th className="p-3.5 text-center w-24">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -791,6 +878,26 @@ export default function FishFarmingPage() {
                       <td className="p-3.5 text-right font-bold text-slate-900 dark:text-white">
                         {formatBdCurrency(h.cost_allocated)}
                       </td>
+                      <td className="p-3.5 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setViewHarvest(h)}
+                            className="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center hover:bg-sky-100 transition-colors cursor-pointer"
+                            title="আহরণ ভাউচার দেখুন"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteHarvest(h)}
+                            className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center hover:bg-rose-100 transition-colors cursor-pointer"
+                            title="আহরণ রেকর্ড বাতিল করুন"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -822,10 +929,20 @@ export default function FishFarmingPage() {
                 </div>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span className="text-slate-500">চলমান ব্যাচ:</span>
-                <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                  {p.active_batches_count} টি
-                </span>
+                <div>
+                  <span className="text-slate-500">চলমান ব্যাচ: </span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                    {p.active_batches_count} টি
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleQuickStockPond(p)}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold text-[11px] flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>পোনা মজুত</span>
+                </button>
               </div>
             </div>
           ))}
@@ -901,56 +1018,52 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   পুকুর নির্বাচন করুন <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={batchPondId}
-                  onChange={(e) => setBatchPondId(Number(e.target.value))}
-                  required
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- পুকুর সিলেক্ট করুন --</option>
-                  {data?.ponds.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.pond_name} ({p.pond_code}) - {p.area_decimal} শতাংশ
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.ponds.map((p) => ({
+                      value: p.id,
+                      label: p.pond_name,
+                      subLabel: `${p.pond_code} - ${p.area_decimal} শতাংশ`,
+                    })) || []
+                  }
+                  value={batchPondId || ""}
+                  onChange={(v) => setBatchPondId(Number(v))}
+                  placeholder="-- পুকুর সিলেক্ট করুন --"
+                />
               </div>
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   মাছের প্রজাতি <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={batchSpeciesId}
-                  onChange={(e) => setBatchSpeciesId(Number(e.target.value))}
-                  required
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- প্রজাতি সিলেক্ট করুন --</option>
-                  {data?.species.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.species_name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.species.map((s) => ({
+                      value: s.id,
+                      label: s.species_name,
+                    })) || []
+                  }
+                  value={batchSpeciesId || ""}
+                  onChange={(v) => setBatchSpeciesId(Number(v))}
+                  placeholder="-- প্রজাতি সিলেক্ট করুন --"
+                />
               </div>
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   সংযুক্ত বিক্রয়যোগ্য পণ্য (ইনভেন্টরি লিংক)
                 </label>
-                <select
-                  value={batchProductId}
-                  onChange={(e) => setBatchProductId(e.target.value ? Number(e.target.value) : "")}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- বিক্রয়যোগ্য পণ্য নির্বাচন করুন (ঐচ্ছিক) --</option>
-                  {data?.saleable_fish_products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.product_name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.saleable_fish_products.map((p) => ({
+                      value: p.id,
+                      label: p.product_name,
+                    })) || []
+                  }
+                  value={batchProductId || ""}
+                  onChange={(v) => setBatchProductId(v ? Number(v) : "")}
+                  placeholder="-- বিক্রয়যোগ্য পণ্য নির্বাচন করুন (ঐচ্ছিক) --"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -994,11 +1107,10 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   মজুদের তারিখ
                 </label>
-                <input
-                  type="date"
+                <CustomDatePicker
                   value={stockingDate}
-                  onChange={(e) => setStockingDate(e.target.value)}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                  onChange={setStockingDate}
+                  placeholder="মজুদের তারিখ নির্বাচন করুন"
                 />
               </div>
 
@@ -1060,40 +1172,38 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={harvestBatchId}
-                  onChange={(e) => setHarvestBatchId(Number(e.target.value))}
-                  required
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- ব্যাচ সিলেক্ট করুন --</option>
-                  {data?.batches
-                    .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
-                    .map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.batch_no} - {b.pond_name} ({b.species_name}) | বর্তমান মাছ: {b.current_fish_count}
-                      </option>
-                    ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.batches
+                      .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
+                      .map((b) => ({
+                        value: b.id,
+                        label: `${b.batch_no} - ${b.pond_name}`,
+                        subLabel: `${b.species_name} | মাছ: ${b.current_fish_count}`,
+                      })) || []
+                  }
+                  value={harvestBatchId || ""}
+                  onChange={(v) => setHarvestBatchId(Number(v))}
+                  placeholder="-- ব্যাচ সিলেক্ট করুন --"
+                />
               </div>
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ইনভেন্টরি প্রোডাক্ট (যেখানে স্টক যুক্ত হবে) <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={harvestProductId}
-                  onChange={(e) => setHarvestProductId(Number(e.target.value))}
-                  required
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- বিক্রয়যোগ্য প্রোডাক্ট নির্বাচন করুন --</option>
-                  {data?.saleable_fish_products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.product_name} (বর্তমান স্টক: {p.stock_kg} kg)
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.saleable_fish_products.map((p) => ({
+                      value: p.id,
+                      label: p.product_name,
+                      subLabel: `স্টক: ${p.stock_kg} kg`,
+                    })) || []
+                  }
+                  value={harvestProductId || ""}
+                  onChange={(v) => setHarvestProductId(Number(v))}
+                  placeholder="-- বিক্রয়যোগ্য প্রোডাক্ট নির্বাচন করুন --"
+                />
               </div>
 
               <div>
@@ -1169,11 +1279,10 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   আহরণের তারিখ
                 </label>
-                <input
-                  type="date"
+                <CustomDatePicker
                   value={harvestDate}
-                  onChange={(e) => setHarvestDate(e.target.value)}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                  onChange={setHarvestDate}
+                  placeholder="আহরণের তারিখ নির্বাচন করুন"
                 />
               </div>
 
@@ -1234,21 +1343,20 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={samplingBatchId}
-                  onChange={(e) => setSamplingBatchId(Number(e.target.value))}
-                  required
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- ব্যাচ সিলেক্ট করুন --</option>
-                  {data?.batches
-                    .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
-                    .map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.batch_no} - {b.pond_name} ({b.species_name})
-                      </option>
-                    ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.batches
+                      .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
+                      .map((b) => ({
+                        value: b.id,
+                        label: `${b.batch_no} - ${b.pond_name}`,
+                        subLabel: b.species_name,
+                      })) || []
+                  }
+                  value={samplingBatchId || ""}
+                  onChange={(v) => setSamplingBatchId(Number(v))}
+                  placeholder="-- ব্যাচ সিলেক্ট করুন --"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -1294,11 +1402,10 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   নমুনার তারিখ
                 </label>
-                <input
-                  type="date"
+                <CustomDatePicker
                   value={samplingDate}
-                  onChange={(e) => setSamplingDate(e.target.value)}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                  onChange={setSamplingDate}
+                  placeholder="নমুনার তারিখ নির্বাচন করুন"
                 />
               </div>
 
@@ -1359,21 +1466,20 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={mortalityBatchId}
-                  onChange={(e) => setMortalityBatchId(Number(e.target.value))}
-                  required
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- ব্যাচ সিলেক্ট করুন --</option>
-                  {data?.batches
-                    .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
-                    .map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.batch_no} - {b.pond_name} ({b.species_name}) | বর্তমান মাছ: {b.current_fish_count}
-                      </option>
-                    ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.batches
+                      .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
+                      .map((b) => ({
+                        value: b.id,
+                        label: `${b.batch_no} - ${b.pond_name}`,
+                        subLabel: `${b.species_name} | বর্তমান মাছ: ${b.current_fish_count}`,
+                      })) || []
+                  }
+                  value={mortalityBatchId || ""}
+                  onChange={(v) => setMortalityBatchId(Number(v))}
+                  placeholder="-- ব্যাচ সিলেক্ট করুন --"
+                />
               </div>
 
               <div>
@@ -1404,11 +1510,10 @@ export default function FishFarmingPage() {
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">তারিখ</label>
-                <input
-                  type="date"
+                <CustomDatePicker
                   value={mortalityDate}
-                  onChange={(e) => setMortalityDate(e.target.value)}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                  onChange={setMortalityDate}
+                  placeholder="তারিখ নির্বাচন করুন"
                 />
               </div>
 
@@ -1458,39 +1563,38 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={expenseBatchId}
-                  onChange={(e) => setExpenseBatchId(Number(e.target.value))}
-                  required
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="">-- ব্যাচ সিলেক্ট করুন --</option>
-                  {data?.batches
-                    .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
-                    .map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.batch_no} - {b.pond_name} ({b.species_name})
-                      </option>
-                    ))}
-                </select>
+                <CustomSelect
+                  options={
+                    data?.batches
+                      .filter((b) => b.status === "ACTIVE" || b.status === "PARTIALLY_HARVESTED")
+                      .map((b) => ({
+                        value: b.id,
+                        label: `${b.batch_no} - ${b.pond_name}`,
+                        subLabel: b.species_name,
+                      })) || []
+                  }
+                  value={expenseBatchId || ""}
+                  onChange={(v) => setExpenseBatchId(Number(v))}
+                  placeholder="-- ব্যাচ সিলেক্ট করুন --"
+                />
               </div>
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   খরচের খাত <span className="text-red-500">*</span>
                 </label>
-                <select
+                <CustomSelect
+                  options={[
+                    "চুন ও পুকুর পরিচর্যা",
+                    "ওষুধ ও রাসায়নিক",
+                    "বিদ্যুৎ ও জ্বালানি",
+                    "শ্রমিক মজুরি",
+                    "পুকুর ইজারা/ভাড়া",
+                    "অন্যান্য বিবিধ ব্যয়",
+                  ]}
                   value={expenseCategory}
-                  onChange={(e) => setExpenseCategory(e.target.value)}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="চুন ও পুকুর পরিচর্যা">চুন ও পুকুর পরিচর্যা</option>
-                  <option value="ওষুধ ও রাসায়নিক">ওষুধ ও রাসায়নিক</option>
-                  <option value="বিদ্যুৎ ও জ্বালানি">বিদ্যুৎ ও জ্বালানি</option>
-                  <option value="শ্রমিক মজুরি">শ্রমিক মজুরি</option>
-                  <option value="পুকুর ইজারা/ভাড়া">পুকুর ইজারা/ভাড়া</option>
-                  <option value="অন্যান্য বিবিধ ব্যয়">অন্যান্য বিবিধ ব্যয়</option>
-                </select>
+                  onChange={(v) => setExpenseCategory(String(v))}
+                />
               </div>
 
               <div>
@@ -1512,25 +1616,24 @@ export default function FishFarmingPage() {
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   পরিশোধ মাধ্যম
                 </label>
-                <select
+                <CustomSelect
+                  options={[
+                    { value: "Cash", label: "Cash (নগদ)" },
+                    { value: "Bkash", label: "Bkash" },
+                    { value: "Nagad", label: "Nagad" },
+                    { value: "Bank", label: "Bank Transfer" },
+                  ]}
                   value={expensePaymentMethod}
-                  onChange={(e) => setExpensePaymentMethod(e.target.value)}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
-                >
-                  <option value="Cash">Cash (নগদ)</option>
-                  <option value="Bkash">Bkash</option>
-                  <option value="Nagad">Nagad</option>
-                  <option value="Bank">Bank Transfer</option>
-                </select>
+                  onChange={(v) => setExpensePaymentMethod(String(v))}
+                />
               </div>
 
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">তারিখ</label>
-                <input
-                  type="date"
+                <CustomDatePicker
                   value={expenseDate}
-                  onChange={(e) => setExpenseDate(e.target.value)}
-                  className="h-[42px] w-full px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+                  onChange={setExpenseDate}
+                  placeholder="তারিখ নির্বাচন করুন"
                 />
               </div>
 
@@ -1684,6 +1787,272 @@ export default function FishFarmingPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* View Batch Details Modal */}
+      {viewBatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                  <Fish className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm tracking-tight">মাছের ব্যাচ খতিয়ান ও বিবরণ</h3>
+                  <p className="text-[11px] text-emerald-100 font-mono mt-0.5">{viewBatch.batch_no}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewBatch(null)}
+                className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">পুকুর:</span>
+                  <span className="font-bold text-slate-800 dark:text-white">{viewBatch.pond_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">মাছের প্রজাতি:</span>
+                  <span className="font-bold text-sky-600 dark:text-sky-400">{viewBatch.species_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">পোনা ছাড়ার তারিখ:</span>
+                  <span className="font-mono text-slate-800 dark:text-slate-200">{viewBatch.stocking_date}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">বর্তমান স্ট্যাটাস:</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                    {viewBatch.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-500 block text-[10px]">মজুদ পোনা</span>
+                  <span className="text-base font-black text-slate-800 dark:text-white">{viewBatch.fingerling_count.toLocaleString()} টি</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-emerald-700 dark:text-emerald-400 block text-[10px] font-bold">বর্তমান জীবন্ত মাছ</span>
+                  <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{viewBatch.current_fish_count.toLocaleString()} টি</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                  <span className="text-amber-700 dark:text-amber-400 block text-[10px] font-bold">সম্ভাব্য বায়োমাস</span>
+                  <span className="text-base font-black text-amber-700 dark:text-amber-400">{viewBatch.estimated_biomass_kg.toLocaleString()} kg</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800">
+                  <span className="text-sky-700 dark:text-sky-400 block text-[10px] font-bold">মোট আহরণ</span>
+                  <span className="text-base font-black text-sky-700 dark:text-sky-400">{viewBatch.harvested_kg.toLocaleString()} kg</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex justify-between items-center">
+                <span className="text-emerald-800 dark:text-emerald-300 font-bold">মোট উৎপাদন ব্যয়:</span>
+                <span className="text-lg font-black text-emerald-800 dark:text-emerald-300">
+                  {formatBdCurrency(viewBatch.total_cost)}
+                </span>
+              </div>
+
+              <div className="pt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewBatch(null);
+                    handleQuickHarvest(viewBatch);
+                  }}
+                  className="flex-1 h-[36px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Scale className="w-3.5 h-3.5" />
+                  <span>আহরণ করুন</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewBatch(null);
+                    handleQuickSampling(viewBatch);
+                  }}
+                  className="flex-1 h-[36px] rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  <span>নমুনা ওজন</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewBatch(null);
+                    handleQuickExpense(viewBatch);
+                  }}
+                  className="flex-1 h-[36px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span>অন্যান্য খরচ</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewBatch(null)}
+                className="h-[38px] px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Harvest Voucher Modal */}
+      {viewHarvest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                  <Scale className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm tracking-tight">মাছ আহরণ ভাউচার ও চালান</h3>
+                  <p className="text-[11px] text-emerald-100 font-mono mt-0.5">{viewHarvest.harvest_no}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewHarvest(null)}
+                className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">পুকুর ও মাছের প্রজাতি:</span>
+                  <span className="font-bold text-slate-800 dark:text-white">{viewHarvest.pond_name} ({viewHarvest.species_name})</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">ইনভেন্টরি প্রোডাক্ট:</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">{viewHarvest.product_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">আহরণের তারিখ:</span>
+                  <span className="font-mono text-slate-800 dark:text-slate-200">{viewHarvest.date}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">আহরণের ধরণ:</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300">
+                    {viewHarvest.harvest_type === "FINAL" ? "চূড়ান্ত আহরণ" : "আংশিক আহরণ"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-500 block text-[10px]">মাছের সংখ্যা</span>
+                  <span className="text-base font-black text-slate-800 dark:text-white">{viewHarvest.fish_count.toLocaleString()} টি</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800">
+                  <span className="text-sky-700 dark:text-sky-400 block text-[10px] font-bold">মোট ওজন</span>
+                  <span className="text-base font-black text-sky-700 dark:text-sky-400">{viewHarvest.total_weight_kg.toLocaleString()} kg</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-emerald-700 dark:text-emerald-400 block text-[10px] font-bold">গড় ওজন</span>
+                  <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{viewHarvest.avg_weight_kg} kg/pc</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-emerald-800 dark:text-emerald-300 font-bold">উৎপাদন ব্যয় / কেজি:</span>
+                  <span className="font-mono font-bold text-emerald-800 dark:text-emerald-300">
+                    {formatBdCurrency(viewHarvest.cost_per_kg)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm pt-1 border-t border-emerald-200 dark:border-emerald-800">
+                  <span className="text-emerald-900 dark:text-emerald-200 font-black">মোট বরাদ্দকৃত ব্যয়:</span>
+                  <span className="font-black text-emerald-900 dark:text-emerald-200">
+                    {formatBdCurrency(viewHarvest.cost_allocated)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="h-[38px] px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>প্রিন্ট ভাউচার</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewHarvest(null)}
+                className="h-[38px] px-5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Harvest Confirmation Modal */}
+      {deleteHarvest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-rose-600 text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Trash2 className="w-5 h-5" />
+                <h3 className="font-bold text-sm">আহরণ রেকর্ড বাতিল ও ইনভেন্টরি রিভার্স</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteHarvest(null)}
+                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 text-xs text-slate-700 dark:text-slate-300 space-y-3">
+              <p>
+                আপনি কি নিশ্চিত যে ভাউচার নম্বর <strong className="font-mono text-rose-600">{deleteHarvest.harvest_no}</strong>-এর আহরণ বাতিল করতে চান?
+              </p>
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 font-medium">
+                বাতিল করলে ইনভেন্টরি থেকে <strong>{deleteHarvest.total_weight_kg} কেজি মাছ</strong> বিয়োগ হবে এবং সংশ্লিষ্ট ব্যাচে <strong>{deleteHarvest.fish_count} টি জীবন্ত মাছ</strong> ফেরত যুক্ত হবে।
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setDeleteHarvest(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                disabled={deletingHarvest}
+                onClick={handleDeleteHarvest}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {deletingHarvest ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>হ্যাঁ, বাতিল নিশ্চিত করুন</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -78,13 +78,13 @@ export async function recordFinancialTransaction(
         business_unit_id: params.businessUnitId ? BigInt(params.businessUnitId) : null,
         transaction_type: params.transactionType,
         amount: new Prisma.Decimal(amt.toFixed(2)),
-        reference_type: params.referenceType,
+        reference_type: params.referenceType || "MANUAL_ADJUSTMENT",
         reference_id: params.referenceId ? BigInt(params.referenceId) : null,
         reference_no: params.referenceNo || null,
         balance_after: new Prisma.Decimal(newBal.toFixed(2)),
         date: params.date || new Date(),
         note: params.note || null,
-        user_id: BigInt(params.userId),
+        user_id: BigInt(params.userId || 1),
       },
     });
 

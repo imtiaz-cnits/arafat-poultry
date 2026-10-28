@@ -119,11 +119,57 @@ export default function SalesReportPage() {
   const displayedOrders = orders.slice(startIndex, startIndex + pageSize);
 
   return (
-    <div className="space-y-4">
+    <div>
+      {/* Print-Only Styles and Dedicated Report Template */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 10px !important;
+          }
+          body {
+            background: #ffffff !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          aside,
+          header,
+          nav,
+          footer,
+          .no-print {
+            display: none !important;
+          }
+          .print-only {
+            display: block !important;
+            padding: 10px !important;
+            margin: 0 !important;
+          }
+          .print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 10px !important;
+          }
+          .print-table th,
+          .print-table td {
+            border: 1px solid #94a3b8 !important;
+            padding: 4px 6px !important;
+          }
+          .print-table tr {
+            page-break-inside: avoid !important;
+          }
+        }
+        @media screen {
+          .print-only {
+            display: none !important;
+          }
+        }
+      `}</style>
+      <div className="no-print space-y-4">
       {/* 1. Header & Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-rose-100 dark:border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800 flex items-center justify-center shrink-0">
             <FileSpreadsheet className="w-5 h-5" />
           </div>
           <div>
@@ -284,7 +330,7 @@ export default function SalesReportPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white font-bold whitespace-nowrap">
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
                 <th className="py-3 px-3 text-center w-[50px]">SL</th>
                 <th className="py-3 px-4">Invoice / Date</th>
                 <th className="py-3 px-4">Customer</th>
@@ -429,6 +475,103 @@ export default function SalesReportPage() {
             }}
             pageSizeOptions={[20, 50, 100, 200, 500]}
           />
+        </div>
+      </div>
+      </div>
+
+      {/* DEDICATED PRINT-ONLY LAYOUT (Strict 10px margin, heading details & tables only) */}
+      <div className="print-only text-black bg-white">
+        <div className="border-b-2 border-slate-900 pb-2 mb-3">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">
+                ARAFAT POULTRY &amp; FISHERIES
+              </h1>
+              <p className="text-[11px] text-slate-600 font-medium m-0">
+                Quality Products. Trusted Service.
+              </p>
+              <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
+                Commercial Sales & Gross Profit Statement (বিক্রয় ও লাভ বিবরণী)
+              </h2>
+            </div>
+            <div className="text-right text-[10px] text-slate-600">
+              <p suppressHydrationWarning>
+                Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </p>
+              <p>Period: <strong className="text-slate-900">{startDate} to {endDate}</strong></p>
+              <p>Invoices: <strong className="text-slate-900">{orders.length}</strong></p>
+            </div>
+          </div>
+        </div>
+
+        {/* Printable Table */}
+        <table className="print-table mb-4">
+          <thead>
+            <tr className="bg-slate-100 font-bold text-left">
+              <th className="text-center w-8">SL</th>
+              <th>Date</th>
+              <th>Invoice No</th>
+              <th>Customer</th>
+              <th className="text-center">Items</th>
+              <th className="text-right">Total (৳)</th>
+              <th className="text-right">Paid (৳)</th>
+              <th className="text-right">Due (৳)</th>
+              <th className="text-right">Gross Profit (৳)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((o, idx) => (
+              <tr key={o.id}>
+                <td className="text-center font-bold">{idx + 1}</td>
+                <td>{o.date}</td>
+                <td className="font-bold">{o.order_no}</td>
+                <td>{o.customer_name}</td>
+                <td className="text-center">{o.items_count}</td>
+                <td className="text-right font-black">{formatBdCurrency(o.net_amount)}</td>
+                <td className="text-right text-emerald-800 font-bold">{formatBdCurrency(o.paid_amount)}</td>
+                <td className="text-right text-red-700 font-bold">{formatBdCurrency(o.due_amount)}</td>
+                <td className="text-right font-black text-emerald-900">{formatBdCurrency(o.profit_amount)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
+              <td colSpan={4} className="text-right font-bold py-1.5 px-2">
+                Total Statement Summary:
+              </td>
+              <td className="text-center py-1.5 px-2">
+                {orders.reduce((a, b) => a + b.items_count, 0)} Items
+              </td>
+              <td className="text-right font-black py-1.5 px-2">
+                {formatBdCurrency(summary?.total_sales_amount || 0)}
+              </td>
+              <td className="text-right font-bold text-emerald-800 py-1.5 px-2">
+                {formatBdCurrency(summary?.total_paid_amount || 0)}
+              </td>
+              <td className="text-right font-bold text-red-700 py-1.5 px-2">
+                {formatBdCurrency(summary?.total_due_amount || 0)}
+              </td>
+              <td className="text-right font-black text-emerald-900 py-1.5 px-2">
+                {formatBdCurrency(summary?.total_gross_profit || 0)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        {/* Signatures */}
+        <div className="flex justify-between items-end mt-12 pt-6 text-[10px] text-slate-600">
+          <div className="text-center">
+            <div className="w-36 border-t border-slate-400 mb-1"></div>
+            <span>Prepared By</span>
+          </div>
+          <div className="text-center">
+            <div className="w-36 border-t border-slate-400 mb-1"></div>
+            <span>Sales Manager</span>
+          </div>
+          <div className="text-center">
+            <div className="w-36 border-t border-slate-400 mb-1"></div>
+            <span>Authorized Signature</span>
+          </div>
         </div>
       </div>
     </div>

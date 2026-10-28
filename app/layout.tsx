@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/footer";
+import Script from "next/script";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -33,7 +33,9 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400;500;600;700;800&family=Valley+Sans:ital,wght@0,300..800;1,300..800&display=swap"
           rel="stylesheet"
         />
-        <script
+        <Script
+          id="theme-initializer"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               try {
@@ -57,7 +59,6 @@ export default function RootLayout({
           <div className="flex-1 flex flex-col">
             {children}
           </div>
-          <Footer />
         </Providers>
       </body>
 

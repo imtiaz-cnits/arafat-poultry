@@ -280,7 +280,7 @@ export default function InventoryPage() {
         @media print {
           @page {
             size: A4 portrait;
-            margin: 10mm 10mm 12mm 10mm;
+            margin: 10px !important;
           }
           body {
             background: #ffffff !important;
@@ -297,6 +297,8 @@ export default function InventoryPage() {
           }
           .print-only {
             display: block !important;
+            padding: 10px !important;
+            margin: 0 !important;
           }
           .print-table {
             width: 100% !important;
@@ -322,7 +324,7 @@ export default function InventoryPage() {
       {/* 1. Header & Actions (Screen View) */}
       <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-rose-100 dark:border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800 flex items-center justify-center shrink-0">
             <Package className="w-5 h-5" />
           </div>
           <div>
@@ -395,7 +397,7 @@ export default function InventoryPage() {
               <Boxes className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
-              {summary.total_stock_units} <span className="text-xs font-normal">Pcs/Box</span>
+              {summary.total_stock_units} <span className="text-xs font-normal">Units</span>
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5">
               Across {summary.total_products} unique SKUs
@@ -464,7 +466,7 @@ export default function InventoryPage() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search stock, barcode..."
+                placeholder="Search stock, product name..."
                 className="w-full bg-transparent border-none outline-none text-xs text-slate-800 dark:text-white placeholder:text-slate-400"
               />
               {search && (
@@ -597,10 +599,9 @@ export default function InventoryPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] text-white font-bold whitespace-nowrap">
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
                 <th className="py-3 px-3 text-center w-[50px]">SL</th>
                 <th className="py-3 px-4">Product Name / Variant</th>
-                <th className="py-3 px-3">Barcode</th>
                 <th className="py-3 px-3">Category & Brand</th>
                 <th className="py-3 px-3 text-center">Stock Level</th>
                 <th className="py-3 px-3 text-right">Cost (৳)</th>
@@ -612,14 +613,14 @@ export default function InventoryPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={8} className="py-10 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-rose-600" />
                     <span>Loading inventory status...</span>
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={8} className="py-10 text-center text-slate-400 font-bold">
                     No items matching filter.
                   </td>
                 </tr>
@@ -636,33 +637,6 @@ export default function InventoryPage() {
                       <div className="font-bold text-slate-800 dark:text-slate-100 text-xs">
                         {item.name}
                       </div>
-                      {(item.tile_size || item.sqft_per_box || item.grade || item.surface_finish) && (
-                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                          {item.tile_size && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
-                              📐 {item.tile_size}
-                            </span>
-                          )}
-                          {item.sqft_per_box && (
-                            <span className="text-[9px] font-medium text-slate-500">
-                              📦 {item.sqft_per_box} Sft/Box {item.pcs_per_box ? `(${item.pcs_per_box} pcs)` : ""}
-                            </span>
-                          )}
-                          {item.grade && (
-                            <span className="text-[9px] font-bold text-emerald-600">
-                              ★ {item.grade}
-                            </span>
-                          )}
-                          {item.surface_finish && (
-                            <span className="text-[9px] font-bold text-purple-600">
-                              ✨ {item.surface_finish}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
-                      {item.primary_code || "—"}
                     </td>
                     <td className="py-3 px-3">
                       <div className="font-semibold text-slate-700 dark:text-slate-200">
@@ -820,7 +794,7 @@ export default function InventoryPage() {
       {isAdjustModalOpen && selectedItem && (
         <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[90vh] flex flex-col">
-            <div className="modal-header-brand bg-gradient-to-r from-[#881337] via-[#991b1b] to-[#b91c1c] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+            <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
@@ -899,7 +873,7 @@ export default function InventoryPage() {
                 <button
                   type="submit"
                   disabled={adjusting}
-                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#991b1b] to-[#dc2626] hover:from-[#7f1d1d] hover:to-[#b91c1c] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {adjusting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Save Stock Update</span>
@@ -925,7 +899,7 @@ export default function InventoryPage() {
               </h2>
             </div>
             <div className="text-right text-[10px] text-slate-600">
-              <p>Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</p>
+              <p suppressHydrationWarning>Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</p>
               <p>Filter Status: <strong className="text-slate-900">{statusFilter === "all" ? "All Items" : statusFilter === "low" ? "Low Stock" : "Out of Stock"}</strong></p>
               <p>SKUs Listed: <strong className="text-slate-900">{filteredItems.length}</strong></p>
             </div>
@@ -970,7 +944,6 @@ export default function InventoryPage() {
             <tr className="bg-slate-200 text-slate-900 font-bold text-left">
               <th className="text-center w-8">SL</th>
               <th>Product Name & Specification</th>
-              <th>Barcode</th>
               <th>Category</th>
               <th>Brand</th>
               <th className="text-center">Stock Level</th>
@@ -985,19 +958,7 @@ export default function InventoryPage() {
                 <td className="text-center font-bold">{idx + 1}</td>
                 <td>
                   <div className="font-bold">{item.name}</div>
-                  {(item.tile_size || item.grade || item.surface_finish) && (
-                    <div className="text-[9px] text-slate-500">
-                      {[
-                        item.tile_size ? `Size: ${item.tile_size}` : null,
-                        item.grade ? `Grade: ${item.grade}` : null,
-                        item.surface_finish ? `Finish: ${item.surface_finish}` : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" • ")}
-                    </div>
-                  )}
                 </td>
-                <td className="font-mono text-[9px]">{item.primary_code || "—"}</td>
                 <td>{item.category}</td>
                 <td>{item.brand}</td>
                 <td className="text-center font-bold">
@@ -1013,7 +974,7 @@ export default function InventoryPage() {
           </tbody>
           <tfoot>
             <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
-              <td colSpan={5} className="text-right py-1.5 px-2">Total Inventory Valuation:</td>
+              <td colSpan={4} className="text-right py-1.5 px-2">Total Inventory Valuation:</td>
               <td className="text-center py-1.5 px-2">
                 {filteredItems.reduce((acc, i) => acc + i.quantity, 0)} Units
               </td>

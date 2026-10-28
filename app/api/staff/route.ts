@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { requireAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 // GET: All Staff & Employees
 export async function GET(req: NextRequest) {
   try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search")?.trim().toLowerCase();
 
@@ -67,6 +73,11 @@ export async function GET(req: NextRequest) {
 // POST: Add New Staff Member
 export async function POST(req: NextRequest) {
   try {
+    const authResult = await requireAuth(req, { requiredRole: "admin" });
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
     const body = await req.json();
     const { name, mobile, email, role, password, status } = body;
 
