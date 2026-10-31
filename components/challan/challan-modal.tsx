@@ -380,7 +380,7 @@ export function ChallanModal({
                                   [item.order_detail_id]: e.target.value,
                                 }))
                               }
-                              className="w-16 h-[32px] px-1 text-center font-mono font-bold text-xs text-rose-700 dark:text-rose-400 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-rose-500"
+                              className="w-16 h-[32px] px-1 text-center font-mono font-bold text-xs text-rose-700 dark:text-rose-400 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-emerald-600"
                             />
                           </div>
                         </div>
@@ -400,7 +400,7 @@ export function ChallanModal({
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
                       placeholder="e.g. Construction Site, Road 4, Pabna"
-                      className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-rose-600 focus:border-rose-600"
+                      className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                     />
                   </div>
 
@@ -414,7 +414,7 @@ export function ChallanModal({
                         value={driverName}
                         onChange={(e) => setDriverName(e.target.value)}
                         placeholder="e.g. Md. Karim"
-                        className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-rose-600 focus:border-rose-600"
+                        className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                       />
                     </div>
                     <div>
@@ -426,7 +426,7 @@ export function ChallanModal({
                         value={driverPhone}
                         onChange={(e) => setDriverPhone(e.target.value)}
                         placeholder="e.g. 01700-123456"
-                        className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-rose-600 focus:border-rose-600"
+                        className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                       />
                     </div>
                   </div>
@@ -440,7 +440,7 @@ export function ChallanModal({
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       placeholder="e.g. Handle with care, offload ground floor"
-                      className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-rose-600 focus:border-rose-600"
+                      className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                     />
                   </div>
                 </div>

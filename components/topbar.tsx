@@ -84,9 +84,9 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       localStorage.removeItem("role");
-      router.push("/login");
+      window.location.replace("/login");
     } catch {
-      router.push("/login");
+      window.location.replace("/login");
     }
   }
 

@@ -6,14 +6,16 @@ import {
   Search,
   Calendar,
   Printer,
+  Download,
+  Loader2,
   TrendingUp,
   CreditCard,
   AlertCircle,
-  Loader2,
   DollarSign,
   ArrowUpRight,
   Filter,
 } from "lucide-react";
+import { exportReportToPdf } from "@/lib/pdf-export";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker } from "@/components/ui/date-picker";
 import { Pagination } from "@/components/ui";
@@ -49,6 +51,21 @@ interface Summary {
 }
 
 export default function SalesReportPage() {
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  async function handleDownloadPdf() {
+    setDownloadingPdf(true);
+    try {
+      await exportReportToPdf(".print-only", {
+        filename: "comprehensive-sales-report-" + new Date().toISOString().slice(0, 10),
+      });
+    } catch (err) {
+      console.error("PDF download failed:", err);
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
+
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -257,7 +274,7 @@ export default function SalesReportPage() {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full h-[38px] pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-600 font-medium"
+            className="w-full h-[38px] pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
         </div>

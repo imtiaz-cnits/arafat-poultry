@@ -509,7 +509,7 @@ function PurchaseReturnsManagementContent() {
             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">entries</span>
           </div>
 
-          <div className="w-full sm:w-72 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-rose-600 shadow-2xs">
+          <div className="w-full sm:w-72 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 shadow-2xs">
             <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2" />
             <input
               type="text"
@@ -884,7 +884,7 @@ function PurchaseReturnsManagementContent() {
                   Search Purchase Memo Number
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-[42px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-rose-600 shadow-2xs">
+                  <div className="flex-1 h-[42px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 shadow-2xs">
                     <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2" />
                     <input
                       type="text"
@@ -1039,7 +1039,7 @@ function PurchaseReturnsManagementContent() {
                                   disabled={!isEligible}
                                   checked={isSelected}
                                   onChange={() => handleToggleSelect(item.detail_id)}
-                                  className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer disabled:cursor-not-allowed"
+                                  className="w-4 h-4 rounded text-rose-600 focus:ring-emerald-600 cursor-pointer disabled:cursor-not-allowed"
                                 />
                               </td>
                               <td className="p-2.5">
@@ -1142,7 +1142,7 @@ function PurchaseReturnsManagementContent() {
                         value={modalReturnNote}
                         onChange={(e) => setModalReturnNote(e.target.value)}
                         placeholder="State reason for returning items back to supplier (damaged, excess order, etc.)..."
-                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white outline-none focus:border-rose-600"
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white outline-none focus:border-emerald-600"
                       />
                     </div>
                   </div>

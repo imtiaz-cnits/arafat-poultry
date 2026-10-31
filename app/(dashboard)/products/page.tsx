@@ -620,7 +620,7 @@ export default function ProductsPage() {
         {/* Left Side: Search Bar + Category, Brand, Stock Status & Unit Filters */}
           <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-2 md:gap-2.5 w-full xl:w-auto flex-1">
             {/* Search Bar - 2 cols on mobile */}
-            <div className="col-span-2 md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-rose-600 focus-within:ring-2 focus-within:ring-rose-600/20 transition-all shadow-xs">
+            <div className="col-span-2 md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 transition-all shadow-xs">
               <Search className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
               <input
                 type="text"
@@ -1074,7 +1074,7 @@ export default function ProductsPage() {
                       value={formData.product_name}
                       onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
                       placeholder="e.g. Fresh Ceramics 60x60 Floor Tiles"
-                      className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                      className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                     />
                   </div>
 
@@ -1138,7 +1138,7 @@ export default function ProductsPage() {
                         value={formData.cost_price}
                         onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
                         placeholder="0.00"
-                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                       />
                     </div>
 
@@ -1152,7 +1152,7 @@ export default function ProductsPage() {
                         value={formData.sell_price}
                         onChange={(e) => setFormData({ ...formData, sell_price: e.target.value })}
                         placeholder="0.00"
-                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                       />
                     </div>
 
@@ -1165,7 +1165,7 @@ export default function ProductsPage() {
                         value={formData.quantity}
                         onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                         placeholder="0"
-                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                       />
                     </div>
                   </div>
@@ -1195,7 +1195,7 @@ export default function ProductsPage() {
                           value={formData.product_code}
                           onChange={(e) => setFormData({ ...formData, product_code: e.target.value })}
                           placeholder="e.g. PRD-0001, 8934521093"
-                          className="w-full h-[42px] pl-9 pr-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                          className="w-full h-[42px] pl-9 pr-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                         />
                       </div>
                       <p className="text-[10px] text-slate-400 mt-0.5">
@@ -1248,7 +1248,7 @@ export default function ProductsPage() {
                               }}
                               className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border ${formData.tile_size === size.value
                                   ? "bg-rose-600 text-white border-rose-700 shadow-xs"
-                                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-rose-400"
+                                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-emerald-500"
                                 }`}
                             >
                               {size.label}
@@ -1270,7 +1270,7 @@ export default function ProductsPage() {
                             });
                           }}
                           placeholder="Or enter custom size (e.g. 8/12, 12x24, 10.5/24)"
-                          className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600 font-medium"
+                          className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 font-medium"
                         />
                       </div>
 
@@ -1287,7 +1287,7 @@ export default function ProductsPage() {
                             value={formData.sqft_per_box}
                             onChange={(e) => setFormData({ ...formData, sqft_per_box: e.target.value })}
                             placeholder="e.g. 16.66 or 16.0"
-                            className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-rose-700 dark:text-rose-400 border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                            className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-rose-700 dark:text-rose-400 border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                           />
                           <p className="text-[10px] text-slate-400 mt-0.5">
                             Required for live POS Box ⇄ Sq.Ft billing conversion.
@@ -1313,7 +1313,7 @@ export default function ProductsPage() {
                               });
                             }}
                             placeholder="e.g. 25, 11, 10, 8, 4"
-                            className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                            className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                           />
                           <p className="text-[10px] text-slate-400 mt-0.5">
                             Useful for loose piece calculations.
@@ -1716,7 +1716,7 @@ export default function ProductsPage() {
                         value={bulkPercentage}
                         onChange={(e) => setBulkPercentage(e.target.value)}
                         placeholder="e.g. 5 or -5"
-                        className="w-full h-[42px] px-3.5 pr-8 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                        className="w-full h-[42px] px-3.5 pr-8 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
                     </div>
@@ -1727,7 +1727,7 @@ export default function ProductsPage() {
                           key={quick}
                           type="button"
                           onClick={() => setBulkPercentage(String(quick))}
-                          className="px-2.5 h-[42px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+                          className="px-2.5 h-[42px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-rose-600 transition-colors cursor-pointer"
                         >
                           {quick > 0 ? `+${quick}%` : `${quick}%`}
                         </button>
@@ -1751,7 +1751,7 @@ export default function ProductsPage() {
                             setBulkSelectedIds(new Set());
                           }
                         }}
-                        className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                        className="w-4 h-4 rounded text-rose-600 focus:ring-emerald-600 cursor-pointer"
                       />
                       <label htmlFor="bulkSelectAll" className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
                         Select All Matching ({bulkSelectedIds.size} / {bulkMatchingProducts.length} Selected)
@@ -1794,7 +1794,7 @@ export default function ProductsPage() {
                                 type="checkbox"
                                 checked={isChecked}
                                 onChange={() => { }} // handled by parent div
-                                className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 shrink-0"
+                                className="w-4 h-4 rounded text-rose-600 focus:ring-emerald-600 shrink-0"
                               />
                               <div className="min-w-0">
                                 <div className="font-bold text-slate-800 dark:text-white truncate">
@@ -1876,7 +1876,7 @@ export default function ProductsPage() {
       )}
 
       {/* 5. Dedicated Print-Only Report Template */}
-      <div className="print-only p-2 text-black bg-white">
+      <div className="print-only p-0 text-black bg-white">
         <div className="border-b-2 border-slate-900 pb-2 mb-3">
           <div className="flex justify-between items-start">
             <div>

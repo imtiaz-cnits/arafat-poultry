@@ -157,7 +157,7 @@ export function NotificationDropdown() {
         onClick={toggleDropdown}
         aria-label="Notifications"
         title="View Notifications & Stock Alerts"
-        className={`w-[38px] h-[38px] rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:border-rose-600 dark:hover:border-rose-500 flex items-center justify-center transition-all cursor-pointer relative ${
+        className={`w-[38px] h-[38px] rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:border-emerald-600 dark:hover:border-emerald-500 flex items-center justify-center transition-all cursor-pointer relative ${
           isOpen ? "ring-2 ring-rose-500/30 border-rose-600 dark:border-rose-500 text-rose-600" : ""
         }`}
       >

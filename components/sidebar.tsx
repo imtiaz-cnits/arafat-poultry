@@ -286,7 +286,7 @@ export function Sidebar({
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden"
+          data-sidebar-backdrop="true" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden"
         />
       )}
 

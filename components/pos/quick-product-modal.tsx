@@ -199,7 +199,7 @@ export function QuickProductModal({
                 value={formData.product_name}
                 onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
                 placeholder="e.g. Fresh Ceramics 60x60 Floor Tiles"
-                className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
               />
             </div>
 
@@ -262,7 +262,7 @@ export function QuickProductModal({
                   value={formData.cost_price}
                   onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
                   placeholder="0.00"
-                  className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                  className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                 />
               </div>
 
@@ -277,7 +277,7 @@ export function QuickProductModal({
                   value={formData.sell_price}
                   onChange={(e) => setFormData({ ...formData, sell_price: e.target.value })}
                   placeholder="0.00"
-                  className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600 font-bold text-rose-700 dark:text-rose-400"
+                  className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 font-bold text-rose-700 dark:text-rose-400"
                 />
               </div>
 
@@ -290,7 +290,7 @@ export function QuickProductModal({
                   value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                   placeholder="0"
-                  className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                  className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                 />
               </div>
             </div>
@@ -320,7 +320,7 @@ export function QuickProductModal({
                     value={formData.product_code}
                     onChange={(e) => setFormData({ ...formData, product_code: e.target.value })}
                     placeholder="e.g. PRD-0001, 8934521093"
-                    className="w-full h-[42px] pl-9 pr-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600 font-mono"
+                    className="w-full h-[42px] pl-9 pr-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 font-mono"
                   />
                 </div>
                 <p className="text-[10px] text-slate-400 mt-0.5">
@@ -374,7 +374,7 @@ export function QuickProductModal({
                         className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border ${
                           formData.tile_size === size.value
                             ? "bg-rose-600 text-white border-rose-700 shadow-xs"
-                            : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-rose-400"
+                            : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-emerald-500"
                         }`}
                       >
                         {size.label}
@@ -396,7 +396,7 @@ export function QuickProductModal({
                       });
                     }}
                     placeholder="Or enter custom size (e.g. 8/12, 12x24, 10.5/24)"
-                    className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600 font-medium"
+                    className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 font-medium"
                   />
                 </div>
 
@@ -413,7 +413,7 @@ export function QuickProductModal({
                       value={formData.sqft_per_box}
                       onChange={(e) => setFormData({ ...formData, sqft_per_box: e.target.value })}
                       placeholder="e.g. 16.66 or 16.0"
-                      className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-rose-700 dark:text-rose-400 border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                      className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-rose-700 dark:text-rose-400 border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                     />
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Required for live POS Box ⇄ Sq.Ft billing conversion.
@@ -439,7 +439,7 @@ export function QuickProductModal({
                         });
                       }}
                       placeholder="e.g. 25, 11, 10, 8, 4"
-                      className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                      className="w-full h-[40px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs font-bold text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                     />
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Useful for loose piece calculations.
@@ -462,7 +462,7 @@ export function QuickProductModal({
                           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer border ${
                             formData.grade === g.value
                               ? "bg-rose-600 text-white border-rose-700 shadow-xs"
-                              : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-rose-400"
+                              : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-emerald-500"
                           }`}
                         >
                           {g.label}

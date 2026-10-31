@@ -54,8 +54,8 @@ export default function LoginPage() {
       }
 
       setTimeout(() => {
-        router.push("/dashboard");
-      }, 600);
+        window.location.replace("/dashboard");
+      }, 400);
     } catch (err: any) {
       setError(err?.message || "An unexpected error occurred.");
       setLoading(false);
@@ -69,106 +69,103 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex w-full bg-slate-50 dark:bg-[#0b0f19]">
-      {/* Left Hero Panel (Desktop) */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#0f3d20] via-[#166534] to-[#14532d] text-white p-12 flex-col justify-between">
-        {/* Glow Blobs */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-[#0b0f19] p-4 sm:p-6 transition-colors">
+      <div className="w-full max-w-5xl rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200/80 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
+        {/* Left Side: Brand Showcase */}
+        <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-[#166534] via-[#15803d] to-[#047857] text-white relative overflow-hidden">
+          {/* Subtle decorative circles */}
+          <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
 
-        {/* Top Logo */}
-        <div className="relative z-10 flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1.5 flex items-center justify-center shadow-lg shrink-0">
-            <Image
-              src="/logo2.png"
-              alt="Arafat Poultry & Fisheries"
-              width={42}
-              height={42}
-              className="w-full h-full object-contain"
-              priority
-            />
-          </div>
-          <div>
-            <h2 className="text-xl font-black tracking-tight text-white leading-none">
-              Arafat Poultry &amp; Fisheries
-            </h2>
-            <p className="text-xs text-emerald-200/90 mt-1 font-medium">Quality Products. Trusted Service.</p>
-          </div>
-        </div>
-
-        {/* Middle Feature Content */}
-        <div className="relative z-10 my-auto py-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-emerald-100 text-xs font-semibold uppercase tracking-wider mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-200" />
-            Poultry &amp; Fisheries Management
-          </div>
-
-          <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-tight text-white mb-6">
-            Smart Poultry &amp; Fisheries Operations.
-          </h1>
-
-          <p className="text-emerald-100/90 text-sm xl:text-base leading-relaxed max-w-lg mb-8 font-normal">
-            Streamlined high-speed checkout, feed &amp; egg inventory tracking, fish farming operations, live stock alerts, and comprehensive financial reports.
-          </p>
-
-          <div className="space-y-3.5">
-            <div className="flex items-center gap-3 text-sm text-emerald-50">
-              <div className="w-6 h-6 rounded-full bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-emerald-200" />
-              </div>
-              <span>100vh Ultra-fast POS with Instant Thermal Receipt</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-emerald-50">
-              <div className="w-6 h-6 rounded-full bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-emerald-200" />
-              </div>
-              <span>Optimized for Chicken Feed, Egg Sales &amp; Fish Farming</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm text-emerald-50">
-              <div className="w-6 h-6 rounded-full bg-emerald-500/30 border border-emerald-400/40 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-emerald-200" />
-              </div>
-              <span>Automated Daily Ledgers, Receivables &amp; Due Collections</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Security Badge */}
-        <div className="relative z-10 flex items-center gap-2 text-xs text-emerald-200/80">
-          <ShieldCheck className="w-4 h-4 text-emerald-300" />
-          <span>Protected with Role-Based Access Control (RBAC) &amp; Next.js Engine</span>
-        </div>
-      </div>
-
-      {/* Right Login Form Panel */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12 lg:p-16">
-        <div className="w-full max-w-md">
-          {/* Mobile Header */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-11 h-11 rounded-xl bg-white p-1 border border-slate-200 shadow-md flex items-center justify-center shrink-0">
+          {/* Top Brand Logo */}
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-white p-2 shadow-lg flex items-center justify-center">
               <Image
                 src="/logo2.png"
                 alt="Arafat Poultry & Fisheries"
-                width={36}
-                height={36}
-                className="w-full h-full object-contain"
+                width={48}
+                height={48}
                 priority
+                className="object-contain"
               />
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-800 dark:text-white leading-tight">
-                Arafat Poultry &amp; Fisheries
-              </h2>
-              <p className="text-xs text-slate-500">Quality Products. Trusted Service.</p>
+              <h1 className="text-xl font-black tracking-tight leading-tight">
+                ARAFAT POULTRY
+              </h1>
+              <p className="text-xs text-emerald-100 tracking-wider font-semibold">
+                &amp; FISHERIES MANAGEMENT
+              </p>
             </div>
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-              Sign In to Your Account
+          {/* Middle Value Proposition */}
+          <div className="relative z-10 my-10 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-xs font-bold tracking-wide uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Modern Farm ERP &amp; Smart POS</span>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
+                Quality Products.
+                <br />
+                Trusted Service.
+              </h2>
+              <p className="text-sm text-emerald-100/90 leading-relaxed max-w-md">
+                Streamlining poultry sheds, egg collections, aquaculture lakes, feed inventory, and customer ledgers in one seamless platform.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
+                <ShieldCheck className="w-5 h-5 text-emerald-200 shrink-0" />
+                <span className="text-xs font-semibold">Role-Based Access</span>
+              </div>
+              <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
+                <ShoppingBag className="w-5 h-5 text-emerald-200 shrink-0" />
+                <span className="text-xs font-semibold">Full-Screen POS</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Footer Credit */}
+          <div className="relative z-10 pt-6 border-t border-white/15 flex items-center justify-between text-xs text-emerald-100/80">
+            <span>Enterprise Farm Edition</span>
+            <span>Software By: CodeNext IT</span>
+          </div>
+        </div>
+
+        {/* Right Side: Auth Form */}
+        <div className="p-8 sm:p-12 flex flex-col justify-center">
+          {/* Mobile Logo View */}
+          <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 p-1.5 shadow-sm flex items-center justify-center">
+              <Image
+                src="/logo2.png"
+                alt="Arafat Poultry & Fisheries"
+                width={40}
+                height={40}
+                priority
+                className="object-contain"
+              />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-slate-800 dark:text-white leading-tight">
+                ARAFAT POULTRY
+              </h2>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold">
+                &amp; Fisheries Management
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Welcome Back
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-              Enter your credentials to access the POS & Admin Dashboard
+              Enter your credentials to access the POS &amp; Admin Dashboard
             </p>
           </div>
 
@@ -180,8 +177,8 @@ export default function LoginPage() {
           )}
 
           {success && (
-            <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-rose-600" />
+            <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
               Login successful! Redirecting to dashboard...
             </div>
           )}
@@ -201,7 +198,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@gmail.com"
-                  className="w-full h-[42px] pl-10 pr-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-sm text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 transition-all"
+                  className="w-full h-[42px] pl-10 pr-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-sm text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all"
                 />
               </div>
             </div>

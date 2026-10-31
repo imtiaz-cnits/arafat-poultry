@@ -232,3 +232,111 @@ table thead th {
 @page {
   margin: 10px;
 }
+
+/* Universal Form Input, Dropdown & Search Hover / Focus Primary Green Theme (#166534 / Emerald) */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):hover,
+select:hover,
+textarea:hover {
+  border-color: #166534 !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  border-color: #166534 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(22, 101, 52, 0.25) !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):hover,
+.dark select:hover,
+.dark textarea:hover {
+  border-color: #22c55e !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):focus,
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):focus-visible,
+.dark select:focus,
+.dark select:focus-visible,
+.dark textarea:focus,
+.dark textarea:focus-visible {
+  border-color: #22c55e !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3) !important;
+}
+
+/* ============================================================ */
+/* UNIVERSAL PRINT VIEW STANDARDS (Strict 10px Gap & Repeat Header) */
+/* ============================================================ */
+@page {
+  margin: 10px !important;
+  size: auto;
+}
+
+@media print {
+  @page {
+    margin: 10px !important;
+    size: auto;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Universal Hide for Non-Printable Page Chrome */
+  header,
+  aside,
+  nav,
+  footer,
+  .no-print,
+  button,
+  .sidebar,
+  .topbar,
+  .toast-container,
+  [data-sidebar-backdrop] {
+    display: none !important;
+  }
+
+  /* Universal Print Container: Exactly 10px gap enforced by @page */
+  .print-only {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Universal Table Pagination & Repeating Header */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  thead {
+    display: table-header-group !important; /* Repeats table header at top of page 2, 3, etc. */
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  th, td {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}

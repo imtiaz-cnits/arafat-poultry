@@ -234,7 +234,7 @@ export function TileCalculatorModal({
                     value={sqftInput}
                     onChange={(e) => setSqftInput(e.target.value)}
                     placeholder="e.g. 250 Sq.Ft"
-                    className="w-full h-[44px] pl-3.5 pr-14 rounded-xl bg-white dark:bg-slate-800/90 text-sm font-extrabold text-slate-900 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                    className="w-full h-[44px] pl-3.5 pr-14 rounded-xl bg-white dark:bg-slate-800/90 text-sm font-extrabold text-slate-900 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                   />
                   <span className="absolute right-3.5 top-3 text-xs font-bold text-slate-400">
                     Sq.Ft
@@ -362,7 +362,7 @@ export function TileCalculatorModal({
                     value={pcsInput}
                     onChange={(e) => setPcsInput(e.target.value)}
                     placeholder="e.g. 15 or 50 Pieces"
-                    className="w-full h-[44px] pl-3.5 pr-14 rounded-xl bg-white dark:bg-slate-800/90 text-sm font-extrabold text-slate-900 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                    className="w-full h-[44px] pl-3.5 pr-14 rounded-xl bg-white dark:bg-slate-800/90 text-sm font-extrabold text-slate-900 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                   />
                   <span className="absolute right-3.5 top-3 text-xs font-bold text-slate-400">
                     Pieces
@@ -445,7 +445,7 @@ export function TileCalculatorModal({
                     value={boxesInput}
                     onChange={(e) => setBoxesInput(e.target.value)}
                     placeholder="e.g. 10 or 75 Boxes"
-                    className="w-full h-[44px] pl-3.5 pr-14 rounded-xl bg-white dark:bg-slate-800/90 text-sm font-extrabold text-slate-900 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                    className="w-full h-[44px] pl-3.5 pr-14 rounded-xl bg-white dark:bg-slate-800/90 text-sm font-extrabold text-slate-900 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                   />
                   <span className="absolute right-3.5 top-3 text-xs font-bold text-slate-400">
                     Boxes
@@ -510,7 +510,7 @@ export function TileCalculatorModal({
                   step="0.01"
                   value={boxPriceInput}
                   onChange={(e) => handleBoxPriceChange(e.target.value)}
-                  className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800 text-xs font-black text-rose-600 dark:text-rose-400 border border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                  className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800 text-xs font-black text-rose-600 dark:text-rose-400 border border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                 />
               </div>
 
@@ -523,7 +523,7 @@ export function TileCalculatorModal({
                   step="0.01"
                   value={sqftPriceInput}
                   onChange={(e) => handleSqftPriceChange(e.target.value)}
-                  className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800 text-xs font-black text-rose-700 dark:text-rose-400 border border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                  className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-slate-800 text-xs font-black text-rose-700 dark:text-rose-400 border border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                 />
               </div>
             </div>

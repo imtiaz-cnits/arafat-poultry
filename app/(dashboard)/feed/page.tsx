@@ -241,7 +241,7 @@ export default function FeedTradingPage() {
   }, [data, searchTerm]);
 
   return (
-    <div className="space-y-6">
+    <div className="no-print space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -835,6 +835,57 @@ export default function FeedTradingPage() {
                 <span>হ্যাঁ, বাতিল নিশ্চিত করুন</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* 4. Dedicated Print-Only Voucher Layout */}
+      {viewIssue && (
+        <div className="print-only text-black bg-white">
+          <div className="border-b-2 border-slate-900 pb-2 mb-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">ARAFAT POULTRY &amp; FISHERIES</h1>
+                <p className="text-[11px] text-slate-600 font-medium m-0">Quality Products. Trusted Service.</p>
+                <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
+                  ফিড অভ্যন্তরীণ হস্তান্তর ভাউচার (FEED ISSUE VOUCHER)
+                </h2>
+              </div>
+              <div className="text-right text-[10px] text-slate-600">
+                <p>ভাউচার নং: <strong className="text-slate-900 font-mono">{viewIssue.issue_no}</strong></p>
+                <p>তারিখ: <strong>{new Date(viewIssue.date).toLocaleDateString("en-GB")}</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <table className="w-full text-left border-collapse text-xs mb-4">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold">
+                <th className="p-2 border border-slate-300">ফিডের বিবরণ ও সাইজ</th>
+                <th className="p-2 border border-slate-300">গন্তব্য / ব্যাচ</th>
+                <th className="p-2 border border-slate-300 text-center">বস্তা</th>
+                <th className="p-2 border border-slate-300 text-center">মোট কেজি</th>
+                <th className="p-2 border border-slate-300 text-right">কেজি প্রতি দর</th>
+                <th className="p-2 border border-slate-300 text-right">স্থানান্তরিত ব্যয়</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="p-2 border border-slate-300 font-bold">{viewIssue.product_name}</td>
+                <td className="p-2 border border-slate-300">{viewIssue.destination}</td>
+                <td className="p-2 border border-slate-300 text-center font-bold">{viewIssue.bags} বস্তা</td>
+                <td className="p-2 border border-slate-300 text-center">{viewIssue.total_kg} কেজি</td>
+                <td className="p-2 border border-slate-300 text-right">৳{viewIssue.unit_cost_per_kg.toFixed(2)}</td>
+                <td className="p-2 border border-slate-300 text-right font-bold">{formatBdCurrency(viewIssue.total_cost)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          
+
+          <div className="grid grid-cols-3 gap-8 pt-10 text-center text-xs text-slate-700">
+            <div className="border-t border-slate-400 pt-1">প্রস্তুতকারক</div>
+            <div className="border-t border-slate-400 pt-1">গ্রহীতা</div>
+            <div className="border-t border-slate-400 pt-1">অনুমোদনকারী</div>
           </div>
         </div>
       )}

@@ -378,7 +378,7 @@ export default function EggProductionPage() {
   }, [data, searchTerm]);
 
   return (
-    <div className="space-y-6">
+    <div className="no-print space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -395,7 +395,7 @@ export default function EggProductionPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
           <button
             onClick={() => setIsFlockModalOpen(true)}
             className="h-[38px] px-3.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all"
@@ -497,8 +497,8 @@ export default function EggProductionPage() {
             <button
               onClick={() => setActiveTab("collections")}
               className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${activeTab === "collections"
-                  ? "bg-emerald-700 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                ? "bg-emerald-700 text-white shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
             >
               দৈনিক সংগ্রহ হিস্ট্রি ({data?.recent_collections.length || 0})
@@ -506,8 +506,8 @@ export default function EggProductionPage() {
             <button
               onClick={() => setActiveTab("grades")}
               className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${activeTab === "grades"
-                  ? "bg-emerald-700 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                ? "bg-emerald-700 text-white shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
             >
               গ্রেড অনুযায়ী মজুত ({data?.grade_products.length || 0})
@@ -515,8 +515,8 @@ export default function EggProductionPage() {
             <button
               onClick={() => setActiveTab("flocks")}
               className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${activeTab === "flocks"
-                  ? "bg-emerald-700 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                ? "bg-emerald-700 text-white shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
             >
               শেড ও ফ্লক সমূহ ({data?.flocks.length || 0})
@@ -1260,6 +1260,68 @@ export default function EggProductionPage() {
                 <span>হ্যাঁ, বাতিল নিশ্চিত করুন</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Dedicated Print-Only Collection Voucher */}
+      {viewCollection && (
+        <div className="print-only text-black bg-white">
+          <div className="border-b-2 border-slate-900 pb-2 mb-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">ARAFAT POULTRY &amp; FISHERIES</h1>
+                <p className="text-[11px] text-slate-600 font-medium m-0">Quality Products. Trusted Service.</p>
+                <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
+                  ডিম সংগ্রহ ও গ্রেডিং ভাউচার (EGG COLLECTION VOUCHER)
+                </h2>
+              </div>
+              <div className="text-right text-[10px] text-slate-600">
+                <p>শেড/ফ্লক: <strong className="text-slate-900">{viewCollection.flock_name}</strong></p>
+                <p>তারিখ: <strong>{viewCollection.date}</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-4 text-xs">
+            <div className="p-2 border border-slate-300">
+              <span className="text-slate-500 block">মোট সংগৃহীত ডিম:</span>
+              <strong className="text-sm">{viewCollection.total_collected} টি</strong>
+            </div>
+            <div className="p-2 border border-slate-300">
+              <span className="text-slate-500 block">ভাঙা / নষ্ট:</span>
+              <strong className="text-sm text-rose-600">{viewCollection.rejected_breakage} টি</strong>
+            </div>
+            <div className="p-2 border border-slate-300">
+              <span className="text-slate-500 block">গ্রহণযোগ্য ডিম:</span>
+              <strong className="text-sm text-emerald-700">{viewCollection.accepted_quantity} টি</strong>
+            </div>
+          </div>
+
+          <table className="w-full text-left border-collapse text-xs mb-4">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold">
+                <th className="p-2 border border-slate-300 text-center w-10">ক্র নং</th>
+                <th className="p-2 border border-slate-300">গ্রেডের নাম</th>
+                <th className="p-2 border border-slate-300 text-center">ডিমের সংখ্যা (টি)</th>
+                <th className="p-2 border border-slate-300 text-center">খাঁচি সংখ্যা (ট্রে)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {viewCollection.grades.map((g, idx) => (
+                <tr key={idx}>
+                  <td className="p-2 border border-slate-300 text-center font-bold">{idx + 1}</td>
+                  <td className="p-2 border border-slate-300 font-bold">{g.grade_name}</td>
+                  <td className="p-2 border border-slate-300 text-center font-mono">{g.pieces} টি</td>
+                  <td className="p-2 border border-slate-300 text-center font-mono">{g.trays} খাঁচি</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="grid grid-cols-3 gap-8 pt-10 text-center text-xs text-slate-700">
+            <div className="border-t border-slate-400 pt-1">সংগ্রহকারী</div>
+            <div className="border-t border-slate-400 pt-1">ইনভেন্টরি ইনচার্জ</div>
+            <div className="border-t border-slate-400 pt-1">ম্যানেজার</div>
           </div>
         </div>
       )}

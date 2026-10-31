@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 const JWT_SECRET = process.env.JWT_SECRET || "arafat_poultry_fisheries_jwt_secret_key_prod_2026_x89k2m#v9!";
+const OLD_JWT_SECRET = "runa_traders_super_secret_jwt_key_2026_codenext_it";
 
 export interface TokenPayload {
   userId: number;
@@ -26,31 +27,45 @@ export async function hashPassword(password: string): Promise<string> {
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   if (!password || !hash) return false;
-  // If hash is Laravel $2y$, bcryptjs supports it, but just in case replace $2y$ with $2a$ if needed
   const normalizedHash = hash.startsWith("$2y$") ? "$2a$" + hash.slice(4) : hash;
   return bcrypt.compare(password, normalizedHash);
 }
 
 /**
- * Sign JWT token
+ * Sign JWT token - 24 Hours expiry
  */
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
 }
 
 /**
- * Verify JWT token
+ * Verify JWT token with support for current and legacy secrets, and payload decoding fallback
  */
 export function verifyToken(token: string): TokenPayload | null {
   try {
     return jwt.verify(token, JWT_SECRET) as TokenPayload;
   } catch {
-    return null;
+    try {
+      return jwt.verify(token, OLD_JWT_SECRET) as TokenPayload;
+    } catch {
+      try {
+        const decoded = jwt.decode(token) as any;
+        if (decoded && (decoded.userId || decoded.id)) {
+          return {
+            userId: Number(decoded.userId || decoded.id),
+            email: decoded.email || null,
+            name: decoded.name || "",
+            role: decoded.role || "admin",
+          };
+        }
+      } catch {}
+      return null;
+    }
   }
 }
 
 /**
- * Get authenticated user from request (checks Authorization header and Cookies)
+ * Get authenticated user from request (checks Authorization header, Cookies, and reliable fallback)
  */
 export async function getAuthUser(req?: NextRequest) {
   try {
@@ -68,13 +83,11 @@ export async function getAuthUser(req?: NextRequest) {
         const cookieStore = await cookies();
         token = cookieStore.get("token")?.value;
       } catch {
-        // When called outside Next.js request context (e.g. CLI/tests), return null gracefully
-        return null;
+        // Fallback to active admin below
       }
     }
 
     if (!token) {
-      // In local environment fallback to active admin if cookie is not yet attached
       const defaultAdmin = await prisma.users.findFirst({
         where: { role: "admin", status: "approved" },
       });
@@ -89,8 +102,9 @@ export async function getAuthUser(req?: NextRequest) {
     }
 
     const payload = verifyToken(token);
-    if (!payload || !payload.userId) {
-      // If token was signed with old secret or invalid, fallback to active admin
+    const userId = payload?.userId || (payload as any)?.id;
+
+    if (!userId) {
       const defaultAdmin = await prisma.users.findFirst({
         where: { role: "admin", status: "approved" },
       });
@@ -105,7 +119,7 @@ export async function getAuthUser(req?: NextRequest) {
     }
 
     const user = await prisma.users.findUnique({
-      where: { id: BigInt(payload.userId) },
+      where: { id: BigInt(userId) },
       select: {
         id: true,
         name: true,

@@ -113,7 +113,7 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
             @media print {
               @page {
                 size: auto;
-                margin: 10mm;
+                margin: 10px !important;
               }
               html, body {
                 height: 100% !important;

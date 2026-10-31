@@ -552,9 +552,14 @@ export default function PosPage() {
 
     try {
       setIsSubmitting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       const res = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -756,7 +761,7 @@ export default function PosPage() {
                   }
                 }}
                 placeholder="🔍 Search product code or name... (F2)"
-                className="w-full h-[38px] pl-3 pr-9 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-600 font-medium"
+                className="w-full h-[38px] pl-3 pr-9 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
               />
               <button
                 type="button"
@@ -1050,7 +1055,7 @@ export default function PosPage() {
               <div ref={customerDropdownRef} className="relative flex-1 min-w-0">
                 <div
                   onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
-                  className="h-[38px] px-3 rounded-xl bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] flex items-center justify-between cursor-pointer hover:border-rose-500 transition-colors"
+                  className="h-[38px] px-3 rounded-xl bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] flex items-center justify-between cursor-pointer hover:border-emerald-500 transition-colors"
                 >
                   <div className="flex items-center gap-1.5 truncate">
                     <UserCheck className="w-4 h-4 text-emerald-700 shrink-0" />
@@ -1073,7 +1078,7 @@ export default function PosPage() {
                         placeholder="Search customer name or mobile..."
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
-                        className="w-full h-[38px] pl-9 pr-8 text-xs font-medium rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-rose-600 focus:ring-2 focus:ring-rose-600/20 transition-all shadow-xs"
+                        className="w-full h-[38px] pl-9 pr-8 text-xs font-medium rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all shadow-xs"
                       />
                       {customerSearch && (
                         <button
@@ -1349,7 +1354,7 @@ export default function PosPage() {
                     onClick={() => setPaymentMethod(m.name)}
                     className={`h-[30px] rounded-lg text-[11px] font-bold transition-all border cursor-pointer ${paymentMethod === m.name
                         ? `${m.color} text-white border-transparent shadow-xs scale-102`
-                        : "bg-white dark:bg-[#0f172a] text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-rose-500"
+                        : "bg-white dark:bg-[#0f172a] text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-emerald-500"
                       }`}
                   >
                     {m.name}
@@ -1366,7 +1371,7 @@ export default function PosPage() {
                   placeholder="Order Note / Remark"
                   value={orderNote}
                   onChange={(e) => setOrderNote(e.target.value)}
-                  className="w-full h-[28px] px-2.5 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-rose-600"
+                  className="w-full h-[28px] px-2.5 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 />
               </div>
             ) : (
@@ -1376,14 +1381,14 @@ export default function PosPage() {
                   placeholder="Trx ID / Ref No."
                   value={transactionId}
                   onChange={(e) => setTransactionId(e.target.value)}
-                  className="h-[28px] px-2 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-rose-600 font-mono"
+                  className="h-[28px] px-2 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600 font-mono"
                 />
                 <input
                   type="text"
                   placeholder="Order Note / Remark"
                   value={orderNote}
                   onChange={(e) => setOrderNote(e.target.value)}
-                  className="h-[28px] px-2 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-rose-600"
+                  className="h-[28px] px-2 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 />
               </div>
             )}
@@ -1442,7 +1447,7 @@ export default function PosPage() {
                     placeholder="0"
                     value={discount || ""}
                     onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                    className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] focus:outline-none focus:ring-1 focus:ring-rose-600"
+                    className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] focus:outline-none focus:ring-1 focus:ring-emerald-600"
                   />
                 </div>
               </div>
@@ -1459,7 +1464,7 @@ export default function PosPage() {
                   placeholder="0"
                   value={deliveryCharge || ""}
                   onChange={(e) => setDeliveryCharge(parseFloat(e.target.value) || 0)}
-                  className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] focus:outline-none focus:ring-1 focus:ring-rose-600"
+                  className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 />
               </div>
 
@@ -1475,7 +1480,7 @@ export default function PosPage() {
                   placeholder="0"
                   value={returnAdjustment || ""}
                   onChange={(e) => setReturnAdjustment(parseFloat(e.target.value) || 0)}
-                  className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] text-amber-700 dark:text-amber-400 focus:outline-none focus:ring-1 focus:ring-rose-600"
+                  className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] text-amber-700 dark:text-amber-400 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 />
               </div>
 

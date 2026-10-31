@@ -476,7 +476,7 @@ export default function FishFarmingPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="no-print space-y-6">
       {/* 1. Header & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center gap-3">
@@ -494,7 +494,7 @@ export default function FishFarmingPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
           <button
             onClick={() => setIsBatchModalOpen(true)}
             className="h-[38px] px-3.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
@@ -637,41 +637,37 @@ export default function FishFarmingPage() {
         <div className="flex items-center gap-1.5 w-full sm:w-auto">
           <button
             onClick={() => setActiveTab("batches")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === "batches"
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === "batches"
                 ? "bg-emerald-700 text-white shadow-sm"
                 : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
+              }`}
           >
             ব্যাচ ও পুকুর স্টক ({data?.batches.length || 0})
           </button>
           <button
             onClick={() => setActiveTab("harvests")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === "harvests"
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === "harvests"
                 ? "bg-emerald-700 text-white shadow-sm"
                 : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
+              }`}
           >
             আহরণ ইতিহাস ({data?.recent_harvests.length || 0})
           </button>
           <button
             onClick={() => setActiveTab("ponds")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === "ponds"
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === "ponds"
                 ? "bg-emerald-700 text-white shadow-sm"
                 : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
+              }`}
           >
             পুকুরসমূহ ({data?.ponds.length || 0})
           </button>
           <button
             onClick={() => setActiveTab("products")}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === "products"
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === "products"
                 ? "bg-emerald-700 text-white shadow-sm"
                 : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
+              }`}
           >
             বিক্রয়যোগ্য মাছ স্টক ({data?.saleable_fish_products.length || 0})
           </button>
@@ -762,13 +758,12 @@ export default function FishFarmingPage() {
                       </td>
                       <td className="p-3.5 text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            b.status === "ACTIVE"
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${b.status === "ACTIVE"
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
                               : b.status === "PARTIALLY_HARVESTED"
-                              ? "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
-                              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
+                                ? "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
+                                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            }`}
                         >
                           {b.status}
                         </span>
@@ -854,11 +849,10 @@ export default function FishFarmingPage() {
                       </td>
                       <td className="p-3.5 text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            h.harvest_type === "FINAL"
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${h.harvest_type === "FINAL"
                               ? "bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300"
                               : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
-                          }`}
+                            }`}
                         >
                           {h.harvest_type === "FINAL" ? "চূড়ান্ত আহরণ" : "আংশিক আহরণ"}
                         </span>
@@ -1214,22 +1208,20 @@ export default function FishFarmingPage() {
                   <button
                     type="button"
                     onClick={() => setHarvestType("PARTIAL")}
-                    className={`h-[42px] rounded-xl font-semibold border transition-all ${
-                      harvestType === "PARTIAL"
+                    className={`h-[42px] rounded-xl font-semibold border transition-all ${harvestType === "PARTIAL"
                         ? "bg-sky-600 text-white border-sky-600 shadow-sm"
                         : "border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                    }`}
+                      }`}
                   >
                     আংশিক আহরণ (Partial)
                   </button>
                   <button
                     type="button"
                     onClick={() => setHarvestType("FINAL")}
-                    className={`h-[42px] rounded-xl font-semibold border transition-all ${
-                      harvestType === "FINAL"
+                    className={`h-[42px] rounded-xl font-semibold border transition-all ${harvestType === "FINAL"
                         ? "bg-purple-600 text-white border-purple-600 shadow-sm"
                         : "border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                    }`}
+                      }`}
                   >
                     চূড়ান্ত আহরণ (Final/Close)
                   </button>
@@ -2053,6 +2045,57 @@ export default function FishFarmingPage() {
                 <span>হ্যাঁ, বাতিল নিশ্চিত করুন</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Dedicated Print-Only Harvest Voucher */}
+      {viewHarvest && (
+        <div className="print-only text-black bg-white">
+          <div className="border-b-2 border-slate-900 pb-2 mb-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">ARAFAT POULTRY &amp; FISHERIES</h1>
+                <p className="text-[11px] text-slate-600 font-medium m-0">Quality Products. Trusted Service.</p>
+                <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
+                  মাছ আহরণ ও বিক্রি ভাউচার (FISH HARVEST VOUCHER)
+                </h2>
+              </div>
+              <div className="text-right text-[10px] text-slate-600">
+                <p>পুকুর: <strong className="text-slate-900">{viewHarvest.pond_name}</strong></p>
+                <p>তারিখ: <strong>{viewHarvest.date}</strong></p>
+              </div>
+            </div>
+          </div>
+
+          <table className="w-full text-left border-collapse text-xs mb-4">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold">
+                <th className="p-2 border border-slate-300">প্রজাতি ও পণ্য</th>
+                <th className="p-2 border border-slate-300 text-center">ধরণ</th>
+                <th className="p-2 border border-slate-300 text-center">মাছের সংখ্যা</th>
+                <th className="p-2 border border-slate-300 text-center">মোট ওজন</th>
+                <th className="p-2 border border-slate-300 text-center">গড় ওজন</th>
+                <th className="p-2 border border-slate-300 text-right">উৎপাদন ব্যয়/কেজি</th>
+                <th className="p-2 border border-slate-300 text-right">মোট ব্যয়</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="p-2 border border-slate-300 font-bold">{viewHarvest.species_name} ({viewHarvest.product_name})</td>
+                <td className="p-2 border border-slate-300 text-center">{viewHarvest.harvest_type === 'FINAL' ? 'চূড়ান্ত' : 'আংশিক'}</td>
+                <td className="p-2 border border-slate-300 text-center font-mono">{viewHarvest.fish_count} টি</td>
+                <td className="p-2 border border-slate-300 text-center font-bold font-mono">{viewHarvest.total_weight_kg} kg</td>
+                <td className="p-2 border border-slate-300 text-center font-mono">{viewHarvest.avg_weight_kg} kg/pc</td>
+                <td className="p-2 border border-slate-300 text-right">{formatBdCurrency(viewHarvest.cost_per_kg)}</td>
+                <td className="p-2 border border-slate-300 text-right font-bold">{formatBdCurrency(viewHarvest.cost_allocated)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div className="grid grid-cols-3 gap-8 pt-10 text-center text-xs text-slate-700">
+            <div className="border-t border-slate-400 pt-1">আহরণকারী</div>
+            <div className="border-t border-slate-400 pt-1">ওজনকারী</div>
+            <div className="border-t border-slate-400 pt-1">খামার ইনচার্জ</div>
           </div>
         </div>
       )}

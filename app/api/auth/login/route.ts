@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
       permissions,
     });
 
-    // Set HTTP-only Cookie for security
+    // Set HTTP-only Cookie for security (24 hours expiry)
     response.cookies.set({
       name: "token",
       value: token,
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 24 * 60 * 60, // 24 hours
     });
 
     return response;

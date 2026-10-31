@@ -510,7 +510,7 @@ function ReturnsManagementContent() {
           {/* Search Bar + Show Entries */}
           <div className="flex items-center gap-2.5 w-full md:w-auto">
             {/* Filter Search */}
-            <div className="flex-1 md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-rose-600 focus-within:ring-2 focus-within:ring-rose-600/20 shadow-xs transition-all">
+            <div className="flex-1 md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 shadow-xs transition-all">
               <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
               <input
                 type="text"
@@ -942,7 +942,7 @@ function ReturnsManagementContent() {
                   {activeTab === "purchase" ? "Search Purchase Memo Number" : "Search Invoice Number"}
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-[38px] flex items-center px-3 bg-white dark:bg-slate-700/60 rounded-xl border border-[#cbd5e1] dark:border-[#334155] focus-within:border-rose-600 focus-within:ring-2 focus-within:ring-rose-600/20 shadow-xs">
+                  <div className="flex-1 h-[38px] flex items-center px-3 bg-white dark:bg-slate-700/60 rounded-xl border border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 shadow-xs">
                     <input
                       type="text"
                       value={modalSearchQuery}
@@ -1054,7 +1054,7 @@ function ReturnsManagementContent() {
                               type="checkbox"
                               checked={Boolean(isAllEligibleSelected)}
                               onChange={(e) => toggleSelectAll(e.target.checked)}
-                              className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+                              className="rounded text-rose-600 focus:ring-emerald-600 cursor-pointer"
                               title="Select All Eligible Items"
                             />
                           </th>
@@ -1091,7 +1091,7 @@ function ReturnsManagementContent() {
                                   onChange={() =>
                                     toggleItemCheckbox(item.detail_id, item.returnable_quantity)
                                   }
-                                  className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer disabled:cursor-not-allowed"
+                                  className="rounded text-rose-600 focus:ring-emerald-600 cursor-pointer disabled:cursor-not-allowed"
                                 />
                               </td>
                               <td className="p-2.5">
@@ -1139,7 +1139,7 @@ function ReturnsManagementContent() {
                                       item.returnable_quantity
                                     )
                                   }
-                                  className="w-20 h-[34px] px-2 text-center font-bold text-slate-800 dark:text-white bg-white dark:bg-slate-800 rounded-lg border border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                                  className="w-20 h-[34px] px-2 text-center font-bold text-slate-800 dark:text-white bg-white dark:bg-slate-800 rounded-lg border border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed"
                                 />
                               </td>
                               <td className="p-2.5 text-right pr-4 font-bold text-rose-700 dark:text-rose-400">
@@ -1186,7 +1186,7 @@ function ReturnsManagementContent() {
                         value={modalReturnNote}
                         onChange={(e) => setModalReturnNote(e.target.value)}
                         placeholder="e.g. Customer returned extra tiles or broken goods..."
-                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-rose-600"
+                        className="w-full h-[42px] px-3.5 rounded-xl bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600"
                       />
                     </div>
                   </div>

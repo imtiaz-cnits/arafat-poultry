@@ -310,8 +310,15 @@ export default function InventoryPage() {
             border: 1px solid #94a3b8 !important;
             padding: 4px 6px !important;
           }
+          .print-table thead {
+            display: table-header-group !important;
+          }
           .print-table tr {
             page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          @page {
+            margin: 10px !important;
           }
         }
         @media screen {
@@ -338,7 +345,7 @@ export default function InventoryPage() {
         </div>
 
         {/* Header Right Actions: Status Pills & Print Button */}
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end self-start sm:self-auto">
           {summary && (
             <>
               <button
@@ -348,8 +355,8 @@ export default function InventoryPage() {
                   setCurrentPage(1);
                 }}
                 className={`h-[36px] px-3 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer ${statusFilter === "low"
-                    ? "bg-amber-500 text-white border-amber-600 shadow-xs"
-                    : "bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/40 hover:bg-amber-100"
+                  ? "bg-amber-500 text-white border-amber-600 shadow-xs"
+                  : "bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/40 hover:bg-amber-100"
                   }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -364,8 +371,8 @@ export default function InventoryPage() {
                   setCurrentPage(1);
                 }}
                 className={`h-[36px] px-3 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer ${statusFilter === "out"
-                    ? "bg-rose-600 text-white border-rose-700 shadow-xs"
-                    : "bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-900/40 hover:bg-rose-100"
+                  ? "bg-rose-600 text-white border-rose-700 shadow-xs"
+                  : "bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-900/40 hover:bg-rose-100"
                   }`}
               >
                 <span>Out of Stock:</span>
@@ -457,7 +464,7 @@ export default function InventoryPage() {
           {/* Filters Grid: 2 per row on mobile (grid-cols-2), flex on desktop */}
           <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-2 md:gap-2.5 w-full xl:w-auto flex-1">
             {/* Search Bar - 2 cols on mobile */}
-            <div className="col-span-2 md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-rose-600 focus-within:ring-2 focus-within:ring-rose-600/20 transition-all shadow-xs">
+            <div className="col-span-2 md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 transition-all shadow-xs">
               <Search className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
               <input
                 type="text"
@@ -647,10 +654,10 @@ export default function InventoryPage() {
                     <td className="py-3 px-3 text-center">
                       <span
                         className={`inline-block px-2.5 py-1 rounded-full text-xs font-black ${item.quantity <= 0
-                            ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
-                            : item.quantity <= 5
-                              ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
-                              : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                          ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
+                          : item.quantity <= 5
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
                           }`}
                       >
                         {item.tile_size || item.pcs_per_box
@@ -720,10 +727,10 @@ export default function InventoryPage() {
                 </div>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-black ${item.quantity <= 0
-                      ? "bg-rose-100 text-rose-700"
-                      : item.quantity <= 5
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-emerald-100 text-emerald-700"
+                    ? "bg-rose-100 text-rose-700"
+                    : item.quantity <= 5
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-emerald-100 text-emerald-700"
                     }`}
                 >
                   {item.tile_size || item.pcs_per_box
@@ -838,7 +845,7 @@ export default function InventoryPage() {
                   required
                   value={newQty}
                   onChange={(e) => setNewQty(e.target.value)}
-                  className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-black text-emerald-600 text-base focus:outline-none focus:ring-2 focus:ring-rose-600"
+                  className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-black text-emerald-600 text-base focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 />
               </div>
 
@@ -885,7 +892,7 @@ export default function InventoryPage() {
       )}
 
       {/* 7. DEDICATED PRINT-ONLY REPORT TEMPLATE */}
-      <div className="print-only p-2 text-black bg-white">
+      <div className="print-only p-0 text-black bg-white">
         {/* Report Header */}
         <div className="border-b-2 border-slate-900 pb-2 mb-3">
           <div className="flex justify-between items-start">

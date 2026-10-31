@@ -5,15 +5,17 @@ import {
   Scale,
   Calendar,
   Printer,
+  Download,
+  Loader2,
   Coins,
   ArrowDownLeft,
   ArrowUpRight,
   Wallet,
-  Loader2,
   TrendingUp,
   Tag,
   Truck,
 } from "lucide-react";
+import { exportReportToPdf } from "@/lib/pdf-export";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker } from "@/components/ui/date-picker";
 
@@ -41,6 +43,21 @@ interface SupplierBreakdown {
 }
 
 export default function IncomeExpensePage() {
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  async function handleDownloadPdf() {
+    setDownloadingPdf(true);
+    try {
+      await exportReportToPdf(".print-only", {
+        filename: "income-expense-statement-" + new Date().toISOString().slice(0, 10),
+      });
+    } catch (err) {
+      console.error("PDF download failed:", err);
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
+
   const [summary, setSummary] = useState<StatementSummary | null>(null);
   const [expenses, setExpenses] = useState<ExpenseBreakdown[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierBreakdown[]>([]);
