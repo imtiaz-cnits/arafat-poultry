@@ -2,7 +2,6 @@
 
 import { Printer, X, Truck, Calendar, User, MapPin } from "lucide-react";
 import Image from "next/image";
-import { parseBoxAndPcs } from "@/lib/tiles-calculator";
 
 interface ChallanItem {
   id: number;
@@ -45,22 +44,12 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
     window.print();
   };
 
-  let totalBoxes = 0;
-  let totalPcs = 0;
+  let totalQty = 0;
   challan.items.forEach((it) => {
-    const { fullBoxes, pcs } = parseBoxAndPcs(it.quantity, it.pcs_per_box, it.tile_size);
-    totalBoxes += fullBoxes;
-    totalPcs += pcs;
+    totalQty += Number(it.quantity || 0);
   });
 
-  const formattedTotalDispatch =
-    totalBoxes > 0 && totalPcs > 0
-      ? `${totalBoxes} Boxes ${totalPcs} Pcs`
-      : totalBoxes > 0
-      ? `${totalBoxes} Boxes`
-      : totalPcs > 0
-      ? `${totalPcs} Pcs`
-      : "0 Box";
+  const formattedTotalDispatch = `${totalQty.toLocaleString()} একক`;
 
   const formattedDate = challan.challan_date
     ? new Date(challan.challan_date).toLocaleDateString("en-GB", {
@@ -163,19 +152,16 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
             <div className="space-y-3.5 flex-1">
               {/* Header */}
               <div className="text-center border-b-2 border-emerald-800 pb-2.5">
-                <div className="flex justify-center mb-1">
+                <div className="flex justify-center mb-2">
                   <Image
                     src="/logo1.png"
                     alt="Arafat Poultry & Fisheries"
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 object-contain"
+                    width={180}
+                    height={55}
+                    className="h-12 w-auto object-contain"
                     priority
                   />
                 </div>
-                <h1 className="text-lg font-black text-emerald-900 tracking-wider uppercase leading-tight">
-                  ARAFAT POULTRY &amp; FISHERIES
-                </h1>
                 <p className="text-[10px] text-slate-600 font-medium">
                   Quality Products. Trusted Service.
                 </p>
@@ -231,57 +217,33 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
                   <thead>
                     <tr className="bg-[#166534] text-white font-bold text-[10px]">
                       <th className="py-1.5 px-2 w-7 text-center">#</th>
-                      <th className="py-1.5 px-2">Description</th>
-                      <th className="py-1.5 px-1.5 text-center">Size</th>
-                      <th className="py-1.5 px-2 text-right">Qty</th>
-                      <th className="py-1.5 px-1.5 text-center">Unit</th>
+                      <th className="py-1.5 px-2">পণ্যের বিবরণ (Description)</th>
+                      <th className="py-1.5 px-2 text-right">পরিমাণ (Qty)</th>
+                      <th className="py-1.5 px-2 text-center">একক (Unit)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-slate-800">
-                    {challan.items.map((item, idx) => {
-                      const isTile = Boolean(
-                        item.tile_size ||
-                        item.pcs_per_box ||
-                        (item.unit && item.unit.toLowerCase().includes("box"))
-                      );
-                      const { fullBoxes, pcs, formatted } = parseBoxAndPcs(
-                        item.quantity,
-                        item.pcs_per_box,
-                        item.tile_size
-                      );
-                      const displayQty = isTile ? formatted : `${item.quantity} Pcs`;
-                      const displayUnit = isTile
-                        ? fullBoxes > 0 && pcs > 0
-                          ? "Box, Pcs"
-                          : fullBoxes > 0
-                          ? "Box"
-                          : "Pcs"
-                        : item.unit || "Pcs";
-                      return (
-                        <tr key={item.id || idx} className="hover:bg-slate-50/50">
-                          <td className="py-1.5 px-2 text-center text-slate-500 font-mono text-[10px]">
-                            {idx + 1}
-                          </td>
-                          <td className="py-1.5 px-2 font-semibold text-slate-900 leading-tight">
-                            {item.product_name}
-                          </td>
-                          <td className="py-1.5 px-1.5 text-center text-slate-600 text-[10px]">
-                            {item.tile_size || "-"}
-                          </td>
-                          <td className="py-1.5 px-2 text-right font-bold font-mono text-slate-900 whitespace-nowrap">
-                            {displayQty}
-                          </td>
-                          <td className="py-1.5 px-1.5 text-center text-slate-600 text-[10px] whitespace-nowrap">
-                            {displayUnit}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {challan.items.map((item, idx) => (
+                      <tr key={item.id || idx} className="hover:bg-slate-50/50">
+                        <td className="py-1.5 px-2 text-center text-slate-500 font-mono text-[10px]">
+                          {idx + 1}
+                        </td>
+                        <td className="py-1.5 px-2 font-semibold text-slate-900 leading-tight">
+                          {item.product_name}
+                        </td>
+                        <td className="py-1.5 px-2 text-right font-bold font-mono text-slate-900 whitespace-nowrap">
+                          {item.quantity}
+                        </td>
+                        <td className="py-1.5 px-2 text-center text-slate-600 text-[10px] whitespace-nowrap">
+                          {item.unit || "একক"}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                   <tfoot>
                     <tr className="bg-slate-100 border-t-2 border-slate-300 font-bold text-slate-900 text-[11px]">
-                      <td colSpan={3} className="py-1.5 px-2 text-right uppercase text-[10px]">
-                        Total Dispatch:
+                      <td colSpan={2} className="py-1.5 px-2 text-right uppercase text-[10px]">
+                        মোট ডেলিভারি (Total Dispatch):
                       </td>
                       <td colSpan={2} className="py-1.5 px-2 text-right font-mono font-black text-rose-900 whitespace-nowrap">
                         {formattedTotalDispatch}
@@ -292,8 +254,8 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
               </div>
 
               {/* Note & Inspection Notice */}
-              <div className="p-2 bg-amber-50/80 rounded-lg border border-amber-200 text-[10px] text-amber-900">
-                <span className="font-bold">Notice:</span> Inspect tiles boxes for breakage before delivery handover.
+              <div className="p-2 bg-emerald-50/80 rounded-lg border border-emerald-200 text-[10px] text-emerald-950">
+                <span className="font-bold">ঘোষণা:</span> পণ্য ও খাদ্যসামগ্রী বুঝিয়া পাইলাম। ডেলিভারি গ্রহণের পূর্বে ডিম বা অন্যান্য পণ্যের পরিমাণ ও অবস্থা যাচাই করুন।
                 {challan.note && (
                   <p className="mt-0.5 text-slate-800 font-medium">
                     <strong>Note:</strong> {challan.note}
@@ -302,17 +264,25 @@ export function ChallanPrintReceipt({ challan, onClose }: ChallanPrintProps) {
               </div>
             </div>
 
-            {/* Signature Protocol & Footer (Always pinned at bottom in print) */}
+            {/* Signature Protocol & Footer (3 signature areas) */}
             <div className="challan-footer-wrapper mt-auto pt-6 space-y-2">
-              <div className="grid grid-cols-2 gap-4 text-center text-[9px] font-semibold text-slate-600 uppercase tracking-wider">
+              <div className="grid grid-cols-3 gap-2 text-center text-[9px] font-semibold text-slate-600 uppercase tracking-wider">
                 <div>
-                  <div className="border-t border-slate-400 pt-1 w-4/5 mx-auto font-bold text-slate-800">
-                    Delivered By
+                  <div className="border-t border-slate-400 pt-1 w-full mx-auto font-bold text-slate-800">
+                    প্রস্তুতকারী / ডেলিভারিম্যান
+                    <span className="block text-[8px] text-slate-400 font-normal">Delivered By</span>
                   </div>
                 </div>
                 <div>
-                  <div className="border-t border-slate-400 pt-1 w-4/5 mx-auto font-bold text-slate-800">
-                    Customer Received
+                  <div className="border-t border-slate-400 pt-1 w-full mx-auto font-bold text-slate-800">
+                    গ্রহণকারীর স্বাক্ষর
+                    <span className="block text-[8px] text-slate-400 font-normal">Customer Received</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="border-t border-slate-400 pt-1 w-full mx-auto font-bold text-slate-800">
+                    অনুমোদনকারীর স্বাক্ষর
+                    <span className="block text-[8px] text-slate-400 font-normal">Authorized By</span>
                   </div>
                 </div>
               </div>

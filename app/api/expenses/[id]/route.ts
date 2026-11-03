@@ -51,8 +51,22 @@ export async function DELETE(
     const { id } = await params;
     const expenseId = BigInt(id);
 
-    await prisma.expenses.delete({
-      where: { id: expenseId },
+    await prisma.$transaction(async (tx) => {
+      const exp = await tx.expenses.findUnique({ where: { id: expenseId } });
+      if (exp) {
+        // Revert financial transaction if exists
+        const finTx = await tx.financial_transactions.findFirst({
+          where: { reference_type: "EXPENSE", reference_id: expenseId },
+        });
+        if (finTx) {
+          await tx.financial_transactions.delete({ where: { id: finTx.id } });
+          await tx.financial_accounts.update({
+            where: { id: finTx.account_id },
+            data: { balance: { increment: finTx.amount } },
+          });
+        }
+        await tx.expenses.delete({ where: { id: expenseId } });
+      }
     });
 
     return NextResponse.json({

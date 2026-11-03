@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordFinancialTransaction, getAccountByPaymentMethod } from "@/lib/financial-service";
 
 export const dynamic = "force-dynamic";
 
-// GET: Expenses List with Date & Category Filtering (Latest First, Rule 4.1)
+// GET: Expenses List with Date & Category Filtering (Latest First)
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -17,8 +18,8 @@ export async function GET(req: NextRequest) {
     const limit = limitParam && limitParam !== "all" && !isNaN(Number(limitParam)) ? Number(limitParam) : undefined;
 
     const where: any = {};
-    if (typeId) where.expense_type_id = BigInt(typeId);
-    if (staffId) where.staff_id = BigInt(staffId);
+    if (typeId && typeId !== "all") where.expense_type_id = BigInt(typeId);
+    if (staffId && staffId !== "all") where.staff_id = BigInt(staffId);
     if (fromDate && toDate) {
       where.date = {
         gte: fromDate,
@@ -116,7 +117,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: Record New Expense
+// POST: Record New Expense with Financial Outflow
 export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
     const userId = user?.id || (fallbackUser ? Number(fallbackUser.id) : 1);
 
     const body = await req.json();
-    const { expense_type_id, staff_id, expense_amount, expense_details, date } = body;
+    const { expense_type_id, staff_id, expense_amount, expense_details, date, payment_method } = body;
 
     if (!expense_type_id || !expense_amount) {
       return NextResponse.json(
@@ -134,28 +135,54 @@ export async function POST(req: NextRequest) {
     }
 
     const expDate = date || new Date().toISOString().split("T")[0];
+    const amountNum = parseFloat(String(expense_amount));
 
-    const newExpense = await prisma.expenses.create({
-      data: {
-        expense_type_id: BigInt(expense_type_id),
-        staff_id: staff_id ? BigInt(staff_id) : null,
-        expense_amount: parseFloat(String(expense_amount)),
-        expense_details: expense_details ? String(expense_details).trim() : null,
-        date: expDate,
-        user_id: BigInt(userId),
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create expense row
+      const newExpense = await tx.expenses.create({
+        data: {
+          expense_type_id: BigInt(expense_type_id),
+          staff_id: staff_id ? BigInt(staff_id) : null,
+          expense_amount: amountNum,
+          expense_details: expense_details ? String(expense_details).trim() : null,
+          date: expDate,
+          user_id: BigInt(userId),
+        },
+      });
+
+      // 2. Record Financial Outflow
+      const finAccount = await getAccountByPaymentMethod(payment_method || "Cash", tx);
+      if (finAccount) {
+        await recordFinancialTransaction(
+          {
+            accountId: finAccount.id,
+            transactionType: "OUTFLOW",
+            amount: amountNum,
+            referenceType: "EXPENSE",
+            referenceId: newExpense.id,
+            referenceNo: `EXP-${newExpense.id}`,
+            date: new Date(expDate),
+            note: expense_details || `Expense: ${expense_type_id}`,
+            userId,
+            allowOverdraft: true,
+          },
+          tx
+        );
+      }
+
+      return newExpense;
     });
 
     return NextResponse.json({
       status: "success",
       message: "Expense recorded successfully",
       data: {
-        ...newExpense,
-        id: Number(newExpense.id),
-        expense_type_id: Number(newExpense.expense_type_id),
-        staff_id: newExpense.staff_id ? Number(newExpense.staff_id) : null,
-        user_id: Number(newExpense.user_id),
-        expense_amount: parseFloat(String(newExpense.expense_amount)),
+        ...result,
+        id: Number(result.id),
+        expense_type_id: Number(result.expense_type_id),
+        staff_id: result.staff_id ? Number(result.staff_id) : null,
+        user_id: Number(result.user_id),
+        expense_amount: parseFloat(String(result.expense_amount)),
       },
     });
 

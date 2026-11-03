@@ -540,7 +540,7 @@ export async function recordInternalFeedIssue(params: RecordInternalFeedIssuePar
       },
     });
 
-    // 4. If destination is fish pond or batch, update fish_batches accumulated_feed_cost
+    // 4. If destination is fish pond or poultry flock, update batch feed consumption & costs
     if (params.destinationType === "FISH_POND" && params.destinationId) {
       const destId = BigInt(params.destinationId);
       let batch = await tx.fish_batches.findFirst({
@@ -557,6 +557,24 @@ export async function recordInternalFeedIssue(params: RecordInternalFeedIssuePar
           where: { id: batch.id },
           data: {
             accumulated_feed_cost: {
+              increment: new Prisma.Decimal(totalFeedCost.toFixed(2)),
+            },
+          },
+        });
+      }
+    } else if (params.destinationType === "POULTRY_FARM" && params.destinationId) {
+      const destId = BigInt(params.destinationId);
+      const flock = await tx.poultry_flocks.findUnique({
+        where: { id: destId },
+      });
+      if (flock) {
+        await tx.poultry_flocks.update({
+          where: { id: destId },
+          data: {
+            feed_consumed_kg: {
+              increment: new Prisma.Decimal(totalKg.toFixed(3)),
+            },
+            total_expenses: {
               increment: new Prisma.Decimal(totalFeedCost.toFixed(2)),
             },
           },

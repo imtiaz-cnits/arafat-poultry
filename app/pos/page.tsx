@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft,
   Search,
-  Camera,
   Plus,
   Trash2,
   Minus,
@@ -34,19 +33,23 @@ import {
   Check,
   SlidersHorizontal,
   X,
+  Egg,
+  Fish,
+  ArrowRightLeft,
+  Scale,
+  Percent,
+  Wallet,
+  Loader2,
 } from "lucide-react";
 import { usePosStore, CartItem, Customer } from "@/lib/pos-store";
 import { formatBdCurrency } from "@/lib/utils";
 import { ThermalReceiptModal } from "@/components/pos/thermal-receipt";
-import { CameraScannerModal } from "@/components/pos/camera-scanner";
 import { CustomerModal } from "@/components/pos/customer-modal";
 import { HeldInvoicesModal, HeldInvoice } from "@/components/pos/held-invoices-modal";
 import { QuickProductModal } from "@/components/pos/quick-product-modal";
-import { ChallanModal } from "@/components/challan/challan-modal";
 import { PosDatePicker } from "@/components/pos/date-picker";
 import { getInitialTheme, applyTheme } from "@/lib/theme";
 import { useToast } from "@/components/ui/toast";
-import { formatBoxAndPcs } from "@/lib/tiles-calculator";
 
 interface Product {
   id: number;
@@ -62,11 +65,6 @@ interface Product {
   category: string;
   brand: string;
   unit: string;
-  tile_size?: string | null;
-  sqft_per_box?: number | null;
-  pcs_per_box?: number | null;
-  grade?: string | null;
-  surface_finish?: string | null;
   img_url?: string | null;
 }
 
@@ -75,28 +73,54 @@ interface Category {
   category_name: string;
 }
 
-interface Brand {
-  id: number;
-  name: string;
-}
-
-interface Unit {
-  id: number;
-  unit_name: string;
-}
-
 type ProductFilterOption = "all" | "in_stock" | "out_of_stock" | "a_to_z";
 
 const FILTER_OPTIONS: { id: ProductFilterOption; label: string }[] = [
-  { id: "all", label: "All Items" },
-  { id: "in_stock", label: "In Stock" },
-  { id: "out_of_stock", label: "Out of Stock" },
-  { id: "a_to_z", label: "A to Z" },
+  { id: "all", label: "সকল পণ্য (All)" },
+  { id: "in_stock", label: "মজুত আছে (In Stock)" },
+  { id: "out_of_stock", label: "স্টক শেষ (Out of Stock)" },
+  { id: "a_to_z", label: "নামানুসারে (A to Z)" },
 ];
 
-export default function PosPage() {
-  const { showToast: triggerGlobalToast } = useToast();
-  // Store
+export default function ModernPosPage() {
+  const { toast } = useToast();
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [invoiceDate, setInvoiceDate] = useState<string>(new Date().toISOString().split("T")[0]);
+
+  // Product Catalog States
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Array<{ id: number; name: string }>>([]);
+  const [units, setUnits] = useState<Array<{ id: number; unit_name: string }>>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterOption, setFilterOption] = useState<ProductFilterOption>("all");
+  const [loading, setLoading] = useState(true);
+
+  // Customers
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+
+  // Modals
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
+  const [isQuickProductModalOpen, setIsQuickProductModalOpen] = useState(false);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<any>(null);
+  const [heldInvoices, setHeldInvoices] = useState<HeldInvoice[]>([]);
+  const [submittingOrder, setSubmittingOrder] = useState(false);
+
+  // Exchange Panel State
+  const [showExchangePanel, setShowExchangePanel] = useState(false);
+  const [exchangeMode, setExchangeMode] = useState<"EGGS" | "FEED" | "CUSTOM">("EGGS");
+  const [exchangeEggCount, setExchangeEggCount] = useState<string>("100");
+  const [exchangeEggRate, setExchangeEggRate] = useState<string>("11.00");
+  const [exchangeDirectAmount, setExchangeDirectAmount] = useState<string>("0");
+  const [exchangeReason, setExchangeReason] = useState<string>("");
+
+  // Store Hooks
   const {
     cart,
     selectedCustomer,
@@ -106,11 +130,11 @@ export default function PosPage() {
     returnAdjustment,
     paidAmount,
     paymentMethod,
-    transactionId,
     orderNote,
     addItem,
     updateQty,
-    updateTileCalculation,
+    updatePrice,
+    updateUnitSelection,
     removeItem,
     clearCart,
     setCustomer,
@@ -118,9 +142,9 @@ export default function PosPage() {
     setDiscountType,
     setDeliveryCharge,
     setReturnAdjustment,
+    setExchangeData,
     setPaidAmount,
     setPaymentMethod,
-    setTransactionId,
     setOrderNote,
     getSubTotal,
     getCalculatedDiscount,
@@ -129,909 +153,524 @@ export default function PosPage() {
     getTotalDueWithPrevious,
   } = usePosStore();
 
-  // State
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-
-  const [selectedCategory, setSelectedCategory] = useState<number | "all">("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().split("T")[0]);
-
-  // Customer dropdown
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
-
-  // Product Sort & Filter dropdown
-  const [filterOption, setFilterOption] = useState<ProductFilterOption>("all");
-  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
-  const filterDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Modals
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [isHeldModalOpen, setIsHeldModalOpen] = useState(false);
-  const [isQuickProductModalOpen, setIsQuickProductModalOpen] = useState(false);
-  const [tileCalcProduct, setTileCalcProduct] = useState<any | null>(null);
-  const [isTileCalcOpen, setIsTileCalcOpen] = useState(false);
-  const [receiptData, setReceiptData] = useState<any | null>(null);
-  const [challanOrderId, setChallanOrderId] = useState<number | null>(null);
-
-  // Held invoices
-  const [heldInvoices, setHeldInvoices] = useState<HeldInvoice[]>([]);
-
-  // Mobile tab switch ('catalog' | 'cart')
-  const [mobileTab, setMobileTab] = useState<"catalog" | "cart">("catalog");
-
-  // Dark mode & Fullscreen
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  // Submission
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
-
-  // Refs
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const customerDropdownRef = useRef<HTMLDivElement>(null);
-  const categoryScrollRef = useRef<HTMLDivElement>(null);
-  const barcodeBufferRef = useRef<string>("");
-  const lastKeyTimeRef = useRef<number>(0);
 
-  // Smooth Horizontal Category Slider Scroll
-  const scrollCategories = (direction: "left" | "right") => {
-    if (categoryScrollRef.current) {
-      const scrollAmount = 260;
-      categoryScrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  // Show notification banner
-  const showToast = useCallback((message: string, type: "success" | "error" = "success") => {
-    triggerGlobalToast(message, type);
-  }, [triggerGlobalToast]);
-
-
-  // Synchronize Theme state
+  // Theme Init
   useEffect(() => {
-    setIsDarkMode(getInitialTheme());
-
-    const handleThemeChange = (e: Event) => {
-      const custom = e as CustomEvent<{ isDark: boolean }>;
-      if (custom.detail !== undefined) {
-        setIsDarkMode(custom.detail.isDark);
-      }
-    };
-    window.addEventListener("theme-change", handleThemeChange);
-    return () => {
-      window.removeEventListener("theme-change", handleThemeChange);
-    };
+    const isDark = getInitialTheme();
+    setTheme(isDark ? "dark" : "light");
+    applyTheme(isDark);
   }, []);
 
-  // 1. Initial Data Fetching
-  const loadData = useCallback(async () => {
-    try {
-      const [prodRes, catRes, brandRes, unitRes, custRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/categories"),
-        fetch("/api/brands"),
-        fetch("/api/units"),
-        fetch("/api/customers"),
-      ]);
-
-      const [prodData, catData, brandData, unitData, custData] = await Promise.all([
-        prodRes.json(),
-        catRes.json(),
-        brandRes.json(),
-        unitRes.json(),
-        custRes.json(),
-      ]);
-
-      if (prodData.status === "success") setProducts(prodData.data);
-      if (catData.status === "success") setCategories(catData.data);
-      if (brandData.status === "success") setBrands(brandData.data);
-      if (unitData.status === "success") setUnits(unitData.data);
-      if (custData.status === "success") {
-        setCustomers(custData.data);
-        // Auto select first customer if none selected
-        if (!selectedCustomer && custData.data.length > 0) {
-          setCustomer(custData.data[0]);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load POS data:", err);
-    }
-  }, [selectedCustomer, setCustomer]);
-
-  useEffect(() => {
-    loadData();
-
-    // Load held invoices from localStorage
-    try {
-      const stored = localStorage.getItem("runa_held_invoices");
-      if (stored) {
-        setHeldInvoices(JSON.parse(stored));
-      }
-    } catch { }
-
-    // Check dark mode
-    if (typeof window !== "undefined") {
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
-    }
-  }, []);
-
-  // Save held invoices
-  const saveHeldInvoices = (list: HeldInvoice[]) => {
-    setHeldInvoices(list);
-    try {
-      localStorage.setItem("runa_held_invoices", JSON.stringify(list));
-    } catch { }
+  const toggleTheme = () => {
+    const nextIsDark = theme !== "dark";
+    setTheme(nextIsDark ? "dark" : "light");
+    applyTheme(nextIsDark);
   };
 
-  // Close customer & filter dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target as Node)) {
-        setIsCustomerDropdownOpen(false);
-      }
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
-        setIsFilterDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // 2. Barcode Scanner Gun Buffer Detection (Global Listener)
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      // Shortcuts
-      if (e.key === "F4") {
-        e.preventDefault();
-        handleSubmitOrder();
-        return;
-      }
-      if (e.key === "F2") {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-        return;
-      }
-      if (e.key === "F8") {
-        e.preventDefault();
-        handleHoldInvoice();
-        return;
-      }
-
-      // Scanner Gun Buffer Detection:
-      const target = e.target as HTMLElement;
-      const isInputFocused =
-        target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
-
-      const currentTime = Date.now();
-      const timeDiff = currentTime - lastKeyTimeRef.current;
-      lastKeyTimeRef.current = currentTime;
-
-      if (e.key === "Enter") {
-        if (barcodeBufferRef.current.length >= 3 && timeDiff < 100) {
-          e.preventDefault();
-          const scannedCode = barcodeBufferRef.current.trim();
-          barcodeBufferRef.current = "";
-          handleScanCode(scannedCode);
-        } else {
-          barcodeBufferRef.current = "";
-        }
-        return;
-      }
-
-      if (e.key.length === 1) {
-        if (timeDiff > 120) {
-          barcodeBufferRef.current = ""; // Reset buffer if user is typing manually with pauses
-        }
-        barcodeBufferRef.current += e.key;
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [products, cart]);
-
-  // Handle scanned barcode (from gun or camera)
-  const handleScanCode = async (code: string) => {
-    if (!code) return;
-    const trimmed = code.trim().toLowerCase();
-
-    // Check in existing state first
-    const matched = products.find((p) => {
-      if (String(p.id) === trimmed) return true;
-      if (p.primary_code.toLowerCase() === trimmed) return true;
-      return p.all_codes?.some((c) => c.toLowerCase() === trimmed);
-    });
-
-    if (matched) {
-      ringProduct(matched);
-      showToast(`Added: ${matched.name}`, "success");
-      setSearchQuery("");
-      setSearchResults([]);
-      return;
-    }
-
-    // Try server search
-    try {
-      const res = await fetch(`/api/product-search?query=${encodeURIComponent(trimmed)}`);
-      const data = await res.json();
-      if (res.ok && data.status === "success" && data.product) {
-        const prod = data.product;
-        const formatted: Product = {
-          id: prod.id,
-          name: prod.name,
-          product_name: prod.product_name,
-          primary_code: prod.product_code?.[0] || "",
-          display_codes: Array.isArray(prod.product_code) ? prod.product_code.join(", ") : "",
-          all_codes: Array.isArray(prod.product_code) ? prod.product_code : [],
-          cost_price: prod.cost_price || 0,
-          sell_price: prod.sell_price || 0,
-          quantity: prod.quantity || 0,
-          category_id: prod.category_id,
-          category: prod.categories?.category_name || "N/A",
-          brand: prod.brands?.name || "N/A",
-          unit: prod.units?.unit_name || "Pcs",
-          tile_size: prod.tile_size || null,
-          sqft_per_box: prod.sqft_per_box ? parseFloat(prod.sqft_per_box) : null,
-          pcs_per_box: prod.pcs_per_box ? parseInt(prod.pcs_per_box) : null,
-          grade: prod.grade || null,
-          surface_finish: prod.surface_finish || null,
-          img_url: prod.img_url,
-        };
-        ringProduct(formatted);
-        showToast(`Added: ${formatted.name}`, "success");
-        setSearchQuery("");
-        setSearchResults([]);
-      } else {
-        showToast(`Product with code "${code}" not found!`, "error");
-      }
-    } catch {
-      showToast(`Search error for barcode "${code}"`, "error");
-    }
-  };
-
-  // Live text search in POS catalog
-  const handleSearchChange = (val: string) => {
-    setSearchQuery(val);
-    if (!val.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    const q = val.trim().toLowerCase();
-    const filtered = products.filter(
-      (p) =>
-        p.product_name.toLowerCase().includes(q) ||
-        p.display_codes.toLowerCase().includes(q) ||
-        String(p.id) === q
-    );
-    setSearchResults(filtered.slice(0, 10));
-  };
-
-  // Ring product into cart
-  const ringProduct = (p: Product) => {
-    addItem({
-      product_id: p.id,
-      product_name: p.name,
-      barcode: p.primary_code,
-      cost_price: p.cost_price,
-      selling_price: p.sell_price,
-      stock: p.quantity,
-      unit: p.unit,
-      tile_size: p.tile_size,
-      sqft_per_box: p.sqft_per_box,
-      pcs_per_box: p.pcs_per_box,
-      grade: p.grade,
-      surface_finish: p.surface_finish,
-    });
-  };
-
-  // Hold current invoice
-  const handleHoldInvoice = () => {
-    if (cart.length === 0) {
-      showToast("Cannot hold an empty cart!", "error");
-      return;
-    }
-
-    const newHeld: HeldInvoice = {
-      id: "HOLD-" + Date.now(),
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-      customer: selectedCustomer,
-      cart: [...cart],
-      subTotal: getSubTotal(),
-      grandTotal: getGrandTotal(),
-      discount,
-      discountType,
-      deliveryCharge,
-      note: orderNote,
-    };
-
-    saveHeldInvoices([newHeld, ...heldInvoices]);
-    clearCart();
-    showToast("Invoice saved to Held list!", "success");
-  };
-
-  // Restore held invoice
-  const handleRestoreHeld = (held: HeldInvoice) => {
-    clearCart();
-    held.cart.forEach((item) => {
-      addItem(item, item.quantity);
-    });
-    setCustomer(held.customer);
-    setDiscount(held.discount);
-    setDiscountType(held.discountType);
-    setDeliveryCharge(held.deliveryCharge);
-    setOrderNote(held.note);
-
-    const updated = heldInvoices.filter((h) => h.id !== held.id);
-    saveHeldInvoices(updated);
-    setIsHeldModalOpen(false);
-    showToast("Held invoice loaded to cart!", "success");
-  };
-
-  // Delete held invoice
-  const handleDeleteHeld = (id: string) => {
-    const updated = heldInvoices.filter((h) => h.id !== id);
-    saveHeldInvoices(updated);
-    showToast("Held invoice removed", "success");
-  };
-
-  // Quick button: Full Paid
-  const handleSetFullPaid = () => {
-    setPaidAmount(getGrandTotal());
-  };
-
-  // Toggle Dark Mode
-  const toggleDarkMode = () => {
-    const next = !isDarkMode;
-    setIsDarkMode(next);
-    applyTheme(next);
-  };
-
-  // Toggle Fullscreen
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => { });
+      document.documentElement.requestFullscreen().catch(() => {});
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen().catch(() => { });
+      document.exitFullscreen().catch(() => {});
       setIsFullscreen(false);
     }
   };
 
-  // Submit & Save Order
-  const handleSubmitOrder = async () => {
-    if (cart.length === 0) {
-      showToast("Cart is empty! Add products to proceed.", "error");
-      return;
-    }
-
-    if (!selectedCustomer) {
-      showToast("Please select or create a customer!", "error");
-      return;
-    }
-
-    const subTotal = getSubTotal();
-    const discountAmount = getCalculatedDiscount();
-    const grandTotal = getGrandTotal();
-    const dueAmount = getDueAmount();
-    const prevDue = selectedCustomer.previous_due_amount || 0;
-
-    const payload = {
-      customer_id: selectedCustomer.id,
-      sub_total: subTotal,
-      delivery_charge: deliveryCharge,
-      discount_amount: discountAmount,
-      return_adjustment_amount: returnAdjustment,
-      paid_amount: paidAmount,
-      due_amount: dueAmount,
-      previous_due_amount: prevDue,
-      order_note: orderNote,
-      invoice_date: invoiceDate,
-      payment_method: paymentMethod,
-      transaction_id: transactionId,
-      payment_status: dueAmount <= 0 ? "Paid" : paidAmount > 0 ? "Partial Paid" : "Due",
-      products: cart.map((item) => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.cost_price,
-        selling_price: item.selling_price,
-      })),
-    };
-
+  // Load Initial Data
+  const loadInitialData = async () => {
     try {
-      setIsSubmitting(true);
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      setLoading(true);
+      const [prodsRes, catsRes, custsRes, brandsRes, unitsRes] = await Promise.all([
+        fetch("/api/products?limit=500"),
+        fetch("/api/categories"),
+        fetch("/api/customers?limit=200"),
+        fetch("/api/brands"),
+        fetch("/api/units"),
+      ]);
 
-      const data = await res.json();
-      if (res.ok && data.status === "success") {
-        // Prepare thermal receipt
-        setReceiptData({
-          id: data.invoice_id,
-          order_no: data.order_no,
-          has_tiles: data.has_tiles,
-          challan_status: data.challan_status,
-          invoice_date: invoiceDate,
-          customer: {
-            customer_name: selectedCustomer.customer_name,
-            mobile: selectedCustomer.mobile,
-            address_details: selectedCustomer.address_details || undefined,
-          },
-          sub_total: subTotal,
-          discount_amount: discountAmount,
-          delivery_charge: deliveryCharge,
-          return_adjustment_amount: returnAdjustment,
-          paid_amount: paidAmount,
-          due_amount: dueAmount,
-          previous_due_amount: prevDue,
-          payment_method: paymentMethod,
-          transaction_id: transactionId,
-          order_note: orderNote,
-          details: cart.map((c) => ({
-            product_name: c.product_name,
-            quantity: c.quantity,
-            price: c.selling_price,
-            total: c.selling_price * c.quantity,
-            tile_size: c.tile_size || null,
-            sqft_per_box: c.sqft_per_box || null,
-            grade: c.grade || null,
-            category: c.category || null,
-          })),
-        });
+      const [prodsData, catsData, custsData, brandsData, unitsData] = await Promise.all([
+        prodsRes.json(),
+        catsRes.json(),
+        custsRes.json(),
+        brandsRes.json(),
+        unitsRes.json(),
+      ]);
 
-        // Update customer in state
-        if (dueAmount > 0) {
-          setCustomers((curr) =>
-            curr.map((c) =>
-              c.id === selectedCustomer.id
-                ? { ...c, previous_due_amount: prevDue + dueAmount }
-                : c
-            )
-          );
-        }
-
-        clearCart();
-        showToast("Order Placed Successfully! (Invoice: " + data.order_no + ")", "success");
-      } else {
-        showToast(data.message || "Failed to place order", "error");
+      if (prodsData.status === "success" && Array.isArray(prodsData.data)) {
+        const formatted = prodsData.data.map((p: any) => ({
+          id: Number(p.id),
+          name: p.product_name,
+          product_name: p.product_name,
+          primary_code: p.product_code?.[0] || `PRD-${p.id}`,
+          display_codes: p.product_code?.[0] || `PRD-${p.id}`,
+          all_codes: p.product_code || [],
+          cost_price: parseFloat(p.cost_price || 0),
+          sell_price: parseFloat(p.sell_price || 0),
+          quantity: parseFloat(p.quantity || 0),
+          category_id: Number(p.category_id),
+          category: p.category?.category_name || "General",
+          brand: p.brand?.name || "General",
+          unit: p.unit?.unit_name || "Piece",
+          img_url: p.img_url,
+        }));
+        setProducts(formatted);
       }
-    } catch (err: any) {
-      showToast(err?.message || "Communication error", "error");
+
+      if (catsData.status === "success" && Array.isArray(catsData.data)) {
+        setCategories(catsData.data);
+      }
+
+      if (brandsData.status === "success" && Array.isArray(brandsData.data)) {
+        setBrands(brandsData.data);
+      }
+
+      if (unitsData.status === "success" && Array.isArray(unitsData.data)) {
+        setUnits(unitsData.data);
+      }
+
+      if (custsData.status === "success" && Array.isArray(custsData.data)) {
+        const formattedCusts = custsData.data.map((c: any) => ({
+          id: Number(c.id),
+          customer_id: c.customer_id || `CUST-${c.id}`,
+          customer_name: c.customer_name || c.name || "Customer",
+          mobile: c.mobile || "",
+          address_details: c.address_details || c.address || "",
+          previous_due_amount: parseFloat(c.due_amount || c.previous_due || 0),
+        }));
+        setCustomers(formattedCusts);
+        // Default customer if none selected
+        if (!selectedCustomer && formattedCusts.length > 0) {
+          setCustomer(formattedCusts[0]);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("ডাটা লোড করতে ব্যর্থ হয়েছে");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  // Filtered and sorted catalog products
-  const displayProducts = products
-    .filter((p) => {
-      // Category filter
-      if (selectedCategory !== "all" && p.category_id !== selectedCategory) {
-        return false;
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  // Keyboard Shortcuts: F2 for search, F4 to submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F2") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === "F4") {
+        e.preventDefault();
+        handleSubmitOrder();
       }
-      // Stock status filter
-      if (filterOption === "in_stock" && Number(p.quantity || 0) <= 0) {
-        return false;
-      }
-      if (filterOption === "out_of_stock" && Number(p.quantity || 0) > 0) {
-        return false;
-      }
-      // Live search query filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          p.product_name.toLowerCase().includes(q) ||
-          p.display_codes.toLowerCase().includes(q) ||
-          String(p.id) === q
-        );
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      if (filterOption === "a_to_z") {
-        return a.product_name.localeCompare(b.product_name, undefined, { sensitivity: "base" });
-      }
-      // Poultry Priority: Poultry Eggs (102) & Fisheries (103) & Feed (101) show first
-      const priority = [102, 103, 101, 104, 105];
-      const pA = priority.indexOf(Number(a.category_id));
-      const pB = priority.indexOf(Number(b.category_id));
-      if (pA !== -1 && pB !== -1 && pA !== pB) return pA - pB;
-      return Number(b.id) - Number(a.id);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cart, selectedCustomer, paidAmount, returnAdjustment, invoiceDate]);
+
+  // Product Filtering by Category Tabs
+  const filteredProducts = useMemo(() => {
+    // 0. Exclude Feed & Medicine from POS sales page
+    let result = products.filter((p) => {
+      const cat = (p.category || "").toLowerCase();
+      const name = (p.name || "").toLowerCase();
+      const isFeed = cat.includes("feed") || cat.includes("ফিড") || name.includes("feed") || name.includes("ফিড");
+      const isMedicine = cat.includes("medicine") || cat.includes("ওষুধ") || cat.includes("ভ্যাকসিন") || cat.includes("vet") || name.includes("vitamino");
+      return !isFeed && !isMedicine;
     });
 
-  // Filtered customers for dropdown
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.customer_name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-      c.mobile.includes(customerSearch) ||
-      c.customer_id.toLowerCase().includes(customerSearch.toLowerCase())
-  );
+    // Category Filter
+    if (selectedCategory !== "ALL") {
+      result = result.filter((p) => {
+        const cat = (p.category || "").toLowerCase();
+        const name = (p.name || "").toLowerCase();
+        if (selectedCategory === "EGGS") {
+          return cat.includes("egg") || cat.includes("ডিম") || name.includes("egg") || name.includes("ডিম");
+        }
+        if (selectedCategory === "FISH") {
+          return cat.includes("fish") || cat.includes("মাছ") || cat.includes("aqua") || name.includes("fish") || name.includes("মাছ");
+        }
+        if (selectedCategory === "POULTRY") {
+          return cat.includes("chick") || cat.includes("মুরগি") || cat.includes("poultry") || name.includes("মুরগি") || name.includes("chick");
+        }
+        return true;
+      });
+    }
 
-  const subTotal = getSubTotal();
-  const calculatedDiscount = getCalculatedDiscount();
-  const grandTotal = getGrandTotal();
-  const dueAmount = getDueAmount();
-  const totalDueWithPrev = getTotalDueWithPrevious();
+    // Search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.primary_code.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.brand.toLowerCase().includes(q)
+      );
+    }
 
-  const paymentStatus =
-    dueAmount <= 0 ? "PAID" : paidAmount > 0 ? "PARTIAL PAID" : "DUE";
+    // Secondary Filter Option
+    if (filterOption === "in_stock") {
+      result = result.filter((p) => p.quantity > 0);
+    } else if (filterOption === "out_of_stock") {
+      result = result.filter((p) => p.quantity <= 0);
+    } else if (filterOption === "a_to_z") {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return result;
+  }, [products, selectedCategory, searchQuery, filterOption]);
+
+  // Add Product to Cart
+  const handleProductClick = (prod: Product) => {
+    addItem({
+      product_id: prod.id,
+      product_name: prod.name,
+      barcode: prod.primary_code,
+      cost_price: prod.cost_price,
+      selling_price: prod.sell_price,
+      stock: prod.quantity,
+      unit: prod.unit,
+      category: prod.category,
+    });
+  };
+
+  // Update Exchange Offset
+  const handleApplyExchange = () => {
+    let amt = 0;
+    let note = "";
+
+    if (exchangeMode === "EGGS") {
+      const qty = Number(exchangeEggCount || 0);
+      const rate = Number(exchangeEggRate || 0);
+      amt = Math.round(qty * rate);
+      note = `ডিম বিনিময় সমন্বয়: ${qty} পিস @ ৳${rate}`;
+    } else if (exchangeMode === "FEED") {
+      amt = Number(exchangeDirectAmount || 0);
+      note = `ফিড ক্রয় ক্রেডিট সমন্বয়: ৳${amt}`;
+    } else {
+      amt = Number(exchangeDirectAmount || 0);
+      note = exchangeReason || `পণ্য বিনিময় সমন্বয়: ৳${amt}`;
+    }
+
+    setReturnAdjustment(amt);
+    setExchangeData({
+      type: exchangeMode,
+      amount: amt,
+      eggQty: Number(exchangeEggCount || 0),
+      eggRate: Number(exchangeEggRate || 0),
+      note,
+    });
+
+    toast.success(`বিনিময় সমন্বয় ৳${amt} প্রয়োগ করা হয়েছে`);
+  };
+
+  const handleClearExchange = () => {
+    setReturnAdjustment(0);
+    setExchangeData({
+      type: "NONE",
+      amount: 0,
+      note: "",
+    });
+    setExchangeDirectAmount("0");
+    setShowExchangePanel(false);
+  };
+
+  // Submit Order
+  const handleSubmitOrder = async () => {
+    if (cart.length === 0) {
+      toast.error("কার্ট খালি! পণ্য যুক্ত করুন");
+      return;
+    }
+    if (!selectedCustomer) {
+      toast.error("কাস্টমার নির্বাচন করুন");
+      return;
+    }
+
+    const grand = getGrandTotal();
+    const paid = Number(paidAmount || 0);
+    const due = Math.max(0, grand - paid);
+
+    try {
+      setSubmittingOrder(true);
+      const payload = {
+        customer_id: selectedCustomer.id,
+        sub_total: getSubTotal(),
+        discount_amount: getCalculatedDiscount(),
+        delivery_charge: deliveryCharge,
+        return_adjustment_amount: returnAdjustment,
+        paid_amount: paid,
+        due_amount: due,
+        previous_due_amount: selectedCustomer.previous_due_amount || 0,
+        payment_method: paymentMethod || "Cash",
+        order_note: orderNote || (returnAdjustment > 0 ? `বিনিময় সমন্বয়: ৳${returnAdjustment}` : ""),
+        invoice_date: invoiceDate,
+        products: cart.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.selling_price,
+          selling_price: item.selling_price,
+        })),
+      };
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (json.status === "success" && (json.invoice_id || json.data)) {
+        toast.success("অর্ডার সফলভাবে সম্পন্ন হয়েছে!", "সফল");
+        const orderId = json.invoice_id || json.data?.id;
+        if (orderId) {
+          try {
+            const receiptRes = await fetch(`/api/invoice-print-receipt?id=${orderId}`);
+            const receiptJson = await receiptRes.json();
+            if (receiptJson.status === "success" && receiptJson.rows) {
+              setCompletedOrder(receiptJson.rows);
+              setIsReceiptModalOpen(true);
+            }
+          } catch (e) {
+            console.error("Receipt fetch error:", e);
+          }
+        }
+        clearCart();
+        loadInitialData(); // Refresh live stock!
+      } else {
+        toast.error(json.message || "অর্ডার সম্পন্ন করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setSubmittingOrder(false);
+    }
+  };
+
+  // Quick Full Paid Button
+  const handleFullPaid = () => {
+    setPaidAmount(getGrandTotal());
+  };
 
   return (
-    <div className="fixed inset-0 h-screen w-full max-h-screen max-w-full overflow-hidden flex flex-col bg-slate-100 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 select-none">
-      {/* TOP COMPACT NAVIGATION BAR (Marss Corp Rule: Compact, Emerald Theme) */}
-
-      <header className="h-[46px] bg-white dark:bg-[#0f172a] border-b border-[#cbd5e1] dark:border-[#334155] px-3 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center gap-2.5">
+    <div className="h-screen w-screen flex flex-col bg-slate-100 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 overflow-hidden font-sans select-none">
+      {/* 1. TOP NAVBAR */}
+      <header className="h-[52px] bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between shrink-0 z-30">
+        <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="h-[32px] px-3 rounded-full bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
+            className="h-[36px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Back to Dashboard</span>
-            <span className="sm:hidden">Back</span>
+            <ArrowLeft className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            <span className="hidden sm:inline">ড্যাশবোর্ড</span>
           </Link>
 
-          <div className="flex items-center gap-2 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 rounded-full border border-emerald-200 dark:border-emerald-900/40">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs font-black tracking-wider text-emerald-800 dark:text-emerald-400 uppercase">
-              ARAFAT POULTRY &amp; FISHERIES POS
-            </span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 p-1 flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
+              <Image src="/logo1.png" alt="Arafat Logo" width={32} height={32} className="object-contain" priority />
+            </div>
+            <div>
+              <div className="text-xs sm:text-sm font-black text-[#166534] dark:text-emerald-400 leading-tight">
+                ARAFAT POULTRY &amp; FISHERIES POS
+              </div>
+              <div className="text-[10px] text-slate-400 leading-none">
+                বিক্রয় ও ক্যাশ রেজিস্টার
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Center/Right quick tools */}
+        {/* Right Tools */}
         <div className="flex items-center gap-2">
-          {/* Held Invoices Pill */}
+          {/* Date Picker */}
+          <div className="hidden md:block">
+            <PosDatePicker value={invoiceDate} onChange={setInvoiceDate} />
+          </div>
+
+          {/* Quick Product Add */}
           <button
-            type="button"
-            onClick={() => setIsHeldModalOpen(true)}
-            className="h-[32px] px-2.5 rounded-xl border border-amber-400 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="View Held Invoices"
+            onClick={() => setIsQuickProductModalOpen(true)}
+            className="h-[36px] px-3 rounded-xl bg-gradient-to-r from-[#14532d] to-[#166534] hover:from-[#0f3d21] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
           >
-            <FolderOpen className="w-3.5 h-3.5 text-amber-600" />
-            <span className="hidden sm:inline">Held</span>
-            <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
-              {heldInvoices.length}
-            </span>
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">+ নতুন পণ্য</span>
           </button>
 
           {/* Theme Toggle */}
           <button
-            type="button"
-            onClick={toggleDarkMode}
-            className="w-[32px] h-[32px] rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-emerald-700 transition-colors cursor-pointer"
-            title="Toggle Light/Dark Theme"
+            onClick={toggleTheme}
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center transition-colors text-slate-600 dark:text-slate-300"
+            title="Toggle Dark / Light Mode"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
           </button>
 
-          {/* Fullscreen Toggle */}
+          {/* Fullscreen */}
           <button
-            type="button"
             onClick={toggleFullscreen}
-            className="w-[32px] h-[32px] rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-emerald-700 transition-colors cursor-pointer"
-            title="Toggle Fullscreen"
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center transition-colors text-slate-600 dark:text-slate-300"
+            title="Fullscreen"
           >
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </button>
         </div>
       </header>
 
-      {/* MAIN TWO-COLUMN WORKSPACE (Strict Rule: 100vh full screen, no window scroll) */}
-      <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden p-2.5 sm:p-3 gap-3">
-        {/* ======================================================== */}
-        {/* LEFT COLUMN: PRODUCT CATALOG & SEARCH                     */}
-        {/* ======================================================== */}
-        <section
-          className={`flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden bg-white dark:bg-[#0f172a] rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] shadow-sm ${mobileTab === "cart" ? "hidden lg:flex" : "flex"
-            }`}
-        >
-          {/* Search bar & Scan buttons (Height 38px, Focus ring emerald) */}
-          <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0">
-            {/* Input with Search Icon */}
-            <div className="relative flex-1 min-w-0">
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && searchQuery.trim()) {
-                    handleScanCode(searchQuery.trim());
-                  }
-                }}
-                placeholder="🔍 Search product code or name... (F2)"
-                className="w-full h-[38px] pl-3 pr-9 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (searchQuery.trim()) handleScanCode(searchQuery.trim());
-                }}
-                className="absolute right-1 top-1 w-[30px] h-[30px] rounded-lg bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
-              >
-                <Search className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Suggestions Dropdown */}
-              {searchResults.length > 0 && (
-                <div className="absolute left-0 right-0 top-[42px] z-30 bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl shadow-2xl overflow-hidden max-h-[260px] overflow-y-auto">
-                  {searchResults.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        ringProduct(item);
-                        setSearchQuery("");
-                        setSearchResults([]);
-                        showToast(`Added: ${item.name}`);
-                      }}
-                      className="px-3 py-2 flex items-center justify-between hover:bg-rose-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-b-0"
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                          {item.name}
-                        </div>
-                        <div className="text-[10px] text-slate-500 font-mono">
-                          Code: {item.primary_code || "N/A"} &bull; Stock: {item.quantity} {item.unit}
-                        </div>
-                      </div>
-                      <div className="text-xs font-black text-emerald-700 dark:text-emerald-400">
-                        {formatBdCurrency(item.sell_price)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Custom Sort & Filter Dropdown (All Items, In Stock, Out of Stock, A to Z) */}
-            <div className="relative shrink-0" ref={filterDropdownRef}>
-              <button
-                type="button"
-                onClick={() => setIsFilterDropdownOpen((prev) => !prev)}
-                className={`h-[38px] px-2.5 sm:px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs ${filterOption !== "all"
-                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400"
-                    : "bg-slate-50 hover:bg-slate-100 dark:bg-[#1e293b] dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-[#cbd5e1] dark:border-[#334155]"
-                  }`}
-                title="Filter & Sort Products"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />
-                <span className="hidden sm:inline whitespace-nowrap">
-                  {FILTER_OPTIONS.find((o) => o.id === filterOption)?.label || "Sort"}
-                </span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${isFilterDropdownOpen ? "rotate-180 text-emerald-700" : "text-slate-400"
-                    }`}
+      {/* 2. MAIN SPLIT INTERFACE */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-2 gap-2">
+        {/* LEFT COLUMN: PRODUCT CATALOG */}
+        <section className="flex-1 flex flex-col bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+          {/* Top Search & Filter Bar */}
+          <div className="p-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="পণ্য খুঁজুন (নাম বা কোড) (F2)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-[40px] pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 />
-              </button>
+              </div>
 
-              {isFilterDropdownOpen && (
-                <div className="absolute left-0 sm:right-0 sm:left-auto top-[44px] z-40 w-44 bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl shadow-2xl py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800/80">
-                    Filter &amp; Sort
-                  </div>
-                  {FILTER_OPTIONS.map((opt) => {
-                    const isSelected = filterOption === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => {
-                          setFilterOption(opt.id);
-                          setIsFilterDropdownOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-xs font-semibold flex items-center justify-between text-left transition-colors cursor-pointer ${isSelected
-                            ? "bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold"
-                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-                          }`}
-                      >
-                        <span>{opt.label}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              {/* Filter Dropdown */}
+              <select
+                value={filterOption}
+                onChange={(e) => setFilterOption(e.target.value as any)}
+                className="h-[40px] px-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer"
+              >
+                {FILTER_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Camera Scan Button */}
-            <button
-              type="button"
-              onClick={() => setIsCameraOpen(true)}
-              className="h-[38px] px-3 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer shadow-xs"
-              title="Open Camera QR / Barcode Scanner"
-            >
-              <Camera className="w-4 h-4" />
-              <span className="hidden sm:inline">Camera</span>
-            </button>
-
-            {/* New Product Button */}
-            <button
-              type="button"
-              onClick={() => setIsQuickProductModalOpen(true)}
-              className="h-[38px] px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold flex items-center gap-1 shrink-0 transition-colors cursor-pointer shadow-xs"
-              title="Add New Product"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Product</span>
-            </button>
-          </div>
-
-          {/* Category Filter Tabs with Left / Right Scroll Arrows */}
-          <div className="w-full min-w-0 px-2 py-1.5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5 shrink-0 bg-slate-50/60 dark:bg-slate-900/40">
-            {/* Left Arrow Button */}
-            <button
-              type="button"
-              onClick={() => scrollCategories("left")}
-              className="w-7 h-7 rounded-lg bg-white dark:bg-[#1e293b] hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400 text-slate-600 dark:text-slate-300 border border-[#cbd5e1] dark:border-[#334155] flex items-center justify-center shrink-0 transition-colors shadow-2xs cursor-pointer active:scale-95"
-              title="Slide Categories Left"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {/* Scrollable Category Tabs */}
-            <div
-              ref={categoryScrollRef}
-              className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5"
-            >
+            {/* Dedicated Category Pills: ডিম, মাছ, মুরগি */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
               <button
                 type="button"
-                onClick={() => setSelectedCategory("all")}
-                className={`h-[28px] px-3.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${selectedCategory === "all"
-                    ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white shadow-xs"
-                    : "bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
+                onClick={() => setSelectedCategory("ALL")}
+                className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  selectedCategory === "ALL"
+                    ? "bg-[#166534] text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
               >
-                All Categories
+                সকল পণ্য (All)
               </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`h-[28px] px-3.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${selectedCategory === cat.id
-                      ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white shadow-xs"
-                      : "bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    }`}
-                >
-                  {cat.category_name}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("EGGS")}
+                className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer ${
+                  selectedCategory === "EGGS"
+                    ? "bg-[#166534] text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+              >
+                <Egg className="w-3.5 h-3.5 text-amber-500" />
+                <span>ডিম (Eggs)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("FISH")}
+                className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer ${
+                  selectedCategory === "FISH"
+                    ? "bg-[#166534] text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+              >
+                <Fish className="w-3.5 h-3.5 text-sky-500" />
+                <span>মাছ (Fish)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("POULTRY")}
+                className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer ${
+                  selectedCategory === "POULTRY"
+                    ? "bg-[#166534] text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-orange-500" />
+                <span>মুরগি (Poultry)</span>
+              </button>
             </div>
-
-            {/* Right Arrow Button */}
-            <button
-              type="button"
-              onClick={() => scrollCategories("right")}
-              className="w-7 h-7 rounded-lg bg-white dark:bg-[#1e293b] hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400 text-slate-600 dark:text-slate-300 border border-[#cbd5e1] dark:border-[#334155] flex items-center justify-center shrink-0 transition-colors shadow-2xs cursor-pointer active:scale-95"
-              title="Slide Categories Right"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
           </div>
 
-          {/* Product Grid Area (Scrollable independently, fewer cards per row for wider comfortable cards) */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-3">
-            {displayProducts.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 py-10">
-                <ShoppingBag className="w-12 h-12 stroke-[1.5] mb-2 opacity-40" />
-                <p className="text-sm font-bold">No Products Found</p>
-                <p className="text-xs text-slate-500">
-                  Try another search query or category filter.
-                </p>
+          {/* Product Grid */}
+          <div className="flex-1 overflow-y-auto p-3">
+            {loading ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-2" />
+                <span className="text-xs">পণ্য লোড হচ্ছে...</span>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <ShoppingBag className="w-10 h-10 mb-2 stroke-1" />
+                <span className="text-xs font-semibold">কোনো পণ্য পাওয়া যায়নি</span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3.5">
-                {displayProducts.map((p) => {
-                  const isOutOfStock = p.quantity <= 0;
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5">
+                {filteredProducts.map((prod) => {
+                  const isOutOfStock = prod.quantity <= 0;
+
                   return (
                     <div
-                      key={p.id}
-                      onClick={() => {
-                        if (!isOutOfStock) {
-                          ringProduct(p);
-                        } else {
-                          showToast(`"${p.name}" is out of stock!`, "error");
-                        }
-                      }}
-                      className={`relative flex flex-col justify-between p-3.5 rounded-2xl border transition-all text-left group min-h-[148px] ${isOutOfStock
-                          ? "bg-slate-100 dark:bg-slate-800/40 border-slate-300 dark:border-slate-800 opacity-60 cursor-not-allowed"
-                          : "bg-white dark:bg-[#1e293b] border-[#cbd5e1] dark:border-[#334155] hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md cursor-pointer hover:-translate-y-0.5"
-                        }`}
+                      key={prod.id}
+                      onClick={() => !isOutOfStock && handleProductClick(prod)}
+                      className={`group relative bg-white dark:bg-[#1e293b] rounded-2xl border transition-all p-3 flex flex-col justify-between ${
+                        isOutOfStock
+                          ? "border-slate-200 dark:border-slate-800 opacity-60 cursor-not-allowed"
+                          : "border-slate-200 dark:border-slate-700/80 hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md cursor-pointer"
+                      }`}
                     >
-                      {/* Top: Product Title, Category & Stock Status */}
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 line-clamp-2 leading-tight group-hover:text-emerald-700 transition-colors">
-                            {p.product_name}
-                          </h4>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-400 truncate mt-0.5 font-medium">
-                            {p.category} &bull; {p.brand}
-                          </p>
-                        </div>
-
-                        {(() => {
-                          const stockText = isOutOfStock
-                            ? "Out of Stock"
-                            : p.tile_size || p.pcs_per_box || p.unit?.toLowerCase() === "box"
-                              ? formatBoxAndPcs(p.quantity, p.pcs_per_box, p.tile_size)
-                              : p.quantity % 1 !== 0
-                                ? `${parseFloat(p.quantity.toFixed(2))} ${p.unit || ""}`.trim()
-                                : `${p.quantity} ${p.unit || ""}`.trim();
-
-                          return (
-                            <span
-                              title={isOutOfStock ? "Out of Stock" : `Stock: ${stockText}`}
-                              className={`text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 mt-0.5 max-w-[145px] truncate text-right ${isOutOfStock
-                                  ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
-                                  : p.quantity <= 5
-                                    ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
-                                    : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-900/50"
-                                }`}
-                            >
-                              {isOutOfStock ? "Out of Stock" : `Stock: ${stockText}`}
-                            </span>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Product Tags (Wrapped cleanly to 2nd line) */}
-                      <div className="flex items-center gap-1 flex-wrap my-1.5">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0 whitespace-nowrap">
-                          {p.unit}
+                      {/* Top Badges */}
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          {prod.category}
                         </span>
-                        {p.tile_size && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60 shrink-0 whitespace-nowrap">
-                            📐 {p.tile_size}
-                          </span>
-                        )}
-                        {p.sqft_per_box && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60 shrink-0 whitespace-nowrap">
-                            {p.sqft_per_box} Sft
-                          </span>
-                        )}
-                        {p.grade && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/60 shrink-0 whitespace-nowrap">
-                            ★ {p.grade}
-                          </span>
-                        )}
+                        <span
+                          className={`text-[10px] font-bold ${
+                            isOutOfStock
+                              ? "text-rose-600 font-black"
+                              : prod.quantity <= 20
+                              ? "text-amber-600"
+                              : "text-slate-400"
+                          }`}
+                        >
+                          স্টক: {prod.quantity} {prod.unit}
+                        </span>
                       </div>
 
-                      {/* Bottom Pricing */}
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      {/* Product Name */}
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug mb-2">
+                        {prod.name}
+                      </h4>
+
+                      {/* Price & Add Button */}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700/60 mt-auto">
                         <div>
-                          <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
-                            {formatBdCurrency(p.sell_price)}
-                          </span>
-                          {p.sqft_per_box && p.sqft_per_box > 0 && (
-                            <span className="text-[10px] text-slate-400 block font-medium -mt-0.5">
-                              ৳{(p.sell_price / p.sqft_per_box).toFixed(2)} / Sq.Ft
-                            </span>
-                          )}
+                          <div className="text-[10px] text-slate-400">নির্ধারিত দর:</div>
+                          <div className="text-sm font-black text-emerald-700 dark:text-emerald-400">
+                            {formatBdCurrency(prod.sell_price)}
+                          </div>
                         </div>
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white flex items-center justify-center transition-all shadow-xs group-hover:scale-110 shrink-0">
-                          <Plus className="w-4 h-4 text-white stroke-[3]" />
-                        </div>
+
+                        <button
+                          type="button"
+                          disabled={isOutOfStock}
+                          className="w-7 h-7 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-xs transition-transform active:scale-90"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   );
@@ -1041,668 +680,521 @@ export default function PosPage() {
           </div>
         </section>
 
-        {/* ======================================================== */}
-        {/* RIGHT COLUMN: CUSTOMER, CART TABLE & CHECKOUT BAR         */}
-        {/* ======================================================== */}
-        <section
-          className={`w-full lg:w-[650px] xl:w-[730px] 2xl:w-[780px] shrink-0 min-h-0 min-w-0 flex flex-col overflow-hidden bg-white dark:bg-[#0f172a] rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] shadow-sm ${mobileTab === "catalog" ? "hidden lg:flex" : "flex"
-            }`}
-        >
-          {/* 1. CUSTOMER & INVOICE META ROW */}
-          <div className="p-2.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-[#1e293b]/50 shrink-0">
+        {/* RIGHT COLUMN: CART, CUSTOMER & CHECKOUT */}
+        <section className="w-full lg:w-[460px] xl:w-[500px] flex flex-col bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden shrink-0">
+          {/* Customer Selection Bar */}
+          <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#1e293b]/40">
             <div className="flex items-center gap-2">
-              {/* Customer Selector Dropdown */}
-              <div ref={customerDropdownRef} className="relative flex-1 min-w-0">
-                <div
-                  onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
-                  className="h-[38px] px-3 rounded-xl bg-white dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] flex items-center justify-between cursor-pointer hover:border-emerald-500 transition-colors"
-                >
-                  <div className="flex items-center gap-1.5 truncate">
-                    <UserCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
-                      {selectedCustomer ? selectedCustomer.customer_name : "Select Customer..."}
-                    </span>
-                  </div>
-                  <span className="text-slate-400 text-xs">&#9662;</span>
-                </div>
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="কাস্টমার নির্বাচন বা মোবাইল নম্বর..."
+                  value={customerSearch}
+                  onFocus={() => setIsCustomerDropdownOpen(true)}
+                  onChange={(e) => {
+                    setCustomerSearch(e.target.value);
+                    setIsCustomerDropdownOpen(true);
+                  }}
+                  className="w-full h-[38px] px-3 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                />
 
-                {/* Dropdown Menu */}
+                {/* Dropdown Results */}
                 {isCustomerDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-[44px] z-50 bg-white dark:bg-[#0f172a] border-[1.5px] border-[#cbd5e1] dark:border-[#334155] rounded-2xl shadow-2xl p-2.5 max-h-[290px] flex flex-col animate-in fade-in zoom-in-95 duration-100">
-                    {/* Modern Search Box with Icon & Clear Button */}
-                    <div className="relative mb-2 shrink-0">
-                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        type="text"
-                        autoFocus
-                        placeholder="Search customer name or mobile..."
-                        value={customerSearch}
-                        onChange={(e) => setCustomerSearch(e.target.value)}
-                        className="w-full h-[38px] pl-9 pr-8 text-xs font-medium rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all shadow-xs"
-                      />
-                      {customerSearch && (
-                        <button
-                          type="button"
-                          onClick={() => setCustomerSearch("")}
-                          className="w-5 h-5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center absolute right-2.5 top-1/2 -translate-y-1/2 transition-colors cursor-pointer"
+                  <div className="absolute top-[42px] left-0 right-0 max-h-48 overflow-y-auto bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl z-50 divide-y divide-slate-100 dark:divide-slate-800">
+                    {customers
+                      .filter(
+                        (c) =>
+                          c.customer_name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                          c.mobile.includes(customerSearch)
+                      )
+                      .slice(0, 10)
+                      .map((c) => (
+                        <div
+                          key={c.id}
+                          onClick={() => {
+                            setCustomer(c);
+                            setCustomerSearch(c.customer_name);
+                            setIsCustomerDropdownOpen(false);
+                          }}
+                          className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs cursor-pointer flex items-center justify-between"
                         >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Customer Items List */}
-                    <div className="flex-1 overflow-y-auto space-y-1 pr-0.5">
-                      {filteredCustomers.length === 0 ? (
-                        <div className="py-6 text-center text-xs text-slate-400 font-medium">
-                          No customers found
-                        </div>
-                      ) : (
-                        filteredCustomers.map((c) => (
-                          <div
-                            key={c.id}
-                            onClick={() => {
-                              setCustomer(c);
-                              setIsCustomerDropdownOpen(false);
-                            }}
-                            className={`p-2.5 rounded-xl text-xs cursor-pointer flex items-center justify-between transition-colors ${selectedCustomer?.id === c.id
-                                ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold shadow-xs"
-                                : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
-                              }`}
-                          >
-                            <div>
-                              <div className="font-bold">{c.customer_name}</div>
-                              <div className="text-[10px] opacity-75">{c.mobile}</div>
+                          <div>
+                            <div className="font-bold text-slate-800 dark:text-slate-100">
+                              {c.customer_name}
                             </div>
-                            {c.previous_due_amount > 0 && (
-                              <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${selectedCustomer?.id === c.id
-                                    ? "bg-white/20 text-white"
-                                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900"
-                                  }`}
-                              >
-                                Due: ৳{c.previous_due_amount}
-                              </span>
-                            )}
+                            <div className="text-[10px] text-slate-400">{c.mobile || "মোবাইল নম্বর নেই"}</div>
                           </div>
-                        ))
-                      )}
-                    </div>
+                          {c.previous_due_amount > 0 && (
+                            <span className="text-[10px] font-bold text-rose-600">
+                              বকেয়া: {formatBdCurrency(c.previous_due_amount)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>
 
-              {/* + New Customer Button */}
               <button
                 type="button"
                 onClick={() => setIsCustomerModalOpen(true)}
-                className="h-[38px] px-3 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1 shrink-0 transition-colors cursor-pointer shadow-xs"
+                className="h-[38px] px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shrink-0 transition-colors shadow-xs"
               >
-                <Plus className="w-4 h-4" />
-                <span>New</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>নতুন</span>
+              </button>
+            </div>
+
+            {/* Selected Customer Quick Badge */}
+            {selectedCustomer && (
+              <div className="mt-2 p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                    {selectedCustomer.customer_name}
+                  </span>
+                  <span className="text-[11px] text-slate-500 ml-2">
+                    {selectedCustomer.mobile}
+                  </span>
+                </div>
+                <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                  পূর্বের বকেয়া:{" "}
+                  <strong className="text-rose-600">
+                    {formatBdCurrency(selectedCustomer.previous_due_amount || 0)}
+                  </strong>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Cart Items List (Independent Scroll) */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+            {cart.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12">
+                <ShoppingBag className="w-12 h-12 mb-2 stroke-1" />
+                <p className="text-xs font-semibold m-0">কার্ট খালি রয়েছে</p>
+                <p className="text-[11px] text-slate-400 m-0">বাম পাশের তালিকা থেকে পণ্য ক্লিক করুন</p>
+              </div>
+            ) : (
+              cart.map((item) => {
+                const isEgg =
+                  item.product_name.toLowerCase().includes("egg") ||
+                  item.product_name.toLowerCase().includes("ডিম");
+                const isFish =
+                  item.product_name.toLowerCase().includes("fish") ||
+                  item.product_name.toLowerCase().includes("মাছ");
+                const isChicken =
+                  item.product_name.toLowerCase().includes("মুরগি") ||
+                  item.product_name.toLowerCase().includes("chicken") ||
+                  item.product_name.toLowerCase().includes("chick");
+
+                const lineTotal = item.selling_price * item.quantity;
+
+                return (
+                  <div
+                    key={item.product_id}
+                    className="p-3 bg-slate-50 dark:bg-[#1e293b]/70 rounded-2xl border border-slate-200 dark:border-slate-700/80 space-y-2"
+                  >
+                    {/* Item Top: Name and Delete */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                          {item.product_name}
+                        </h4>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          আইডি: #{item.product_id}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.product_id)}
+                        className="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Unit Selectors (As requested: Egg hali/dozen/tray, Fish kg/gram, Chicken pcs/weight) */}
+                    {isEgg && (
+                      <div className="flex items-center gap-1 text-[11px]">
+                        <span className="text-slate-400 mr-1">একক:</span>
+                        <button
+                          type="button"
+                          onClick={() => updateQty(item.product_id, 1)}
+                          className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100"
+                        >
+                          ১ পিস
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateQty(item.product_id, 4)}
+                          className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100"
+                        >
+                          ১ হালি (৪)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateQty(item.product_id, 12)}
+                          className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100"
+                        >
+                          ১ ডজন (১২)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateQty(item.product_id, 30)}
+                          className="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100"
+                        >
+                          ১ ট্রে (৩০)
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Manual Rate & Quantity Row */}
+                    <div className="grid grid-cols-3 gap-2 items-center pt-1 border-t border-slate-200/60 dark:border-slate-700/60 text-xs">
+                      {/* Manual Editable Price as requested */}
+                      <div>
+                        <label className="text-[10px] text-slate-400 block">
+                          দর (৳) [ম্যানুয়াল]:
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={item.selling_price}
+                          onChange={(e) => updatePrice(item.product_id, parseFloat(e.target.value) || 0)}
+                          className="w-full h-[32px] px-2 text-xs font-black text-emerald-700 dark:text-emerald-400 bg-white dark:bg-[#0f172a] border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                        />
+                      </div>
+
+                      {/* Quantity / Weight Input */}
+                      <div>
+                        <label className="text-[10px] text-slate-400 block">
+                          {isFish ? "ওজন (কেজি/গ্রাম):" : "পরিমাণ (Qty):"}
+                        </label>
+                        <div className="flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => updateQty(item.product_id, Math.max(0.1, item.quantity - (isFish ? 0.5 : 1)))}
+                            className="w-7 h-[32px] bg-slate-200 dark:bg-slate-700 rounded-l-lg flex items-center justify-center text-slate-700 dark:text-slate-200"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0.1"
+                            value={item.quantity}
+                            onChange={(e) => updateQty(item.product_id, parseFloat(e.target.value) || 0)}
+                            className="w-full h-[32px] text-center font-bold text-xs bg-white dark:bg-[#0f172a] border-y border-slate-300 dark:border-slate-700 focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => updateQty(item.product_id, item.quantity + (isFish ? 0.5 : 1))}
+                            className="w-7 h-[32px] bg-slate-200 dark:bg-slate-700 rounded-r-lg flex items-center justify-center text-slate-700 dark:text-slate-200"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Line Total */}
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block">মোট মূল্য:</span>
+                        <span className="text-sm font-black text-slate-900 dark:text-white">
+                          {formatBdCurrency(lineTotal)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* 3. EXCHANGE & BARTER OFFSET ACCORDION (As requested by user!) */}
+          <div className="px-3 py-2 bg-amber-50/60 dark:bg-amber-950/20 border-t border-amber-200 dark:border-amber-900/60">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setShowExchangePanel(!showExchangePanel)}
+                className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 cursor-pointer"
+              >
+                <ArrowRightLeft className="w-4 h-4 text-amber-600" />
+                <span>পণ্য বিনিময় বা সমন্বয় (Exchange Offset)</span>
               </button>
 
-              {/* Custom Date Picker - Clicking anywhere opens the calendar */}
-              <div className="w-[145px] shrink-0">
-                <PosDatePicker
-                  value={invoiceDate}
-                  onChange={(d) => setInvoiceDate(d)}
-                  hideChevron={true}
-                />
-              </div>
-            </div>
-
-            {/* Quick Customer Info Preview Bar */}
-            {selectedCustomer && (
-              <div className="mt-1.5 pt-1.5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-4 gap-1 text-[11px]">
-                <div className="truncate">
-                  <span className="text-slate-400">Name:</span>{" "}
-                  <strong className="text-slate-700 dark:text-slate-200 font-bold truncate">
-                    {selectedCustomer.customer_name}
-                  </strong>
-                </div>
-                <div className="truncate">
-                  <span className="text-slate-400">Mobile:</span>{" "}
-                  <strong className="text-slate-700 dark:text-slate-200 font-bold">
-                    {selectedCustomer.mobile}
-                  </strong>
-                </div>
-                <div className="truncate">
-                  <span className="text-slate-400">Addr:</span>{" "}
-                  <span className="text-slate-600 dark:text-slate-300">
-                    {selectedCustomer.address_details || "N/A"}
-                  </span>
-                </div>
-                <div className="text-right truncate">
-                  <span className="text-slate-400">Prev Due:</span>{" "}
-                  <strong className="text-emerald-700 font-bold">
-                    ৳{selectedCustomer.previous_due_amount || 0}
-                  </strong>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 2. CART ITEMS TABLE (Scrollable independently with sticky header) */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 p-6">
-                <ShoppingBag className="w-10 h-10 stroke-[1.5] mb-2 opacity-30 text-emerald-500" />
-                <p className="text-xs font-bold">Your Cart is Empty</p>
-                <p className="text-[11px] text-slate-500 text-center max-w-[220px] mt-0.5">
-                  Click any product from the catalog to add items.
-                </p>
-              </div>
-            ) : (
-              (() => {
-                const hasTilesInCart = cart.some((it) => !!(it.tile_size || it.sqft_per_box));
-                return (
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-[#1e293b] border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                      <tr>
-                        <th className="py-2 pl-3">Item</th>
-                        <th className="py-2 text-center w-28">Qty</th>
-                        <th className="py-2 text-right w-20">Price</th>
-                        {hasTilesInCart && (
-                          <th className="py-2 text-right w-24">Sqft. Price</th>
-                        )}
-                        <th className="py-2 text-right w-20">Total</th>
-                        <th className="py-2 pr-3 text-center w-10"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {cart.map((item, idx) => (
-                        <tr
-                          key={item.product_id}
-                          className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                        >
-                          <td className="py-2 pl-3">
-                            <div className="font-bold text-slate-800 dark:text-slate-200 line-clamp-1">
-                              {item.product_name}
-                            </div>
-                            {(item.tile_size || item.sqft_per_box) && (
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                {item.tile_size && (
-                                  <span className="text-[9px] font-bold px-1 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300">
-                                    📐 {item.tile_size}
-                                  </span>
-                                )}
-                                {item.sqft_per_box && (
-                                  <span className="text-[9px] font-semibold text-slate-500">
-                                    ({(item.quantity * item.sqft_per_box).toFixed(1)} Sft)
-                                  </span>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setTileCalcProduct(item);
-                                    setIsTileCalcOpen(true);
-                                  }}
-                                  className="text-[9px] font-extrabold text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded cursor-pointer transition-colors border border-rose-200/60 dark:border-rose-900/60 flex items-center gap-0.5"
-                                  title="Open Sft & Box Calculator"
-                                >
-                                  📐 Sft Calc
-                                </button>
-                              </div>
-                            )}
-                          </td>
-
-                          {/* QTY Controller */}
-                          <td className="py-2 text-center">
-                            <div className="inline-flex items-center rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#1e293b] overflow-hidden shadow-2xs">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const next = Math.max(0.01, parseFloat((item.quantity - 1).toFixed(2)));
-                                  updateQty(item.product_id, next);
-                                }}
-                                className="w-6 h-6 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
-                              >
-                                <Minus className="w-3 h-3" />
-                              </button>
-                              <input
-                                type="number"
-                                step="any"
-                                min="0.01"
-                                value={item.quantity}
-                                onChange={(e) => {
-                                  const val = parseFloat(e.target.value);
-                                  updateQty(item.product_id, isNaN(val) ? 0 : val);
-                                }}
-                                className="w-14 h-6 text-center text-xs font-bold bg-transparent border-x border-[#cbd5e1] dark:border-[#334155] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none px-1"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const next = parseFloat((item.quantity + 1).toFixed(2));
-                                  updateQty(item.product_id, next);
-                                }}
-                                className="w-6 h-6 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
-                              >
-                                <Plus className="w-3 h-3" />
-                              </button>
-                            </div>
-                            {/* If fractional tile quantity, show clean dynamic breakdown */}
-                            {item.pcs_per_box && item.quantity % 1 !== 0 && (
-                              <div className="text-[9px] font-bold text-rose-600 dark:text-rose-400 mt-0.5 whitespace-nowrap">
-                                {formatBoxAndPcs(item.quantity, item.pcs_per_box)}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Price */}
-                          <td className="py-2 text-right text-slate-600 dark:text-slate-400 font-medium">
-                            {item.selling_price.toFixed(2)}
-                          </td>
-
-                          {/* Sqft. PRICE (Dynamic - only shown when tiles present in cart) */}
-                          {hasTilesInCart && (
-                            <td className="py-2 text-right text-slate-600 dark:text-slate-400 font-medium">
-                              {item.sqft_per_box && item.sqft_per_box > 0
-                                ? `৳${(item.selling_price / item.sqft_per_box).toFixed(2)}`
-                                : "-"}
-                            </td>
-                          )}
-
-                          {/* Line Total */}
-                          <td className="py-2 text-right font-bold text-slate-900 dark:text-white">
-                            {(item.selling_price * item.quantity).toFixed(2)}
-                          </td>
-
-                          {/* Delete */}
-                          <td className="py-2 pr-3 text-center">
-                            <button
-                              type="button"
-                              onClick={() => removeItem(item.product_id)}
-                              className="w-6 h-6 rounded-md hover:bg-rose-100 dark:hover:bg-rose-950 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                              title="Remove from cart"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                );
-              })()
-            )}
-          </div>
-
-          {/* 3. STICKY BOTTOM CHECKOUT FOOTER (Strict Rule: Pinned to bottom, responsive) */}
-          <div className="border-t border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b]/90 p-2.5 shrink-0 space-y-2">
-            {/* Payment Method Selector (6 Pills) */}
-            <div>
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                <span>Payment Method</span>
-                <span className="font-mono text-emerald-700 dark:text-emerald-400">
-                  {paymentMethod}
-                </span>
-              </div>
-              <div className="grid grid-cols-6 gap-1.5">
-                {[
-                  { name: "Cash", color: "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d]" },
-                  { name: "bKash", color: "bg-[#e2136e]" },
-                  { name: "Nagad", color: "bg-[#f7931e]" },
-                  { name: "Rocket", color: "bg-[#8c3294]" },
-                  { name: "Bank", color: "bg-blue-600" },
-                  { name: "Card", color: "bg-indigo-600" },
-                ].map((m) => (
-                  <button
-                    key={m.name}
-                    type="button"
-                    onClick={() => setPaymentMethod(m.name)}
-                    className={`h-[30px] rounded-lg text-[11px] font-bold transition-all border cursor-pointer ${paymentMethod === m.name
-                        ? `${m.color} text-white border-transparent shadow-xs scale-102`
-                        : "bg-white dark:bg-[#0f172a] text-slate-700 dark:text-slate-300 border-[#cbd5e1] dark:border-[#334155] hover:border-emerald-500"
-                      }`}
-                  >
-                    {m.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Note & Transaction ID (hidden for Cash) */}
-            {paymentMethod === "Cash" ? (
-              <div className="w-full">
-                <input
-                  type="text"
-                  placeholder="Order Note / Remark"
-                  value={orderNote}
-                  onChange={(e) => setOrderNote(e.target.value)}
-                  className="w-full h-[28px] px-2.5 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-                />
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-1.5">
-                <input
-                  type="text"
-                  placeholder="Trx ID / Ref No."
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                  className="h-[28px] px-2 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600 font-mono"
-                />
-                <input
-                  type="text"
-                  placeholder="Order Note / Remark"
-                  value={orderNote}
-                  onChange={(e) => setOrderNote(e.target.value)}
-                  className="h-[28px] px-2 text-xs rounded-lg border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-                />
-              </div>
-            )}
-
-            {/* Financial Calculations Grid */}
-            <div className="bg-white dark:bg-[#0f172a] p-2 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-1.5 text-xs">
-              {/* Subtotal */}
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
-                  Sub-Total:
-                </span>
-                <span className="font-bold text-sky-600 dark:text-sky-400">
-                  {formatBdCurrency(subTotal)}
-                </span>
-              </div>
-
-              {/* Discount with Flat / Percent pill */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
-                    Discount:
-                  </span>
-                  <div className="inline-flex rounded-md border border-[#cbd5e1] dark:border-[#334155] overflow-hidden h-[20px]">
-                    <button
-                      type="button"
-                      onClick={() => setDiscountType("flat")}
-                      className={`px-1.5 text-[10px] font-bold cursor-pointer ${discountType === "flat"
-                          ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                        }`}
-                    >
-                      ৳
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDiscountType("percent")}
-                      className={`px-1.5 text-[10px] font-bold cursor-pointer ${discountType === "percent"
-                          ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                        }`}
-                    >
-                      %
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  {discountType === "percent" && discount > 0 && (
-                    <span className="text-[10px] text-emerald-700 font-bold">
-                      (-{formatBdCurrency(calculatedDiscount)})
-                    </span>
-                  )}
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="0"
-                    value={discount || ""}
-                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                    className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] focus:outline-none focus:ring-1 focus:ring-emerald-600"
-                  />
-                </div>
-              </div>
-
-              {/* Delivery Charge */}
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
-                  Delivery Charge:
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  value={deliveryCharge || ""}
-                  onChange={(e) => setDeliveryCharge(parseFloat(e.target.value) || 0)}
-                  className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] focus:outline-none focus:ring-1 focus:ring-emerald-600"
-                />
-              </div>
-
-              {/* Exchange Amount */}
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
-                  Exchange Amount:
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  value={returnAdjustment || ""}
-                  onChange={(e) => setReturnAdjustment(parseFloat(e.target.value) || 0)}
-                  className="w-18 h-[24px] px-1 text-right font-bold text-xs rounded border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-[#1e293b] text-amber-700 dark:text-amber-400 focus:outline-none focus:ring-1 focus:ring-emerald-600"
-                />
-              </div>
-
-              {/* Net Payable / Grand Total */}
-              <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-800">
-                <span className="font-black text-slate-800 dark:text-white uppercase tracking-wider text-xs">
-                  Net Payable:
-                </span>
-                <span className="font-black text-emerald-700 dark:text-emerald-400 text-sm">
-                  {formatBdCurrency(grandTotal)}
-                </span>
-              </div>
-
-              {/* Paid Amount & Quick "Full Paid" Button */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-500 uppercase tracking-wider text-[11px]">
-                    Paid Amount:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleSetFullPaid}
-                    className="px-1.5 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950 dark:hover:bg-emerald-900 dark:text-emerald-300 text-[10px] font-bold cursor-pointer"
-                  >
-                    Full Paid
-                  </button>
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  value={paidAmount || ""}
-                  onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                  className="w-24 h-[26px] px-1 text-right font-black text-xs rounded border-2 border-emerald-600 bg-white dark:bg-[#1e293b] text-emerald-700 dark:text-emerald-300 focus:outline-none"
-                />
-              </div>
-
-              {/* Due Amount & Status */}
-              <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+              {returnAdjustment > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-emerald-700 uppercase tracking-wider text-[11px]">
-                    Current Due:
+                  <span className="text-xs font-black text-rose-600">
+                    - {formatBdCurrency(returnAdjustment)}
                   </span>
-                  <span
-                    className={`text-[9px] font-black px-1.5 py-0.5 rounded ${paymentStatus === "PAID"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900"
-                        : paymentStatus === "PARTIAL PAID"
-                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                      }`}
+                  <button
+                    type="button"
+                    onClick={handleClearExchange}
+                    className="text-[10px] text-slate-400 hover:text-rose-600 underline"
                   >
-                    {paymentStatus}
-                  </span>
-                </div>
-                <span className="font-black text-emerald-700 text-xs">
-                  {formatBdCurrency(dueAmount)}
-                </span>
-              </div>
-
-              {/* Total Due with Previous Customer Due */}
-              {selectedCustomer && selectedCustomer.previous_due_amount > 0 && (
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5 border-t border-dashed border-slate-200 dark:border-slate-800">
-                  <span>Total Due (inc. Previous ৳{selectedCustomer.previous_due_amount}):</span>
-                  <strong className="text-emerald-700 dark:text-emerald-400 font-bold">
-                    {formatBdCurrency(totalDueWithPrev)}
-                  </strong>
+                    রিসেট
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* ACTION BUTTONS (Hold, Clear, Big Submit Order) */}
-            <div className="grid grid-cols-4 gap-2 pt-1">
-              {/* Hold Button */}
-              <button
-                type="button"
-                onClick={handleHoldInvoice}
-                className="h-[40px] rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs"
-                title="Hold current order (F8)"
-              >
-                <PauseCircle className="w-4 h-4" />
-                <span className="hidden sm:inline">Hold</span>
-              </button>
+            {/* Expandable Exchange Controls */}
+            {showExchangePanel && (
+              <div className="mt-2.5 p-3 bg-white dark:bg-[#0f172a] rounded-xl border border-amber-300 dark:border-amber-800 space-y-2.5 text-xs animate-in fade-in duration-150">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setExchangeMode("EGGS")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      exchangeMode === "EGGS"
+                        ? "bg-amber-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600"
+                    }`}
+                  >
+                    ডিম দিয়ে পরিশোধ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExchangeMode("FEED")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      exchangeMode === "FEED"
+                        ? "bg-amber-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600"
+                    }`}
+                  >
+                    ফিড ক্রয় সমন্বয়
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExchangeMode("CUSTOM")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      exchangeMode === "CUSTOM"
+                        ? "bg-amber-600 text-white shadow-xs"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600"
+                    }`}
+                  >
+                    কাস্টম বিনিময়
+                  </button>
+                </div>
 
-              {/* Clear Cart Button */}
+                {exchangeMode === "EGGS" ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-slate-500 block">ডিমের সংখ্যা (পিস):</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={exchangeEggCount}
+                        onChange={(e) => setExchangeEggCount(e.target.value)}
+                        className="w-full h-[32px] px-2 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 block">প্রতি ডিমের দর (৳):</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={exchangeEggRate}
+                        onChange={(e) => setExchangeEggRate(e.target.value)}
+                        className="w-full h-[32px] px-2 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-[10px] text-slate-500 block">সমন্বয়ের পরিমাণ (৳):</label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      placeholder="0.00"
+                      value={exchangeDirectAmount}
+                      onChange={(e) => setExchangeDirectAmount(e.target.value)}
+                      className="w-full h-[32px] px-2 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleApplyExchange}
+                  className="w-full h-[32px] rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors"
+                >
+                  বিনিময় সমন্বয় প্রয়োগ করুন
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 4. TOTALS & PAYMENT SECTION */}
+          <div className="p-3 bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-slate-800 space-y-2.5">
+            {/* Payment Method Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none text-xs">
+              {["Cash", "bKash", "Nagad", "Rocket", "Bank", "Card"].map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setPaymentMethod(m)}
+                  className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    paymentMethod === m
+                      ? "bg-[#166534] text-white shadow-xs"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                  }`}
+                >
+                  {m === "Cash" ? "ক্যাশ" : m === "Bank" ? "ব্যাংক" : m}
+                </button>
+              ))}
+            </div>
+
+            {/* Calculations Breakdown */}
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center justify-between text-slate-500">
+                <span>সাব-টোটাল (Sub-Total):</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  {formatBdCurrency(getSubTotal())}
+                </span>
+              </div>
+
+              {/* Discount Input */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-500">ডিসকাউন্ট:</span>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountType(discountType === "flat" ? "percent" : "flat")}
+                    className="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300"
+                  >
+                    {discountType === "flat" ? "৳ ফিক্সড" : "% পারসেন্ট"}
+                  </button>
+                </div>
+                <div className="w-24">
+                  <input
+                    type="number"
+                    min="0"
+                    value={discount || ""}
+                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                    className="w-full h-[26px] px-2 text-right font-bold text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Net Payable */}
+              <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-slate-700">
+                <span className="font-black text-slate-900 dark:text-white">সর্বমোট প্রদেয় (Net Payable):</span>
+                <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
+                  {formatBdCurrency(getGrandTotal())}
+                </span>
+              </div>
+
+              {/* Paid Amount */}
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">পরিশোধ (Paid):</span>
+                  <button
+                    type="button"
+                    onClick={handleFullPaid}
+                    className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-200 cursor-pointer"
+                  >
+                    সম্পূর্ণ পরিশোধ
+                  </button>
+                </div>
+                <div className="w-32">
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    value={paidAmount || ""}
+                    onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                    placeholder="0.00"
+                    className="w-full h-[32px] px-2 text-right font-black text-emerald-700 text-sm bg-slate-50 dark:bg-slate-800 border border-emerald-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              {/* Dues */}
+              <div className="flex items-center justify-between text-rose-600 font-bold pt-1">
+                <span>বর্তমান বকেয়া (Current Due):</span>
+                <span>{formatBdCurrency(getDueAmount())}</span>
+              </div>
+              {selectedCustomer && selectedCustomer.previous_due_amount > 0 && (
+                <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                  <span>পূর্বের বকেয়াসহ মোট দেনা:</span>
+                  <span className="font-bold text-rose-600">
+                    {formatBdCurrency(getTotalDueWithPrevious())}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Submit Buttons */}
+            <div className="pt-2 grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={clearCart}
-                className="h-[40px] rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                title="Clear current cart"
+                className="h-[42px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
-                <span className="hidden sm:inline">Clear</span>
+                <span>ক্লিয়ার</span>
               </button>
 
-              {/* Submit Order (F4) Button - Takes 2 Columns */}
               <button
                 type="button"
-                disabled={isSubmitting || cart.length === 0}
                 onClick={handleSubmitOrder}
-                className={`col-span-2 h-[40px] rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${isSubmitting || cart.length === 0
-                    ? "bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white hover:shadow-lg active:scale-98"
-                  }`}
+                disabled={submittingOrder}
+                className="col-span-2 h-[42px] rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md active:scale-98 disabled:opacity-50"
               >
-                <Send className="w-4 h-4" />
-                <span>Submit Order (F4)</span>
+                {submittingOrder ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                <span>অর্ডার সম্পন্ন ও মেমো (F4)</span>
               </button>
             </div>
           </div>
         </section>
       </div>
 
-      {/* MOBILE / TABLET FLOATING DOCK (Shown on screens < 1024px) */}
-      <div className="lg:hidden p-2 bg-slate-900/95 text-white backdrop-blur-md border-t border-slate-800 flex items-center justify-between z-30 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <ShoppingBag className="w-5 h-5 text-emerald-400" />
-            <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center">
-              {cart.length}
-            </span>
-          </div>
-          <div>
-            <div className="text-[10px] text-slate-400">Total Payable</div>
-            <div className="text-xs font-black text-emerald-400">
-              {formatBdCurrency(grandTotal)}
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setMobileTab(mobileTab === "catalog" ? "cart" : "catalog")}
-          className="h-[36px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-        >
-          <span>{mobileTab === "catalog" ? "View Cart / Checkout" : "Back to Catalog"}</span>
-        </button>
-      </div>
-
-      {/* MODALS */}
-      {/* 1. Thermal Receipt Modal */}
-      {receiptData && (
+      {/* 5. MODALS INTEGRATION */}
+      {/* Thermal Receipt Modal with big official logo */}
+      {isReceiptModalOpen && completedOrder && (
         <ThermalReceiptModal
-          receiptData={receiptData}
-          onClose={() => setReceiptData(null)}
-          onOpenChallan={(oid) => setChallanOrderId(oid)}
-        />
-      )}
-
-      {/* Challan Modal */}
-      {challanOrderId && (
-        <ChallanModal
-          orderId={challanOrderId}
-          isOpen={!!challanOrderId}
-          onClose={() => setChallanOrderId(null)}
-          onChallanGenerated={() => {
-            loadData();
-            showToast("Challan successfully dispatched", "success");
+          receiptData={completedOrder}
+          onClose={() => {
+            setIsReceiptModalOpen(false);
+            setCompletedOrder(null);
           }}
         />
       )}
 
-      {/* 2. Camera Barcode/QR Scanner Modal */}
-      <CameraScannerModal
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        onScanSuccess={(code) => handleScanCode(code)}
-      />
+      {/* Customer Create Modal */}
+      {isCustomerModalOpen && (
+        <CustomerModal
+          isOpen={isCustomerModalOpen}
+          onClose={() => setIsCustomerModalOpen(false)}
+          onCustomerCreated={(newCust: any) => {
+            setCustomer(newCust);
+            loadInitialData();
+            setIsCustomerModalOpen(false);
+          }}
+        />
+      )}
 
-      {/* 3. Customer Create Modal */}
-      <CustomerModal
-        isOpen={isCustomerModalOpen}
-        onClose={() => setIsCustomerModalOpen(false)}
-        onCustomerCreated={(newCust) => {
-          setCustomers((curr) => [newCust, ...curr]);
-          setCustomer(newCust);
-          showToast(`Customer created: ${newCust.customer_name}`, "success");
-        }}
-      />
-
-      {/* 4. Held Invoices Modal */}
-      <HeldInvoicesModal
-        isOpen={isHeldModalOpen}
-        onClose={() => setIsHeldModalOpen(false)}
-        heldList={heldInvoices}
-        onRestore={handleRestoreHeld}
-        onDelete={handleDeleteHeld}
-      />
-
-      {/* 5. Quick Add Product Modal */}
-      <QuickProductModal
-        isOpen={isQuickProductModalOpen}
-        onClose={() => setIsQuickProductModalOpen(false)}
-        categories={categories}
-        brands={brands}
-        units={units}
-        onProductCreated={(created) => {
-          const formatted: Product = {
-            id: created.id,
-            name: created.product_name,
-            product_name: created.product_name,
-            primary_code: Array.isArray(created.product_code) ? created.product_code[0] : (created.product_code || ""),
-            display_codes: Array.isArray(created.product_code) ? created.product_code.join(", ") : (created.product_code || ""),
-            all_codes: Array.isArray(created.product_code) ? created.product_code : (created.product_code ? [created.product_code] : []),
-            cost_price: parseFloat(created.cost_price || "0"),
-            sell_price: parseFloat(created.sell_price || "0"),
-            quantity: parseFloat(created.quantity || "1"),
-            category_id: Number(created.category_id),
-            category: categories.find((c) => c.id === Number(created.category_id))?.category_name || "N/A",
-            brand: brands.find((b) => b.id === Number(created.brand_id))?.name || "N/A",
-            unit: units.find((u) => u.id === Number(created.unit_id))?.unit_name || "Pcs",
-            tile_size: created.tile_size || null,
-            sqft_per_box: created.sqft_per_box ? Number(created.sqft_per_box) : null,
-            pcs_per_box: created.pcs_per_box ? Number(created.pcs_per_box) : null,
-            grade: created.grade || null,
-            surface_finish: created.surface_finish || null,
-          };
-          setProducts((curr) => [formatted, ...curr]);
-          ringProduct(formatted);
-          showToast(`Created & Added: ${formatted.name}`, "success");
-        }}
-      />
+      {/* Quick Product Modal */}
+      {isQuickProductModalOpen && (
+        <QuickProductModal
+          isOpen={isQuickProductModalOpen}
+          categories={categories}
+          brands={brands}
+          units={units}
+          onClose={() => setIsQuickProductModalOpen(false)}
+          onProductCreated={() => {
+            loadInitialData();
+            setIsQuickProductModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

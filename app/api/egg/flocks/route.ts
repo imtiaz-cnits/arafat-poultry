@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import {
+  listPoultryFlocksWithMetrics,
+  createPoultryFlock,
+  recordFlockPurchase,
+} from "@/lib/poultry-service";
 
 export const dynamic = "force-dynamic";
 
@@ -11,25 +15,11 @@ export async function GET(req: NextRequest) {
       return authResult.errorResponse;
     }
 
-    const flocks = await prisma.poultry_flocks.findMany({
-      orderBy: { id: "desc" },
-    });
+    const flocks = await listPoultryFlocksWithMetrics();
 
     return NextResponse.json({
       status: "success",
-      data: flocks.map((f) => ({
-        id: Number(f.id),
-        flock_code: f.flock_code,
-        shed_name: f.shed_name,
-        breed: f.breed,
-        initial_chicks_count: f.initial_chicks_count,
-        current_birds_count: f.current_birds_count,
-        housing_date: f.housing_date.toISOString().split("T")[0],
-        status: f.status,
-        feed_consumed_kg: Number(f.feed_consumed_kg),
-        total_expenses: Number(f.total_expenses),
-        note: f.note,
-      })),
+      data: flocks,
     });
   } catch (error: any) {
     console.error("Flocks GET Error:", error);
@@ -48,7 +38,17 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { shed_name, breed, initial_chicks_count, housing_date, note } = body;
+    const {
+      shed_name,
+      breed,
+      initial_chicks_count,
+      housing_date,
+      supplier_id,
+      unit_price,
+      paid_amount,
+      payment_method,
+      note,
+    } = body;
 
     if (!shed_name || !breed) {
       return NextResponse.json(
@@ -57,34 +57,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const count = Math.max(0, parseInt(initial_chicks_count) || 0);
-    const d = new Date();
-    const flockCode = `FLOCK-${d.getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    // If supplier_id is provided, execute full Flock Purchase flow
+    if (supplier_id) {
+      const result = await recordFlockPurchase({
+        supplierId: supplier_id,
+        shedName: shed_name,
+        breed,
+        birdCount: Number(initial_chicks_count || 0),
+        unitPrice: Number(unit_price || 0),
+        paidAmount: paid_amount ? Number(paid_amount) : 0,
+        paymentMethod: payment_method || "Cash",
+        housingDate: housing_date ? new Date(housing_date) : new Date(),
+        note,
+        userId: authResult.user.id,
+      });
 
-    const flock = await prisma.poultry_flocks.create({
-      data: {
-        flock_code: flockCode,
-        shed_name: shed_name.trim(),
-        breed: breed.trim(),
-        initial_chicks_count: count,
-        current_birds_count: count,
-        housing_date: housing_date ? new Date(housing_date) : new Date(),
-        status: "ACTIVE",
-        note: note ? note.trim() : null,
-        user_id: authResult.user.id,
-      },
+      return NextResponse.json({
+        status: "success",
+        message: "নতুন মুরগির ক্রয় ও শেড স্টক সফলভাবে সংরক্ষিত হয়েছে",
+        data: result,
+      });
+    }
+
+    // Otherwise, direct flock creation
+    const result = await createPoultryFlock({
+      shedName: shed_name,
+      breed,
+      initialChicksCount: Number(initial_chicks_count || 0),
+      housingDate: housing_date ? new Date(housing_date) : new Date(),
+      note,
+      userId: authResult.user.id,
     });
 
     return NextResponse.json({
       status: "success",
       message: "নতুন ফ্লক সফলভাবে তৈরি হয়েছে",
-      data: {
-        id: Number(flock.id),
-        flock_code: flock.flock_code,
-        shed_name: flock.shed_name,
-        breed: flock.breed,
-        current_birds_count: flock.current_birds_count,
-      },
+      data: result,
     });
   } catch (error: any) {
     console.error("Flocks POST Error:", error);

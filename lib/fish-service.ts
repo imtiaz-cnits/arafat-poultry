@@ -9,8 +9,11 @@ export interface CreateFishBatchParams {
   pondId: bigint | number;
   speciesId: bigint | number;
   productId?: bigint | number | null;
+  supplierId?: bigint | number | null;
   fingerlingCount: number;
   fingerlingUnitCost: number;
+  paidAmount?: number;
+  paymentMethod?: string;
   stockingDate?: Date;
   note?: string | null;
   userId: bigint | number;
@@ -118,6 +121,72 @@ export async function createFishBatch(params: CreateFishBatchParams) {
         user_id: BigInt(params.userId),
       },
     });
+
+    // Supplier Ledger Integration
+    if (params.supplierId) {
+      const suppId = BigInt(params.supplierId);
+      const supplier = await tx.suppliers.findUnique({ where: { id: suppId } });
+      if (supplier) {
+        const fishBu = await tx.business_units.findUnique({ where: { code: "FISH" } });
+
+        // 1. Credit supplier liability for total fingerling purchase
+        await recordPartyTransaction(
+          {
+            partyType: "SUPPLIER",
+            supplierId: suppId,
+            businessUnitId: fishBu?.id || null,
+            transactionType: "INVOICE",
+            referenceType: "PURCHASE",
+            referenceId: batch.id,
+            referenceNo: batchCode,
+            credit: totalCost,
+            date: stockDate,
+            note: `Fingerling Purchase: ${count} pcs @ ৳${unitCost} for ${pond.pond_name}`,
+            userId: params.userId,
+          },
+          tx
+        );
+
+        // 2. If initial payment made, debit supplier and record financial outflow
+        const paid = Math.max(0, Number(params.paidAmount || 0));
+        if (paid > 0) {
+          await recordPartyTransaction(
+            {
+              partyType: "SUPPLIER",
+              supplierId: suppId,
+              businessUnitId: fishBu?.id || null,
+              transactionType: "PAYMENT",
+              referenceType: "PURCHASE_PAYMENT",
+              referenceId: batch.id,
+              referenceNo: batchCode,
+              debit: paid,
+              date: stockDate,
+              note: `Payment for fingerling batch ${batchCode} to ${supplier.name}`,
+              userId: params.userId,
+            },
+            tx
+          );
+
+          const finAcc = await getAccountByPaymentMethod(params.paymentMethod, tx);
+          if (finAcc) {
+            await recordFinancialTransaction(
+              {
+                accountId: finAcc.id,
+                businessUnitId: fishBu?.id || null,
+                transactionType: "OUTFLOW",
+                amount: paid,
+                referenceType: "PURCHASE_PAYMENT",
+                referenceNo: batchCode,
+                date: stockDate,
+                note: `Payment for fingerling batch ${batchCode} to ${supplier.name}`,
+                userId: params.userId,
+              },
+              tx
+            );
+          }
+        }
+      }
+    }
 
     await logAudit(
       {

@@ -111,7 +111,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all"
         >
           <ShoppingCart className="w-3.5 h-3.5" />
-          <span>POS</span>
+          <span>বিক্রয়</span>
         </Link>
 
         {/* Low Stock & Store Notifications */}
@@ -168,7 +168,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
                 className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-800 hover:text-emerald-700 transition-colors"
               >
                 <UserIcon className="w-3.5 h-3.5" />
-                <span>My Profile</span>
+                <span>আমার প্রোফাইল</span>
               </Link>
 
               <button
@@ -176,7 +176,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-left cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Log Out</span>
+                <span>লগ আউট</span>
               </button>
             </div>
           )}

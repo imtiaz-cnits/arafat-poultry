@@ -9,15 +9,13 @@ export interface CartItem {
   quantity: number;
   stock: number;
   unit: string;
-  // Tiles properties (optional)
-  tile_size?: string | null;
-  sqft_per_box?: number | null;
-  pcs_per_box?: number | null;
-  grade?: string | null;
-  surface_finish?: string | null;
+  // Specific agricultural / aquaculture unit breakdown
+  selected_unit?: "pcs" | "hali" | "dozen" | "tray" | "kg" | "gram";
+  weight_kg?: number;
+  weight_gram?: number;
+  size_tag?: string;
   category?: string | null;
-  selling_mode?: "box" | "sqft";
-  custom_sqft?: number | null;
+  manual_line_total?: number | null;
 }
 
 export interface Customer {
@@ -35,7 +33,11 @@ interface PosState {
   discount: number;
   discountType: "flat" | "percent";
   deliveryCharge: number;
-  returnAdjustment: number;
+  returnAdjustment: number; // Also serves as Exchange Amount
+  exchangeType: "NONE" | "EGGS" | "FEED" | "CUSTOM";
+  exchangeEggQty: number;
+  exchangeEggRate: number;
+  exchangeNote: string;
   paidAmount: number;
   paymentMethod: string;
   transactionId: string;
@@ -44,7 +46,17 @@ interface PosState {
   // Actions
   addItem: (item: Omit<CartItem, "quantity">, qty?: number) => void;
   updateQty: (productId: number, qty: number) => void;
-  updateTileCalculation: (productId: number, data: { quantity: number; selling_mode?: "box" | "sqft"; custom_sqft?: number | null; price?: number }) => void;
+  updatePrice: (productId: number, price: number) => void;
+  updateUnitSelection: (
+    productId: number,
+    data: {
+      quantity: number;
+      selected_unit?: "pcs" | "hali" | "dozen" | "tray" | "kg" | "gram";
+      weight_kg?: number;
+      weight_gram?: number;
+      price?: number;
+    }
+  ) => void;
   removeItem: (productId: number) => void;
   clearCart: () => void;
 
@@ -53,6 +65,13 @@ interface PosState {
   setDiscountType: (type: "flat" | "percent") => void;
   setDeliveryCharge: (val: number) => void;
   setReturnAdjustment: (val: number) => void;
+  setExchangeData: (data: {
+    type: "NONE" | "EGGS" | "FEED" | "CUSTOM";
+    amount: number;
+    eggQty?: number;
+    eggRate?: number;
+    note?: string;
+  }) => void;
   setPaidAmount: (val: number) => void;
   setPaymentMethod: (method: string) => void;
   setTransactionId: (id: string) => void;
@@ -73,6 +92,10 @@ export const usePosStore = create<PosState>((set, get) => ({
   discountType: "flat",
   deliveryCharge: 0,
   returnAdjustment: 0,
+  exchangeType: "NONE",
+  exchangeEggQty: 0,
+  exchangeEggRate: 11,
+  exchangeNote: "",
   paidAmount: 0,
   paymentMethod: "Cash",
   transactionId: "",
@@ -80,9 +103,7 @@ export const usePosStore = create<PosState>((set, get) => ({
 
   addItem: (product, qty = 1) => {
     const { cart } = get();
-    const existingIndex = cart.findIndex(
-      (item) => item.product_id === product.product_id
-    );
+    const existingIndex = cart.findIndex((item) => item.product_id === product.product_id);
 
     if (existingIndex > -1) {
       const updated = [...cart];
@@ -90,7 +111,7 @@ export const usePosStore = create<PosState>((set, get) => ({
       set({ cart: updated });
     } else {
       set({
-        cart: [...cart, { ...product, quantity: qty }],
+        cart: [...cart, { ...product, quantity: qty, selected_unit: "pcs" }],
       });
     }
   },
@@ -114,7 +135,19 @@ export const usePosStore = create<PosState>((set, get) => ({
     });
   },
 
-  updateTileCalculation: (productId, data) => {
+  updatePrice: (productId, price) => {
+    const { cart } = get();
+    set({
+      cart: cart.map((item) => {
+        if (item.product_id === productId) {
+          return { ...item, selling_price: Math.max(0, price) };
+        }
+        return item;
+      }),
+    });
+  },
+
+  updateUnitSelection: (productId, data) => {
     const { cart } = get();
     set({
       cart: cart.map((item) => {
@@ -122,8 +155,9 @@ export const usePosStore = create<PosState>((set, get) => ({
           return {
             ...item,
             quantity: data.quantity,
-            selling_mode: data.selling_mode ?? item.selling_mode,
-            custom_sqft: data.custom_sqft !== undefined ? data.custom_sqft : item.custom_sqft,
+            selected_unit: data.selected_unit ?? item.selected_unit,
+            weight_kg: data.weight_kg ?? item.weight_kg,
+            weight_gram: data.weight_gram ?? item.weight_gram,
             selling_price: data.price !== undefined ? data.price : item.selling_price,
           };
         }
@@ -146,6 +180,10 @@ export const usePosStore = create<PosState>((set, get) => ({
       discountType: "flat",
       deliveryCharge: 0,
       returnAdjustment: 0,
+      exchangeType: "NONE",
+      exchangeEggQty: 0,
+      exchangeEggRate: 11,
+      exchangeNote: "",
       paidAmount: 0,
       paymentMethod: "Cash",
       transactionId: "",
@@ -158,6 +196,16 @@ export const usePosStore = create<PosState>((set, get) => ({
   setDiscountType: (discountType) => set({ discountType }),
   setDeliveryCharge: (deliveryCharge) => set({ deliveryCharge }),
   setReturnAdjustment: (returnAdjustment) => set({ returnAdjustment }),
+
+  setExchangeData: (data) =>
+    set({
+      exchangeType: data.type,
+      returnAdjustment: data.amount,
+      exchangeEggQty: data.eggQty ?? 0,
+      exchangeEggRate: data.eggRate ?? 11,
+      exchangeNote: data.note ?? "",
+    }),
+
   setPaidAmount: (paidAmount) => set({ paidAmount }),
   setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
   setTransactionId: (transactionId) => set({ transactionId }),
@@ -198,4 +246,3 @@ export const usePosStore = create<PosState>((set, get) => ({
     return currentDue + prevDue;
   },
 }));
-

@@ -6,6 +6,7 @@ import {
   Plus,
   Search,
   Calendar,
+  Clock,
   Send,
   RotateCcw,
   Package,
@@ -68,7 +69,7 @@ export default function FeedTradingPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<FeedReport | null>(null);
-  const [activeTab, setActiveTab] = useState<"issues" | "stocks">("issues");
+  const [activeTab, setActiveTab] = useState<"issues" | "stocks" | "schedule">("stocks");
   const [searchTerm, setSearchTerm] = useState("");
 
   // Modal State
@@ -356,6 +357,15 @@ export default function FeedTradingPage() {
             >
               ফিড তালিকা ও মজুত ({data?.feed_products?.length || 0})
             </button>
+            <button
+              onClick={() => setActiveTab("schedule")}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === "schedule"
+                  ? "bg-emerald-700 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+            >
+              খাবার প্রদানের সময়সূচি
+            </button>
           </div>
 
           <div className="relative w-full sm:w-64">
@@ -390,14 +400,14 @@ export default function FeedTradingPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <td colSpan={9} className="py-12 text-center text-slate-400">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                       ডাটা লোড হচ্ছে...
                     </td>
                   </tr>
                 ) : filteredIssues.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <td colSpan={9} className="py-12 text-center text-slate-400">
                       কোনো অভ্যন্তরীণ হস্তান্তরের তথ্য পাওয়া যায়নি।
                     </td>
                   </tr>
@@ -470,6 +480,7 @@ export default function FeedTradingPage() {
                   <th className="py-3 px-4 text-center">টার্গেট</th>
                   <th className="py-3 px-4 text-center">বস্তার ওজন (কেজি)</th>
                   <th className="py-3 px-4 text-center">বর্তমান মজুত</th>
+                  <th className="py-3 px-4 text-center">স্টক অবস্থা</th>
                   <th className="py-3 px-4 text-right">ক্রয় দর (বস্তা)</th>
                   <th className="py-3 px-4 text-right">ক্রয় দর (কেজি)</th>
                   <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
@@ -478,14 +489,14 @@ export default function FeedTradingPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                       ডাটা লোড হচ্ছে...
                     </td>
                   </tr>
                 ) : !data?.feed_products || data.feed_products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
                       কোনো ফিড পণ্য পাওয়া যায়নি।
                     </td>
                   </tr>
@@ -500,9 +511,20 @@ export default function FeedTradingPage() {
                             {p.target_type || "POULTRY"}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center">{p.bag_weight_kg} kg</td>
+                        <td className="py-3 px-4 text-center font-bold text-slate-700 dark:text-slate-300">{p.bag_weight_kg} কেজি / বস্তা</td>
                         <td className="py-3 px-4 text-center font-bold text-emerald-700 dark:text-emerald-400">
-                          {p.quantity} বস্তা ({(p.quantity * p.bag_weight_kg).toFixed(1)} kg)
+                          {p.quantity} বস্তা ({(p.quantity * p.bag_weight_kg).toLocaleString()} কেজি)
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {p.quantity <= 25 ? (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
+                              কম স্টক (Low Stock)
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                              পর্যাপ্ত (In Stock)
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 px-4 text-right font-medium">{formatBdCurrency(p.cost_price)}</td>
                         <td className="py-3 px-4 text-right">৳{costPerKg.toFixed(2)}</td>

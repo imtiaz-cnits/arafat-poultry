@@ -30,6 +30,10 @@ export async function GET(
             products: true,
           },
         },
+        party_ledger_entries: {
+          orderBy: { id: "desc" },
+          take: 100,
+        },
       },
     });
 
@@ -81,6 +85,18 @@ export async function GET(
           quantity: pr.quantity,
           date: pr.date,
           created_at: pr.created_at,
+        })),
+        party_ledger_entries: (supplier.party_ledger_entries || []).map((ple) => ({
+          id: Number(ple.id),
+          date: ple.date,
+          transaction_type: ple.transaction_type,
+          reference_type: ple.reference_type,
+          reference_no: ple.reference_no,
+          debit: parseFloat(String(ple.debit || "0")),
+          credit: parseFloat(String(ple.credit || "0")),
+          balance: parseFloat(String(ple.balance || "0")),
+          note: ple.note,
+          created_at: ple.created_at,
         })),
       },
     });

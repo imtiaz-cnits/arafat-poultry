@@ -20,7 +20,21 @@ import {
   FileSpreadsheet,
   AlertCircle,
   Hash,
+  Printer,
 } from "lucide-react";
+
+interface LedgerItem {
+  id: number;
+  date: string;
+  transaction_type: string;
+  reference_type: string;
+  reference_no: string | null;
+  debit: number;
+  credit: number;
+  balance: number;
+  note: string | null;
+  created_at: string;
+}
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker, CustomSelect } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
@@ -77,6 +91,7 @@ interface CustomerData {
   orders: OrderItem[];
   customer_payment_details: PaymentItem[];
   product_returns: ReturnItem[];
+  party_ledger_entries?: LedgerItem[];
 }
 
 export default function CustomerProfilePage({
@@ -89,7 +104,7 @@ export default function CustomerProfilePage({
 
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"orders" | "payments" | "returns">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "payments" | "returns" | "ledger">("orders");
 
   // Collect Due Modal State
   const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
@@ -230,8 +245,17 @@ export default function CustomerProfilePage({
           </div>
         </div>
 
-        {/* Action Button: Collect Due */}
-        <div className="flex items-center gap-2 self-start md:self-auto">
+        {/* Action Buttons: Print Statement & Collect Due */}
+        <div className="flex items-center gap-2 self-start md:self-auto print:hidden">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="h-[38px] px-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-[#0f172a] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            title="Print Customer Statement"
+          >
+            <Printer className="w-4 h-4 text-emerald-700" />
+            <span>প্রিন্ট স্টেটমেন্ট</span>
+          </button>
           <button
             type="button"
             onClick={handleOpenCollectModal}
@@ -385,16 +409,18 @@ export default function CustomerProfilePage({
 
         <button
           type="button"
-          onClick={() => setActiveTab("returns")}
+          onClick={() => setActiveTab("ledger")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-            activeTab === "returns"
+            activeTab === "ledger"
               ? "bg-[#166534] text-white shadow-xs"
               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
           }`}
         >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Sales Returns ({customer.product_returns.length})</span>
+          <FileSpreadsheet className="w-3.5 h-3.5" />
+          <span>লেজার স্টেটমেন্ট ({customer.party_ledger_entries?.length || 0})</span>
         </button>
+
+
       </div>
 
       {/* 5. Tab Content: Table */}
@@ -582,6 +608,66 @@ export default function CustomerProfilePage({
                       </td>
                       <td className="p-3 text-right font-black text-rose-600 dark:text-rose-400">
                         {formatBdCurrency(r.amount)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === "ledger" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
+                  <th className="p-3 text-center w-[45px]">SL</th>
+                  <th className="p-3">তারিখ</th>
+                  <th className="p-3">ভাউচার / রেফারেন্স নং</th>
+                  <th className="p-3">লেনদেনের ধরন</th>
+                  <th className="p-3">বিবরণ / নোট</th>
+                  <th className="p-3 text-right">ডেবিট (৳)</th>
+                  <th className="p-3 text-right">ক্রেডিট (৳)</th>
+                  <th className="p-3 text-right">অবশিষ্ট ব্যালেন্স (৳)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
+                {(!customer.party_ledger_entries || customer.party_ledger_entries.length === 0) ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
+                      এই কাস্টমারের কোনো লেজার রেকর্ড পাওয়া যায়নি।
+                    </td>
+                  </tr>
+                ) : (
+                  customer.party_ledger_entries.map((ple, idx) => (
+                    <tr
+                      key={ple.id || idx}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
+                      <td className="p-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                        {ple.date ? new Date(ple.date).toLocaleDateString("en-GB") : "-"}
+                      </td>
+                      <td className="p-3 font-mono font-bold text-slate-800 dark:text-white whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                          {ple.reference_no || "-"}
+                        </span>
+                      </td>
+                      <td className="p-3 font-bold text-slate-700 dark:text-slate-300">
+                        {ple.transaction_type}
+                      </td>
+                      <td className="p-3 text-slate-500 dark:text-slate-400 max-w-xs truncate">
+                        {ple.note || "-"}
+                      </td>
+                      <td className="p-3 text-right font-bold text-rose-600 dark:text-rose-400">
+                        {ple.debit > 0 ? formatBdCurrency(ple.debit) : "-"}
+                      </td>
+                      <td className="p-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        {ple.credit > 0 ? formatBdCurrency(ple.credit) : "-"}
+                      </td>
+                      <td className="p-3 text-right font-black text-slate-900 dark:text-white">
+                        {formatBdCurrency(ple.balance)}
                       </td>
                     </tr>
                   ))

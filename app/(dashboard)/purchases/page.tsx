@@ -26,6 +26,7 @@ import { CustomDatePicker } from "@/components/ui/date-picker";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useToast } from "@/components/ui/toast";
 import { Pagination, DeleteConfirmModal } from "@/components/ui";
+import { SupplierModal } from "@/components/suppliers/supplier-modal";
 
 interface PurchaseItem {
   product_id: number;
@@ -112,6 +113,7 @@ export default function PurchasesPage() {
 
   // Modals
   const [isNewPurchaseOpen, setIsNewPurchaseOpen] = useState(false);
+  const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
   // Delete Confirm Modal State
@@ -489,13 +491,7 @@ export default function PurchasesPage() {
                         >
                           <Eye className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                         </Link>
-                        <Link
-                          href={`/returns?tab=purchase&purchase_no=${encodeURIComponent(p.purchase_id)}`}
-                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Process Purchase Return"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                        </Link>
+
                         <button
                           type="button"
                           onClick={() => handleDeletePurchase(p)}
@@ -574,13 +570,7 @@ export default function PurchasesPage() {
                 <span>View</span>
               </button>
 
-              <Link
-                href={`/returns?tab=purchase&purchase_no=${encodeURIComponent(p.purchase_id)}`}
-                className="h-[30px] w-full text-center px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Return</span>
-              </Link>
+
 
               <button
                 type="button"
@@ -642,9 +632,18 @@ export default function PurchasesPage() {
               {/* Meta: Supplier, Memo No, Date */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155]">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Supplier / Vendor <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Supplier / Vendor <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsSupplierModalOpen(true)}
+                      className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" /> + নতুন সরবরাহকারী
+                    </button>
+                  </div>
                   <CustomSelect
                     options={suppliers.map((s) => ({
                       value: s.id,

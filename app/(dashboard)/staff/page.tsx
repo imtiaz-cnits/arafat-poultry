@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useEffect, useState } from "react";
 import {
   Users,
@@ -18,6 +20,7 @@ import {
   DollarSign,
   UserCheck,
   Calendar,
+  ArrowLeft,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker } from "@/components/ui/date-picker";
@@ -73,6 +76,7 @@ export default function StaffPage() {
     expense_amount: "",
     expense_details: "",
     date: new Date().toISOString().split("T")[0],
+    payment_method: "Cash",
   });
   const [savingPayout, setSavingPayout] = useState(false);
   const [payoutError, setPayoutError] = useState<string | null>(null);
@@ -222,15 +226,18 @@ export default function StaffPage() {
     // Find salary or advance type
     const salaryType =
       expenseTypes.find((t) =>
+        t.type_name.toLowerCase().includes("বেতন") ||
+        t.type_name.toLowerCase().includes("মজুরি") ||
         t.type_name.toLowerCase().includes("salary") ||
-        t.type_name.toLowerCase().includes("staff")
+        t.type_name.toLowerCase().includes("advance")
       ) || expenseTypes[0];
 
     setPayoutData({
       expense_type_id: salaryType ? String(salaryType.id) : "",
       expense_amount: "",
-      expense_details: `Monthly Salary / Advance disbursement for ${staff.name}`,
+      expense_details: `বেতন / অগ্রিম প্রদান: ${staff.name}`,
       date: new Date().toISOString().split("T")[0],
+      payment_method: "Cash",
     });
     setPayoutError(null);
     setIsPayoutModalOpen(true);
@@ -256,6 +263,7 @@ export default function StaffPage() {
           expense_amount: payoutData.expense_amount,
           expense_details: payoutData.expense_details,
           date: payoutData.date,
+          payment_method: payoutData.payment_method,
         }),
       });
 
@@ -296,59 +304,68 @@ export default function StaffPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Staff & Payroll Directory
+              কর্মচারী ও বেতন রেজিস্টার (Staff & Payroll Directory)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Manage employees, permissions, and salary/advance disbursement tracking
+              খামারের দায়িত্বপ্রাপ্ত কর্মকর্তা, শ্রমিক এবং তাদের বেতন ও অগ্রিম হিসাব
             </p>
           </div>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Staff</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+          <Link
+            href="/expenses"
+            className="h-[38px] px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4 text-emerald-600" />
+            <span>খরচে ফিরে যান</span>
+          </Link>
+          <button
+            onClick={handleOpenAdd}
+            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ নতুন কর্মচারী</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Three KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Total Staff Registered</span>
+            <span>মোট রেজিস্টার্ড কর্মচারী</span>
             <Users className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
             {totalStaff}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Active shop workforce</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">খামার ও শপের নিয়মিত কর্মী</div>
         </div>
 
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Approved Accounts</span>
+            <span>অনুমোদিত অ্যাকাউন্ট (Active)</span>
             <UserCheck className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-black text-emerald-600 mt-1">
             {activeStaff}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            Can log in to system & POS
+            সিস্টেম ও POS লগইন সক্ষম
           </div>
         </div>
 
         <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Total Salaries & Advances</span>
+            <span>সর্বমোট বেতন ও অগ্রিম প্রদান</span>
             <DollarSign className="w-4 h-4 text-rose-600" />
           </div>
           <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
             {formatBdCurrency(totalDisbursed)}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            Disbursed across all employees
+            কর্মচারীদের সর্বমোট পরিশোধিত অর্থ
           </div>
         </div>
       </div>
@@ -379,13 +396,13 @@ export default function StaffPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-4 w-12 text-center">SL</th>
-                <th className="py-3 px-4">Staff Name & Contact</th>
-                <th className="py-3 px-4 text-center">Role / Position</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Payouts Count</th>
-                <th className="py-3 px-4 text-right">Total Disbursed (৳)</th>
-                <th className="py-3 px-4 text-center w-36">Actions</th>
+                <th className="py-3 px-4 w-12 text-center">ক্র: নং</th>
+                <th className="py-3 px-4">কর্মচারীর নাম ও যোগাযোগ</th>
+                <th className="py-3 px-4 text-center">পদবী / ভূমিকা</th>
+                <th className="py-3 px-4 text-center">স্ট্যাটাস</th>
+                <th className="py-3 px-4 text-center">ভাউচার সংখ্যা</th>
+                <th className="py-3 px-4 text-right">মোট পরিশোধ (৳)</th>
+                <th className="py-3 px-4 text-center w-36">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -468,7 +485,7 @@ export default function StaffPage() {
                           title="Disburse Salary / Advance"
                         >
                           <Banknote className="w-3.5 h-3.5" />
-                          <span>Pay</span>
+                          <span>বেতন/অগ্রিম</span>
                         </button>
                         <button
                           type="button"
@@ -776,7 +793,7 @@ export default function StaffPage() {
               {/* Expense Category */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Expense Category / Head <span className="text-red-500">*</span>
+                  খরচের খাত / বেতন টাইপ (Category) <span className="text-red-500">*</span>
                 </label>
                 <CustomSelect
                   options={expenseTypes.map((t) => ({ value: t.id, label: t.type_name }))}
@@ -784,7 +801,27 @@ export default function StaffPage() {
                   onChange={(val) =>
                     setPayoutData({ ...payoutData, expense_type_id: String(val) })
                   }
-                  placeholder="Select Category..."
+                  placeholder="বেতন বা অগ্রিম খাত নির্বাচন করুন..."
+                />
+              </div>
+
+              {/* Payment Method */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  পরিশোধ মাধ্যম (Payment Method) <span className="text-red-500">*</span>
+                </label>
+                <CustomSelect
+                  options={[
+                    { value: "Cash", label: "ক্যাশ / নগদ ড্রয়ার (Main Farm Cash Drawer)" },
+                    { value: "Bank", label: "ব্যাংক হিসাব (Islami Bank Bangladesh Ltd)" },
+                    { value: "bKash", label: "বিকাশ মার্চেন্ট একাউন্ট (bKash Account)" },
+                    { value: "Nagad", label: "নগদ মার্চেন্ট একাউন্ট (Nagad Account)" },
+                  ]}
+                  value={payoutData.payment_method}
+                  onChange={(val) =>
+                    setPayoutData({ ...payoutData, payment_method: String(val) })
+                  }
+                  placeholder="পরিশোধ মাধ্যম নির্বাচন করুন..."
                 />
               </div>
 
@@ -851,7 +888,7 @@ export default function StaffPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {savingPayout && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Confirm Payout</span>
+                  <span>পরিশোধ নিশ্চিত করুন</span>
                 </button>
               </div>
             </form>

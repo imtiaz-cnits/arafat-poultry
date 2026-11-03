@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import Image from "next/image";
 import {
   Package,
   Search,
@@ -12,39 +13,45 @@ import {
   Edit2,
   X,
   Loader2,
-  Layers,
-  Sparkles,
   Printer,
   RotateCcw,
+  Egg,
+  Fish,
+  ShoppingBag,
+  Sparkles,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Pagination } from "@/components/ui";
-import {
-  POPULAR_TILE_SIZES,
-  TILE_GRADES,
-  SURFACE_FINISHES,
-  formatBoxAndPcs,
-} from "@/lib/tiles-calculator";
+
+interface UnitBreakdown {
+  type: "EGG" | "FEED" | "FISH";
+  trays?: number;
+  dozens?: number;
+  halis?: number;
+  pieces?: number;
+  bags?: number;
+  total_kg?: number;
+  formatted: string;
+}
 
 interface InventoryItem {
   id: number;
   name: string;
   primary_code: string;
   category: string;
+  category_id: number | null;
   brand: string;
   unit: string;
-  tile_size?: string | null;
-  sqft_per_box?: number | null;
-  pcs_per_box?: number | null;
-  grade?: string | null;
-  surface_finish?: string | null;
   quantity: number;
+  reserved_quantity: number;
+  available_quantity: number;
   cost_price: number;
   sell_price: number;
   total_cost_value: number;
   total_retail_value: number;
   stock_status: "In Stock" | "Low Stock" | "Out of Stock";
+  unit_breakdown?: UnitBreakdown | null;
 }
 
 interface Summary {
@@ -75,9 +82,6 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "low" | "out">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
-  const [selectedTileSize, setSelectedTileSize] = useState<string>("all");
-  const [selectedGrade, setSelectedGrade] = useState<string>("all");
-  const [selectedSurfaceFinish, setSelectedSurfaceFinish] = useState<string>("all");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,8 +91,10 @@ export default function InventoryPage() {
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [newQty, setNewQty] = useState("");
-  const [adjustReason, setAdjustReason] = useState("Physical Recount");
+  const [adjustReason, setAdjustReason] = useState("ফিজিক্যাল স্টক গণনা ও সমন্বয়");
+  const [adjustNote, setAdjustNote] = useState("");
   const [adjusting, setAdjusting] = useState(false);
+  const [adjustError, setAdjustError] = useState("");
 
   const loadData = async () => {
     try {
@@ -98,6 +104,7 @@ export default function InventoryPage() {
         fetch("/api/categories"),
         fetch("/api/brands"),
       ]);
+
       const [invData, catData, brandData] = await Promise.all([
         invRes.json(),
         catRes.json(),
@@ -111,7 +118,7 @@ export default function InventoryPage() {
       if (catData.status === "success") setCategories(catData.data || []);
       if (brandData.status === "success") setBrands(brandData.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load inventory data:", err);
     } finally {
       setLoading(false);
     }
@@ -124,228 +131,148 @@ export default function InventoryPage() {
   const handleOpenAdjust = (item: InventoryItem) => {
     setSelectedItem(item);
     setNewQty(String(item.quantity));
-    setAdjustReason("Physical Recount");
+    setAdjustReason("ফিজিক্যাল স্টক গণনা ও সমন্বয়");
+    setAdjustNote("");
+    setAdjustError("");
     setIsAdjustModalOpen(true);
   };
 
   const handleSaveAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedItem || newQty === "") return;
+    if (!selectedItem) return;
+    const qtyVal = parseFloat(newQty);
+    if (isNaN(qtyVal) || qtyVal < 0) {
+      setAdjustError("সঠিক ও অঋণাত্মক সংখ্যা প্রদান করুন");
+      return;
+    }
 
     try {
       setAdjusting(true);
+      setAdjustError("");
+      const fullReason = adjustNote ? `${adjustReason} - ${adjustNote}` : adjustReason;
       const res = await fetch("/api/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           product_id: selectedItem.id,
-          new_quantity: parseFloat(newQty),
-          reason: adjustReason,
+          new_quantity: qtyVal,
+          reason: fullReason,
         }),
       });
 
       const data = await res.json();
-      if (data.status === "success") {
+      if (res.ok && data.status === "success") {
         setIsAdjustModalOpen(false);
-        setSelectedItem(null);
-        setCurrentPage(1);
         loadData();
       } else {
-        alert(data.message || "Failed to adjust stock");
+        setAdjustError(data.message || "স্টক সমন্বয় সংরক্ষণ ব্যর্থ হয়েছে");
       }
-    } catch {
-      alert("Communication error");
+    } catch (err: any) {
+      setAdjustError(err?.message || "সার্ভার এরর");
     } finally {
       setAdjusting(false);
     }
   };
 
-  // Check if selected category is Tiles
-  const selectedCatObj = categories.find((c) => String(c.id) === String(selectedCategory));
-  const isTilesSelected = Boolean(
-    selectedCatObj?.category_name &&
-    (selectedCatObj.category_name.toLowerCase().includes("tile") ||
-      selectedCatObj.category_name.toLowerCase().includes("টাইল"))
-  );
+  // Helper for category display name
+  const getCategoryDisplayName = (name: string): string => {
+    if (!name) return "";
+    const lower = name.toLowerCase();
+    if (lower.includes("egg") || lower.includes("ডিম")) return "ডিম (Poultry Eggs)";
+    if (lower.includes("fish") || lower.includes("aqua") || lower.includes("মাছ")) return "মাছ ও অ্যাকোয়া (Fisheries)";
+    if (lower.includes("feed") || lower.includes("ফিড")) return "পোল্ট্রি ফিড (Poultry Feed)";
+    if (lower.includes("chick") || lower.includes("মুরগি") || lower.includes("বাচ্চা")) return "একদিন বয়সী বাচ্চা (DOC Chicks)";
+    if (lower.includes("medicine") || lower.includes("ওষুধ")) return "ভেটেরিনারি ওষুধ (Medicine)";
+    return name;
+  };
 
+  // Filter options
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "all", label: "সকল ক্যাটাগরি (All)" },
     ...categories.map((c) => ({
       value: String(c.id),
-      label: c.category_name || "",
+      label: getCategoryDisplayName(c.category_name || ""),
     })),
   ];
 
   const brandOptions = [
-    { value: "all", label: "All Brands" },
+    { value: "all", label: "সকল ব্র্যান্ড / প্রস্তুতকারক" },
     ...brands.map((b) => ({
       value: String(b.id),
-      label: b.name || "",
+      label: b.name || "N/A",
     })),
   ];
 
-  const tileSizeOptions = [
-    { value: "all", label: "All Sizes" },
-    ...POPULAR_TILE_SIZES.map((s) => ({ value: s.value, label: s.label })),
-  ];
-
-  const gradeOptions = [
-    { value: "all", label: "All Grades" },
-    ...TILE_GRADES.map((g) => ({ value: g.value, label: g.label })),
-  ];
-
-  const finishOptions = [
-    { value: "all", label: "All Finishes" },
-    ...SURFACE_FINISHES.map((f) => ({ value: f, label: f })),
-  ];
-
-  const handleCategoryChange = (val: string | number) => {
-    setSelectedCategory(String(val));
-    setSelectedTileSize("all");
-    setSelectedGrade("all");
-    setSelectedSurfaceFinish("all");
-    setSelectedBrand("all");
-    setCurrentPage(1);
-  };
-
-  // Filter Items
-  const filteredItems = items.filter((item) => {
-    // Status filter
-    if (statusFilter === "low" && !(item.quantity > 0 && item.quantity <= 5)) return false;
-    if (statusFilter === "out" && item.quantity > 0) return false;
-
-    // Search filter
-    if (search) {
-      const q = search.toLowerCase();
-      const match =
-        item.name.toLowerCase().includes(q) ||
-        (item.primary_code && item.primary_code.toLowerCase().includes(q)) ||
-        (item.category && item.category.toLowerCase().includes(q)) ||
-        (item.brand && item.brand.toLowerCase().includes(q));
-      if (!match) return false;
-    }
-
-    // Category filter
-    if (selectedCategory !== "all") {
-      const cat = categories.find((c) => String(c.id) === String(selectedCategory));
-      if (cat && item.category.toLowerCase() !== (cat.category_name || "").toLowerCase()) {
+  // Filtering
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      // Category filter
+      if (selectedCategory !== "all" && String(item.category_id) !== selectedCategory) {
         return false;
       }
-    }
 
-    // Tiles specific sub-filters OR Brand filter
-    if (isTilesSelected) {
-      if (selectedTileSize !== "all" && item.tile_size !== selectedTileSize) return false;
-      if (selectedGrade !== "all" && item.grade !== selectedGrade) return false;
-      if (selectedSurfaceFinish !== "all" && item.surface_finish !== selectedSurfaceFinish) return false;
-    } else {
+      // Brand filter
       if (selectedBrand !== "all") {
-        const br = brands.find((b) => String(b.id) === String(selectedBrand));
-        if (br && item.brand.toLowerCase() !== (br.name || "").toLowerCase()) {
-          return false;
-        }
+        const selectedBrandObj = brands.find((b) => String(b.id) === selectedBrand);
+        if (selectedBrandObj && item.brand !== selectedBrandObj.name) return false;
       }
-    }
 
-    return true;
-  });
+      // Stock status filter
+      if (statusFilter === "low" && item.stock_status !== "Low Stock") return false;
+      if (statusFilter === "out" && item.stock_status !== "Out of Stock") return false;
 
-  const hasActiveFilters =
-    search !== "" ||
-    statusFilter !== "all" ||
-    selectedCategory !== "all" ||
-    selectedBrand !== "all" ||
-    selectedTileSize !== "all" ||
-    selectedGrade !== "all" ||
-    selectedSurfaceFinish !== "all";
+      // Text Search
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const matchName = item.name.toLowerCase().includes(q);
+        const matchCode = item.primary_code.toLowerCase().includes(q);
+        const matchCat = item.category.toLowerCase().includes(q);
+        const matchBrand = item.brand.toLowerCase().includes(q);
+        if (!matchName && !matchCode && !matchCat && !matchBrand) return false;
+      }
 
-  const handleResetFilters = () => {
-    setSearch("");
-    setStatusFilter("all");
-    setSelectedCategory("all");
-    setSelectedBrand("all");
-    setSelectedTileSize("all");
-    setSelectedGrade("all");
-    setSelectedSurfaceFinish("all");
-    setCurrentPage(1);
-  };
+      return true;
+    });
+  }, [items, selectedCategory, selectedBrand, statusFilter, search, brands]);
 
+  // Pagination slice
   const startIndex = (currentPage - 1) * pageSize;
   const displayedItems = filteredItems.slice(startIndex, startIndex + pageSize);
 
+  const hasActiveFilters =
+    search !== "" ||
+    selectedCategory !== "all" ||
+    selectedBrand !== "all" ||
+    statusFilter !== "all";
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setSelectedCategory("all");
+    setSelectedBrand("all");
+    setStatusFilter("all");
+    setCurrentPage(1);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Print-Only Styles and Dedicated Report Template */}
-      <style jsx global>{`
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 10px !important;
-          }
-          body {
-            background: #ffffff !important;
-            color: #000000 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          aside,
-          header,
-          nav,
-          footer,
-          .no-print {
-            display: none !important;
-          }
-          .print-only {
-            display: block !important;
-            padding: 10px !important;
-            margin: 0 !important;
-          }
-          .print-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            font-size: 10px !important;
-          }
-          .print-table th,
-          .print-table td {
-            border: 1px solid #94a3b8 !important;
-            padding: 4px 6px !important;
-          }
-          .print-table thead {
-            display: table-header-group !important;
-          }
-          .print-table tr {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-          }
-          @page {
-            margin: 10px !important;
-          }
-        }
-        @media screen {
-          .print-only {
-            display: none !important;
-          }
-        }
-      `}</style>
-
-      {/* 1. Header & Actions (Screen View) */}
-      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
+      {/* 1. Header (Screen View) */}
+      <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800 flex items-center justify-center shrink-0">
             <Package className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Stock & Inventory Engine
+            <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-none">
+              কেন্দ্রীয় পণ্য ও উপাদান স্টক (Central Stock)
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Live stock levels, inventory valuation, margin potential, and adjustments
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              ডিম, ফিড, মাছ, মুরগির বাচ্চা ও ওষুধের সমন্বিত লাইভ মজুত ও আর্থিক মূল্যায়ন
             </p>
           </div>
         </div>
 
-        {/* Header Right Actions: Status Pills & Print Button */}
-        <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end self-start sm:self-auto">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 self-stretch sm:self-auto flex-wrap">
           {summary && (
             <>
               <button
@@ -354,13 +281,14 @@ export default function InventoryPage() {
                   setStatusFilter(statusFilter === "low" ? "all" : "low");
                   setCurrentPage(1);
                 }}
-                className={`h-[36px] px-3 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer ${statusFilter === "low"
-                  ? "bg-amber-500 text-white border-amber-600 shadow-xs"
-                  : "bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/40 hover:bg-amber-100"
-                  }`}
+                className={`h-[38px] px-3 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                  statusFilter === "low"
+                    ? "bg-amber-500 text-white border-amber-600 shadow-xs"
+                    : "bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/40 hover:bg-amber-100"
+                }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Low Stock:</span>
+                <span>স্বল্প স্টক:</span>
                 <span className="font-black">{summary.low_stock_count}</span>
               </button>
 
@@ -370,26 +298,27 @@ export default function InventoryPage() {
                   setStatusFilter(statusFilter === "out" ? "all" : "out");
                   setCurrentPage(1);
                 }}
-                className={`h-[36px] px-3 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer ${statusFilter === "out"
-                  ? "bg-rose-600 text-white border-rose-700 shadow-xs"
-                  : "bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-900/40 hover:bg-rose-100"
-                  }`}
+                className={`h-[38px] px-3 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                  statusFilter === "out"
+                    ? "bg-rose-600 text-white border-rose-700 shadow-xs"
+                    : "bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-900/40 hover:bg-rose-100"
+                }`}
               >
-                <span>Out of Stock:</span>
+                <span>স্টক শূন্য:</span>
                 <span className="font-black">{summary.out_of_stock_count}</span>
               </button>
             </>
           )}
 
-          {/* Print Button */}
+          {/* Print Stock Sheet Button */}
           <button
             type="button"
             onClick={() => window.print()}
-            className="h-[36px] px-3.5 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            title="Print Stock Overview"
+            className="h-[38px] px-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="স্টক শিট প্রিন্ট করুন"
           >
-            <Printer className="w-4 h-4 text-rose-600" />
-            <span>Print Overview</span>
+            <Printer className="w-4 h-4 text-emerald-600" />
+            <span>প্রিন্ট শিট</span>
           </button>
         </div>
       </div>
@@ -397,62 +326,57 @@ export default function InventoryPage() {
       {/* 2. Valuation KPI Cards (Screen View) */}
       {summary && (
         <div className="no-print grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Total Stock Units */}
+          {/* Total Products */}
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-              <span>Total Units in Stock</span>
+              <span>মোট পণ্য সংখ্যা (SKUs)</span>
               <Boxes className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
-              {summary.total_stock_units} <span className="text-xs font-normal">Units</span>
+              {summary.total_products} <span className="text-xs font-normal">আইটেম</span>
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5">
-              Across {summary.total_products} unique SKUs
+              মোট ফিজিক্যাল ইউনিট: {summary.total_stock_units.toLocaleString()}
             </div>
           </div>
 
           {/* Cost Valuation */}
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-              <span>Stock Cost Value</span>
+              <span>স্টক ক্রয়মূল্য (Cost Value)</span>
               <DollarSign className="w-4 h-4 text-sky-600" />
             </div>
             <div className="text-xl font-black text-sky-700 dark:text-sky-400 mt-1">
               {formatBdCurrency(summary.total_cost_valuation)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Total capital invested</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">মজুত পণ্যে মোট বিনিয়োগ</div>
           </div>
 
           {/* Retail Valuation */}
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-              <span>Retail Selling Value</span>
+              <span>বিক্রয়মূল্য (Retail Value)</span>
               <Package className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-xl font-black text-emerald-700 dark:text-emerald-400 mt-1">
               {formatBdCurrency(summary.total_retail_valuation)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Expected sales revenue</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">বর্তমান বিক্রয়মূল্য অনুযায়ী</div>
           </div>
 
           {/* Potential Gross Profit */}
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-              <span>Potential Margin</span>
+              <span>সম্ভাব্য মুনাফা (Margin)</span>
               <TrendingUp className="w-4 h-4 text-purple-600" />
             </div>
             <div className="text-xl font-black text-purple-700 dark:text-purple-400 mt-1">
               {formatBdCurrency(summary.potential_profit)}
             </div>
             <div className="text-[11px] text-emerald-600 font-bold mt-0.5">
-              +
-              {summary.total_cost_valuation > 0
-                ? (
-                  (summary.potential_profit / summary.total_cost_valuation) *
-                  100
-                ).toFixed(1)
-                : 0}
-              % Markup
+              +{summary.total_cost_valuation > 0
+                ? ((summary.potential_profit / summary.total_cost_valuation) * 100).toFixed(1)
+                : 0}% সম্ভাব্য মার্জিন
             </div>
           </div>
         </div>
@@ -461,11 +385,10 @@ export default function InventoryPage() {
       {/* 3. Controls & Dynamic Filter Bar (Screen View) */}
       <div className="no-print bg-white dark:bg-[#0f172a] p-3 sm:p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] space-y-3">
         <div className="flex flex-col xl:flex-row items-center justify-between gap-3">
-          {/* Filters Grid: 2 per row on mobile (grid-cols-2), flex on desktop */}
-          <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-2 md:gap-2.5 w-full xl:w-auto flex-1">
-            {/* Search Bar - 2 cols on mobile */}
-            <div className="col-span-2 md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 transition-all shadow-xs">
-              <Search className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
+          <div className="grid grid-cols-1 md:flex md:flex-wrap items-center gap-2 md:gap-2.5 w-full xl:w-auto flex-1">
+            {/* Search Bar */}
+            <div className="w-full md:w-64 h-[38px] flex items-center px-3 bg-white dark:bg-slate-800/90 rounded-xl border border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600/20 transition-all shadow-xs">
+              <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
               <input
                 type="text"
                 value={search}
@@ -473,7 +396,7 @@ export default function InventoryPage() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search stock, product name..."
+                placeholder="পণ্য, ক্যাটাগরি বা কোড খুঁজুন..."
                 className="w-full bg-transparent border-none outline-none text-xs text-slate-800 dark:text-white placeholder:text-slate-400"
               />
               {search && (
@@ -491,92 +414,48 @@ export default function InventoryPage() {
             </div>
 
             {/* Category Filter */}
-            <div className="w-full md:w-[150px]">
+            <div className="w-full md:w-[220px]">
               <CustomSelect
                 value={selectedCategory}
-                onChange={handleCategoryChange}
+                onChange={(val) => {
+                  setSelectedCategory(String(val));
+                  setCurrentPage(1);
+                }}
                 options={categoryOptions}
-                placeholder="All Categories"
+                placeholder="সকল ক্যাটাগরি"
                 className="[&_button]:!min-h-[38px] [&_button]:!h-[38px] [&_button]:!py-1"
               />
             </div>
 
-            {/* Conditional Filters: If Tiles category -> Size, Grade, Finish; Otherwise -> Brand */}
-            {isTilesSelected ? (
-              <>
-                {/* Tile Size Filter */}
-                <div className="w-full md:w-[135px]">
-                  <CustomSelect
-                    value={selectedTileSize}
-                    onChange={(val) => {
-                      setSelectedTileSize(String(val));
-                      setCurrentPage(1);
-                    }}
-                    options={tileSizeOptions}
-                    placeholder="All Sizes"
-                    className="[&_button]:!min-h-[38px] [&_button]:!h-[38px] [&_button]:!py-1"
-                  />
-                </div>
-
-                {/* Tile Grade Filter */}
-                <div className="w-full md:w-[130px]">
-                  <CustomSelect
-                    value={selectedGrade}
-                    onChange={(val) => {
-                      setSelectedGrade(String(val));
-                      setCurrentPage(1);
-                    }}
-                    options={gradeOptions}
-                    placeholder="All Grades"
-                    className="[&_button]:!min-h-[38px] [&_button]:!h-[38px] [&_button]:!py-1"
-                  />
-                </div>
-
-                {/* Tile Surface Finish Filter */}
-                <div className="w-full md:w-[140px]">
-                  <CustomSelect
-                    value={selectedSurfaceFinish}
-                    onChange={(val) => {
-                      setSelectedSurfaceFinish(String(val));
-                      setCurrentPage(1);
-                    }}
-                    options={finishOptions}
-                    placeholder="All Finishes"
-                    className="[&_button]:!min-h-[38px] [&_button]:!h-[38px] [&_button]:!py-1"
-                  />
-                </div>
-              </>
-            ) : (
-              /* Brand Filter (shown when NOT Tiles category) */
-              <div className="w-full md:w-[150px]">
-                <CustomSelect
-                  value={selectedBrand}
-                  onChange={(val) => {
-                    setSelectedBrand(String(val));
-                    setCurrentPage(1);
-                  }}
-                  options={brandOptions}
-                  placeholder="All Brands"
-                  className="[&_button]:!min-h-[38px] [&_button]:!h-[38px] [&_button]:!py-1"
-                />
-              </div>
-            )}
+            {/* Brand Filter */}
+            <div className="w-full md:w-[180px]">
+              <CustomSelect
+                value={selectedBrand}
+                onChange={(val) => {
+                  setSelectedBrand(String(val));
+                  setCurrentPage(1);
+                }}
+                options={brandOptions}
+                placeholder="সকল ব্র্যান্ড"
+                className="[&_button]:!min-h-[38px] [&_button]:!h-[38px] [&_button]:!py-1"
+              />
+            </div>
 
             {/* Reset Filter Button */}
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={handleResetFilters}
-                title="Reset All Filters"
-                className="h-[38px] px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs col-span-2 md:col-span-1"
+                title="ফিল্টার রিসেট করুন"
+                className="h-[38px] px-3 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset</span>
+                <span>রিসেট</span>
               </button>
             )}
           </div>
 
-          {/* Right Side: Show Entries Selector */}
+          {/* Right Side: Page Size */}
           <div className="flex items-center gap-2.5 self-start xl:self-auto shrink-0 w-full md:w-auto">
             <div className="w-[125px]">
               <CustomSelect
@@ -586,11 +465,10 @@ export default function InventoryPage() {
                   setCurrentPage(1);
                 }}
                 options={[
-                  { value: "20", label: "Show: 20" },
-                  { value: "50", label: "Show: 50" },
-                  { value: "100", label: "Show: 100" },
-                  { value: "200", label: "Show: 200" },
-                  { value: "500", label: "Show: 500" },
+                  { value: "20", label: "প্রদর্শন: ২০" },
+                  { value: "50", label: "প্রদর্শন: ৫০" },
+                  { value: "100", label: "প্রদর্শন: ১০০" },
+                  { value: "200", label: "প্রদর্শন: ২০০" },
                 ]}
                 matchTriggerWidth={true}
                 minPopoverWidth={125}
@@ -607,28 +485,28 @@ export default function InventoryPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Product Name / Variant</th>
-                <th className="py-3 px-3">Category & Brand</th>
-                <th className="py-3 px-3 text-center">Stock Level</th>
-                <th className="py-3 px-3 text-right">Cost (৳)</th>
-                <th className="py-3 px-3 text-right">Sell (৳)</th>
-                <th className="py-3 px-3 text-right">Total Cost Value</th>
-                <th className="py-3 px-4 text-center w-24">Adjust</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্রমিক</th>
+                <th className="py-3 px-4">পণ্যের বিবরণ ও কোড</th>
+                <th className="py-3 px-3">ক্যাটাগরি ও ব্র্যান্ড</th>
+                <th className="py-3 px-3 text-center">বর্তমান লাইভ স্টক</th>
+                <th className="py-3 px-3 text-right">ক্রয় দর (৳)</th>
+                <th className="py-3 px-3 text-right">বিক্রয় দর (৳)</th>
+                <th className="py-3 px-3 text-right">মোট মজুত মূল্য</th>
+                <th className="py-3 px-4 text-center w-24">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
                   <td colSpan={8} className="py-10 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-rose-600" />
-                    <span>Loading inventory status...</span>
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
+                    <span>স্টক তথ্য লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-10 text-center text-slate-400 font-bold">
-                    No items matching filter.
+                    কোন পণ্য পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
@@ -641,28 +519,41 @@ export default function InventoryPage() {
                       {startIndex + idx + 1}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-bold text-slate-800 dark:text-slate-100 text-xs">
-                        {item.name}
+                      <div className="font-bold text-slate-800 dark:text-slate-100 text-xs flex items-center gap-2">
+                        {item.category.includes("Egg") || item.category.includes("ডিম") ? (
+                          <Egg className="w-4 h-4 text-amber-600 shrink-0" />
+                        ) : item.category.includes("Fish") || item.category.includes("মাছ") ? (
+                          <Fish className="w-4 h-4 text-sky-600 shrink-0" />
+                        ) : item.category.includes("Feed") || item.category.includes("ফিড") ? (
+                          <Boxes className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : (
+                          <Package className="w-4 h-4 text-slate-500 shrink-0" />
+                        )}
+                        <span>{item.name}</span>
                       </div>
+                      {item.primary_code && (
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          SKU: {item.primary_code}
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 px-3">
                       <div className="font-semibold text-slate-700 dark:text-slate-200">
-                        {item.category}
+                        {getCategoryDisplayName(item.category)}
                       </div>
                       <div className="text-[10px] text-slate-400">{item.brand}</div>
                     </td>
                     <td className="py-3 px-3 text-center">
                       <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-black ${item.quantity <= 0
-                          ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
-                          : item.quantity <= 5
+                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-black ${
+                          item.available_quantity <= 0
+                            ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400"
+                            : item.available_quantity <= 10
                             ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
                             : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                          }`}
+                        }`}
                       >
-                        {item.tile_size || item.pcs_per_box
-                          ? formatBoxAndPcs(item.quantity, item.pcs_per_box)
-                          : `${item.quantity} ${item.unit}`}
+                        {item.unit_breakdown ? item.unit_breakdown.formatted : `${item.available_quantity} ${item.unit}`}
                       </span>
                     </td>
                     <td className="py-3 px-3 text-right font-medium text-slate-600 dark:text-slate-300">
@@ -678,11 +569,11 @@ export default function InventoryPage() {
                       <button
                         type="button"
                         onClick={() => handleOpenAdjust(item)}
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1 mx-auto transition-colors cursor-pointer"
-                        title="Adjust Stock Quantity"
+                        className="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1 mx-auto transition-colors cursor-pointer border border-emerald-200 dark:border-emerald-800"
+                        title="স্টক সমন্বয় করুন"
                       >
-                        <Edit2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Adjust</span>
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>সমন্বয়</span>
                       </button>
                     </td>
                   </tr>
@@ -702,81 +593,75 @@ export default function InventoryPage() {
             setPageSize(newSize);
             setCurrentPage(1);
           }}
-          pageSizeOptions={[20, 50, 100, 200, 500]}
+          pageSizeOptions={[20, 50, 100, 200]}
         />
       </div>
 
       {/* 5. Mobile Card View (Screen View) */}
       <div className="no-print block md:hidden space-y-2.5">
         {loading ? (
-          <div className="p-8 text-center text-slate-400 text-xs">Loading inventory status...</div>
+          <div className="p-8 text-center text-slate-400 text-xs">স্টক ডাটা লোড হচ্ছে...</div>
         ) : filteredItems.length === 0 ? (
-          <div className="p-6 text-center text-slate-400 text-xs">No items matching filter.</div>
+          <div className="p-6 text-center text-slate-400 text-xs">কোন পণ্য পাওয়া যায়নি।</div>
         ) : (
           displayedItems.map((item) => (
             <div
               key={item.id}
               className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs space-y-2"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex justify-between items-start gap-2">
                 <div>
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-white">{item.name}</h3>
-                  <p className="text-[10px] text-slate-400">
-                    {item.category} &bull; {item.brand} &bull; Code: {item.primary_code || "N/A"}
-                  </p>
+                  <div className="font-bold text-slate-800 dark:text-white text-xs">
+                    {item.name}
+                  </div>
+                  <div className="text-[10px] text-slate-400">
+                    {getCategoryDisplayName(item.category)} • {item.brand}
+                  </div>
                 </div>
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-black ${item.quantity <= 0
-                    ? "bg-rose-100 text-rose-700"
-                    : item.quantity <= 5
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    item.available_quantity <= 0
+                      ? "bg-rose-100 text-rose-700"
+                      : item.available_quantity <= 10
                       ? "bg-amber-100 text-amber-700"
                       : "bg-emerald-100 text-emerald-700"
-                    }`}
+                  }`}
                 >
-                  {item.tile_size || item.pcs_per_box
-                    ? formatBoxAndPcs(item.quantity, item.pcs_per_box)
-                    : `${item.quantity} ${item.unit}`}
+                  {item.unit_breakdown ? item.unit_breakdown.formatted : `${item.available_quantity} ${item.unit}`}
                 </span>
               </div>
 
-              {(item.tile_size || item.grade || item.surface_finish) && (
-                <div className="flex flex-wrap items-center gap-1">
-                  {item.tile_size && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700">
-                      📐 {item.tile_size}
-                    </span>
-                  )}
-                  {item.grade && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
-                      ★ {item.grade}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-[#1e293b] p-2 rounded-xl">
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block">Cost / Sell:</span>
-                  <span className="font-bold">
-                    ৳{item.cost_price} / ৳{item.sell_price}
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+                <div>
+                  <span className="text-slate-400 block text-[10px]">ক্রয় দর:</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    ৳{item.cost_price.toFixed(2)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Total Value:</span>
-                  <span className="font-black text-sky-700 dark:text-sky-400">
+                  <span className="text-slate-400 block text-[10px]">বিক্রয় দর:</span>
+                  <span className="font-bold text-slate-800 dark:text-white">
+                    ৳{item.sell_price.toFixed(2)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">মোট মূল্য:</span>
+                  <span className="font-bold text-sky-700 dark:text-sky-400">
                     {formatBdCurrency(item.total_cost_value)}
                   </span>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleOpenAdjust(item)}
-                className="w-full h-[32px] rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-                <span>Adjust Stock Qty</span>
-              </button>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleOpenAdjust(item)}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center gap-1 border border-emerald-200"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>স্টক সমন্বয়</span>
+                </button>
+              </div>
             </div>
           ))
         )}
@@ -792,7 +677,7 @@ export default function InventoryPage() {
               setPageSize(newSize);
               setCurrentPage(1);
             }}
-            pageSizeOptions={[20, 50, 100, 200, 500]}
+            pageSizeOptions={[20, 50, 100, 200]}
           />
         </div>
       </div>
@@ -805,7 +690,7 @@ export default function InventoryPage() {
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  Adjust Stock Quantity
+                  স্টক সমন্বয় (Stock Adjustment)
                 </h3>
               </div>
               <button
@@ -818,17 +703,21 @@ export default function InventoryPage() {
             </div>
 
             <form onSubmit={handleSaveAdjustment} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+              {adjustError && (
+                <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
+                  {adjustError}
+                </div>
+              )}
+
               {/* Product Info */}
               <div className="bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-1 text-xs">
                 <div className="font-bold text-slate-800 dark:text-white text-xs">
                   {selectedItem.name}
                 </div>
                 <div className="flex justify-between text-slate-500">
-                  <span>Current Registered Stock:</span>
+                  <span>বর্তমান নিবন্ধিত মজুত:</span>
                   <strong className="font-bold text-emerald-600">
-                    {selectedItem.tile_size || selectedItem.pcs_per_box
-                      ? formatBoxAndPcs(selectedItem.quantity, selectedItem.pcs_per_box)
-                      : `${selectedItem.quantity} ${selectedItem.unit}`}
+                    {selectedItem.unit_breakdown ? selectedItem.unit_breakdown.formatted : `${selectedItem.quantity} ${selectedItem.unit}`}
                   </strong>
                 </div>
               </div>
@@ -836,7 +725,7 @@ export default function InventoryPage() {
               {/* New Quantity */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  New Physical Stock Quantity <span className="text-red-500">*</span>
+                  সংশোধিত প্রকৃত ফিজিক্যাল স্টক <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -852,19 +741,33 @@ export default function InventoryPage() {
               {/* Reason */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Adjustment Reason
+                  সমন্বয়ের কারণ
                 </label>
                 <CustomSelect
                   value={adjustReason}
                   onChange={(val) => setAdjustReason(String(val))}
                   options={[
-                    { value: "Physical Recount", label: "Physical Inventory Recount" },
-                    { value: "Damaged / Broken", label: "Damaged / Broken Goods" },
-                    { value: "Customer Return", label: "Customer Return / Cancellation" },
-                    { value: "Supplier Replacement", label: "Supplier Replacement" },
-                    { value: "Showroom Display / Sample", label: "Showroom Display / Sample" },
+                    { value: "ফিজিক্যাল স্টক গণনা ও সমন্বয়", label: "ফিজিক্যাল স্টক গণনা ও সমন্বয় (Physical Recount)" },
+                    { value: "ভাঙা / অপচয় / নষ্ট ডিম বা মাছ", label: "ভাঙা / অপচয় / নষ্ট ডিম বা মাছ (Damage / Spoilage)" },
+                    { value: "অভ্যন্তরীণ খামার ব্যবহার", label: "অভ্যন্তরীণ খামার ব্যবহার (Internal Farm Issue)" },
+                    { value: "সরবরাহকারী রিপ্লেসমেন্ট", label: "সরবরাহকারী রিপ্লেসমেন্ট (Supplier Replacement)" },
+                    { value: "অন্যান্য সমন্বয়", label: "অন্যান্য সমন্বয় (Other Adjustment)" },
                   ]}
-                  placeholder="Select Reason"
+                  placeholder="কারণ নির্বাচন করুন"
+                />
+              </div>
+
+              {/* Additional Note */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  মন্তব্য / বিবরণ (ঐচ্ছিক)
+                </label>
+                <input
+                  type="text"
+                  value={adjustNote}
+                  onChange={(e) => setAdjustNote(e.target.value)}
+                  placeholder="যেমন: স্টোর ইনস্পেকশনে প্রাপ্ত ফলাফল..."
+                  className="w-full h-[38px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-600"
                 />
               </div>
 
@@ -875,7 +778,7 @@ export default function InventoryPage() {
                   disabled={adjusting}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -883,7 +786,7 @@ export default function InventoryPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {adjusting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Stock Update</span>
+                  <span>স্টক আপডেট সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>
@@ -892,121 +795,74 @@ export default function InventoryPage() {
       )}
 
       {/* 7. DEDICATED PRINT-ONLY REPORT TEMPLATE */}
-      <div className="print-only p-0 text-black bg-white">
+      <div className="print-only hidden print:block p-0 text-black bg-white">
         {/* Report Header */}
         <div className="border-b-2 border-slate-900 pb-2 mb-3">
           <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">ARAFAT POULTRY &amp; FISHERIES</h1>
-              <p className="text-[11px] text-slate-600 font-medium m-0">
-                Quality Products. Trusted Service.
-              </p>
-              <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
-                Stock Inventory & Valuation Report
-              </h2>
+            <div className="flex items-center gap-3">
+              <Image src="/logo1.png" alt="Arafat Poultry & Fisheries" width={48} height={48} className="object-contain" />
+              <div>
+                <h1 className="text-base font-black tracking-tight text-slate-900 m-0">আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজ</h1>
+                <p className="text-[10px] text-slate-600 m-0">কোয়ালিটি প্রোডাক্টস • বিশ্বস্ত সেবা | কেন্দ্রীয় স্টক অডিট শিট</p>
+              </div>
             </div>
             <div className="text-right text-[10px] text-slate-600">
-              <p suppressHydrationWarning>Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</p>
-              <p>Filter Status: <strong className="text-slate-900">{statusFilter === "all" ? "All Items" : statusFilter === "low" ? "Low Stock" : "Out of Stock"}</strong></p>
-              <p>SKUs Listed: <strong className="text-slate-900">{filteredItems.length}</strong></p>
-            </div>
-          </div>
-
-          {/* Quick Valuation Summary Bar */}
-          <div className="grid grid-cols-4 gap-2 mt-2 pt-2 border-t border-slate-300 text-[10px]">
-            <div className="p-1 bg-slate-100 rounded border border-slate-300">
-              <span className="text-slate-500 block">Total SKUs</span>
-              <strong className="text-slate-900 text-[11px]">{filteredItems.length}</strong>
-            </div>
-            <div className="p-1 bg-slate-100 rounded border border-slate-300">
-              <span className="text-slate-500 block">Total Stock Cost Value</span>
-              <strong className="text-slate-900 text-[11px]">
-                {formatBdCurrency(filteredItems.reduce((acc, i) => acc + i.total_cost_value, 0))}
-              </strong>
-            </div>
-            <div className="p-1 bg-slate-100 rounded border border-slate-300">
-              <span className="text-slate-500 block">Total Retail Value</span>
-              <strong className="text-slate-900 text-[11px]">
-                {formatBdCurrency(filteredItems.reduce((acc, i) => acc + i.total_retail_value, 0))}
-              </strong>
-            </div>
-            <div className="p-1 bg-slate-100 rounded border border-slate-300">
-              <span className="text-slate-500 block">Potential Margin</span>
-              <strong className="text-slate-900 text-[11px]">
-                {formatBdCurrency(
-                  Math.max(
-                    0,
-                    filteredItems.reduce((acc, i) => acc + i.total_retail_value, 0) -
-                    filteredItems.reduce((acc, i) => acc + i.total_cost_value, 0)
-                  )
-                )}
-              </strong>
+              <div>প্রিন্টের তারিখ: {new Date().toLocaleDateString("bn-BD")}</div>
+              <div>সময়: {new Date().toLocaleTimeString("bn-BD")}</div>
             </div>
           </div>
         </div>
 
-        {/* Printable Table */}
-        <table className="print-table">
+        {/* Summary Table */}
+        {summary && (
+          <div className="grid grid-cols-4 gap-2 mb-3 text-[10px] border border-slate-300 p-2 rounded">
+            <div><strong>মোট পণ্য:</strong> {summary.total_products} টি</div>
+            <div><strong>মোট একক:</strong> {summary.total_stock_units.toLocaleString()}</div>
+            <div><strong>ক্রয়মূল্য মূল্যায়ন:</strong> {formatBdCurrency(summary.total_cost_valuation)}</div>
+            <div><strong>বিক্রয়মূল্য মূল্যায়ন:</strong> {formatBdCurrency(summary.total_retail_valuation)}</div>
+          </div>
+        )}
+
+        {/* Print Table */}
+        <table className="w-full text-left text-[10px] border-collapse border border-slate-400">
           <thead>
-            <tr className="bg-slate-200 text-slate-900 font-bold text-left">
-              <th className="text-center w-8">SL</th>
-              <th>Product Name & Specification</th>
-              <th>Category</th>
-              <th>Brand</th>
-              <th className="text-center">Stock Level</th>
-              <th className="text-right">Cost (৳)</th>
-              <th className="text-right">Sell (৳)</th>
-              <th className="text-right">Cost Value (৳)</th>
+            <tr className="bg-slate-100 border-b border-slate-400 font-bold">
+              <th className="p-1 border-r border-slate-400 text-center w-8">ক্র.</th>
+              <th className="p-1 border-r border-slate-400">পণ্যের বিবরণ</th>
+              <th className="p-1 border-r border-slate-400">ক্যাটাগরি</th>
+              <th className="p-1 border-r border-slate-400 text-center">বর্তমান মজুত</th>
+              <th className="p-1 border-r border-slate-400 text-right">ক্রয় দর</th>
+              <th className="p-1 border-r border-slate-400 text-right">বিক্রয় দর</th>
+              <th className="p-1 text-right">মোট মজুত মূল্য</th>
             </tr>
           </thead>
           <tbody>
             {filteredItems.map((item, idx) => (
-              <tr key={item.id} className="text-slate-800">
-                <td className="text-center font-bold">{idx + 1}</td>
-                <td>
-                  <div className="font-bold">{item.name}</div>
+              <tr key={item.id} className="border-b border-slate-300">
+                <td className="p-1 border-r border-slate-300 text-center">{idx + 1}</td>
+                <td className="p-1 border-r border-slate-300 font-semibold">{item.name}</td>
+                <td className="p-1 border-r border-slate-300">{item.category}</td>
+                <td className="p-1 border-r border-slate-300 text-center font-bold">
+                  {item.unit_breakdown ? item.unit_breakdown.formatted : `${item.available_quantity} ${item.unit}`}
                 </td>
-                <td>{item.category}</td>
-                <td>{item.brand}</td>
-                <td className="text-center font-bold">
-                  {item.tile_size || item.pcs_per_box
-                    ? formatBoxAndPcs(item.quantity, item.pcs_per_box)
-                    : `${item.quantity} ${item.unit}`}
-                </td>
-                <td className="text-right">{item.cost_price.toFixed(2)}</td>
-                <td className="text-right">{item.sell_price.toFixed(2)}</td>
-                <td className="text-right font-bold">{formatBdCurrency(item.total_cost_value)}</td>
+                <td className="p-1 border-r border-slate-300 text-right font-mono">৳{item.cost_price.toFixed(2)}</td>
+                <td className="p-1 border-r border-slate-300 text-right font-mono">৳{item.sell_price.toFixed(2)}</td>
+                <td className="p-1 text-right font-mono font-bold">৳{item.total_cost_value.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
-              <td colSpan={4} className="text-right py-1.5 px-2">Total Inventory Valuation:</td>
-              <td className="text-center py-1.5 px-2">
-                {filteredItems.reduce((acc, i) => acc + i.quantity, 0)} Units
-              </td>
-              <td></td>
-              <td></td>
-              <td className="text-right py-1.5 px-2 font-black">
-                {formatBdCurrency(filteredItems.reduce((acc, i) => acc + i.total_cost_value, 0))}
-              </td>
-            </tr>
-          </tfoot>
         </table>
 
-        {/* Signatures */}
-        <div className="flex justify-between items-end mt-12 pt-8 text-[11px] text-slate-600">
-          <div className="text-center">
-            <div className="w-40 border-t border-slate-400 mb-1"></div>
-            <span>Prepared By</span>
+        {/* 3 Signatures Block */}
+        <div className="grid grid-cols-3 gap-6 pt-12 text-center text-[10px]">
+          <div>
+            <div className="border-t border-slate-500 pt-1 font-bold">প্রস্তুতকারীর স্বাক্ষর</div>
           </div>
-          <div className="text-center">
-            <div className="w-40 border-t border-slate-400 mb-1"></div>
-            <span>Store Manager</span>
+          <div>
+            <div className="border-t border-slate-500 pt-1 font-bold">স্টোর কিপারের স্বাক্ষর</div>
           </div>
-          <div className="text-center">
-            <div className="w-40 border-t border-slate-400 mb-1"></div>
-            <span>Authorized Signature</span>
+          <div>
+            <div className="border-t border-slate-500 pt-1 font-bold">অনুমোদনকারীর স্বাক্ষর</div>
           </div>
         </div>
       </div>

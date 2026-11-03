@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { recordEggCollection, getEggPerformanceAndProfitability } from "@/lib/egg-service";
+import {
+  recordEggCollection,
+  getEggPerformanceAndProfitability,
+  reverseEggCollection,
+} from "@/lib/egg-service";
 
 export const dynamic = "force-dynamic";
 
@@ -104,46 +108,17 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const collection = await prisma.egg_collections.findUnique({
-      where: { id: BigInt(id) },
-      include: { egg_collection_grades: true },
-    });
-
-    if (!collection) {
-      return NextResponse.json(
-        { status: "fail", message: "সংগ্রহ রেকর্ড পাওয়া যায়নি" },
-        { status: 404 }
-      );
-    }
-
-    await prisma.$transaction(async (tx) => {
-      // Revert product stock for each grade
-      for (const grade of collection.egg_collection_grades) {
-        const prod = await tx.products.findUnique({ where: { id: grade.product_id } });
-        if (prod) {
-          const curQty = parseFloat(prod.quantity || "0");
-          const newQty = Math.max(0, curQty - grade.quantity_pieces);
-          await tx.products.update({
-            where: { id: grade.product_id },
-            data: { quantity: newQty.toString() },
-          });
-        }
-      }
-
-      // Delete collection (cascades grades)
-      await tx.egg_collections.delete({
-        where: { id: BigInt(id) },
-      });
-    });
+    const result = await reverseEggCollection(BigInt(id), authResult.user.id, "User requested collection voucher cancellation");
 
     return NextResponse.json({
       status: "success",
-      message: "ডিম সংগ্রহ রেকর্ড সফলভাবে বাতিল করা হয়েছে",
+      message: result.message || "ডিম সংগ্রহ রেকর্ড সফলভাবে বাতিল ও স্টক রিভার্স করা হয়েছে",
+      data: result,
     });
   } catch (error: any) {
     console.error("Egg Collection DELETE Error:", error);
     return NextResponse.json(
-      { status: "fail", message: error?.message || "Failed to delete egg collection" },
+      { status: "fail", message: error?.message || "Failed to reverse egg collection" },
       { status: 500 }
     );
   }

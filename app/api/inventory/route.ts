@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordStockMovement, StockMovementType } from "@/lib/stock-service";
+import { convertEggUnits, convertFeedBagsToKg } from "@/lib/unit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +15,7 @@ export async function GET(req: NextRequest) {
     const categoryId = searchParams.get("category_id");
 
     const where: any = {};
-    if (categoryId) where.category_id = BigInt(categoryId);
+    if (categoryId && categoryId !== "all") where.category_id = BigInt(categoryId);
 
     const products = await prisma.products.findMany({
       where,
@@ -57,7 +59,7 @@ export async function GET(req: NextRequest) {
 
       if (availableQty <= 0) {
         outOfStockCount++;
-      } else if (availableQty <= 5) {
+      } else if (availableQty <= 10) {
         lowStockCount++;
       }
 
@@ -72,11 +74,45 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      const catName = p.categories?.category_name || "";
+      const catLower = catName.toLowerCase();
+      const isEgg = catLower.includes("egg") || catName.includes("ডিম");
+      const isFeed = catLower.includes("feed") || catName.includes("ফিড");
+      const isFish = catLower.includes("fish") || catLower.includes("aqua") || catName.includes("মাছ");
+
+      let unitBreakdown: any = null;
+      if (isEgg) {
+        const eggUnits = convertEggUnits(qty, "piece", 30);
+        unitBreakdown = {
+          type: "EGG",
+          trays: eggUnits.trays,
+          dozens: eggUnits.dozens,
+          halis: eggUnits.halis,
+          pieces: eggUnits.pieces,
+          formatted: `${eggUnits.trays} খাঁচি (${eggUnits.pieces} পিস)`,
+        };
+      } else if (isFeed) {
+        const totalKg = convertFeedBagsToKg(qty, 50);
+        unitBreakdown = {
+          type: "FEED",
+          bags: qty,
+          total_kg: totalKg,
+          formatted: `${qty} বস্তা (${totalKg.toLocaleString()} কেজি)`,
+        };
+      } else if (isFish) {
+        unitBreakdown = {
+          type: "FISH",
+          total_kg: qty,
+          formatted: `${qty.toLocaleString()} কেজি`,
+        };
+      }
+
       return {
         id: Number(p.id),
         name: p.product_name,
         primary_code: codes[0] || "",
         category: p.categories?.category_name || "N/A",
+        category_id: p.category_id ? Number(p.category_id) : null,
         brand: p.brands?.name || "N/A",
         unit: p.units?.unit_name || "Pcs",
         quantity: qty,
@@ -86,20 +122,16 @@ export async function GET(req: NextRequest) {
         sell_price: sell,
         total_cost_value: totalCost,
         total_retail_value: totalRetail,
-        tile_size: p.tile_size || null,
-        sqft_per_box: p.sqft_per_box ? parseFloat(p.sqft_per_box) : null,
-        pcs_per_box: p.pcs_per_box ? parseInt(p.pcs_per_box) : null,
-        grade: p.grade || null,
-        surface_finish: p.surface_finish || null,
-        stock_status: availableQty <= 0 ? "Out of Stock" : availableQty <= 5 ? "Low Stock" : "In Stock",
+        unit_breakdown: unitBreakdown,
+        stock_status: availableQty <= 0 ? "Out of Stock" : availableQty <= 10 ? "Low Stock" : "In Stock",
       };
     });
 
     let filteredList = formatted;
     if (filter === "low") {
-      filteredList = filteredList.filter((p) => p.quantity > 0 && p.quantity <= 5);
+      filteredList = filteredList.filter((p) => p.available_quantity > 0 && p.available_quantity <= 10);
     } else if (filter === "out") {
-      filteredList = filteredList.filter((p) => p.quantity <= 0);
+      filteredList = filteredList.filter((p) => p.available_quantity <= 0);
     }
 
     if (search) {
@@ -139,7 +171,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthUser(req);
     const fallbackUser = await prisma.users.findFirst({ select: { id: true } });
-    const userId = user?.id || (fallbackUser ? Number(fallbackUser.id) : 7);
+    const userId = user?.id || (fallbackUser ? Number(fallbackUser.id) : 1);
 
     const body = await req.json();
     const { product_id, new_quantity, reason } = body;
@@ -152,19 +184,79 @@ export async function POST(req: NextRequest) {
     }
 
     const prodId = BigInt(product_id);
-    const updated = await prisma.products.update({
-      where: { id: prodId },
-      data: {
-        quantity: String(new_quantity),
-      },
+    const targetQty = parseFloat(String(new_quantity));
+    if (isNaN(targetQty) || targetQty < 0) {
+      return NextResponse.json(
+        { status: "fail", message: "Quantity must be a non-negative number" },
+        { status: 400 }
+      );
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Fetch current product
+      const product = await tx.products.findUnique({
+        where: { id: prodId },
+        select: { id: true, product_name: true, quantity: true, cost_price: true, sell_price: true },
+      });
+
+      if (!product) {
+        throw new Error(`Product #${product_id} not found`);
+      }
+
+      const currentQty = parseFloat(product.quantity || "0");
+      const delta = targetQty - currentQty;
+
+      if (delta === 0) {
+        return { product, delta: 0, newQty: currentQty };
+      }
+
+      const isDamage =
+        reason &&
+        (reason.toLowerCase().includes("damage") ||
+          reason.toLowerCase().includes("broken") ||
+          reason.toLowerCase().includes("loss") ||
+          reason.toLowerCase().includes("নষ্ট") ||
+          reason.toLowerCase().includes("ভাঙা") ||
+          reason.toLowerCase().includes("অপচয়"));
+
+      const movementType: StockMovementType =
+        delta < 0
+          ? isDamage
+            ? "DAMAGE_LOSS"
+            : "ADJUSTMENT"
+          : "ADJUSTMENT";
+
+      await recordStockMovement(
+        {
+          productId: prodId,
+          movementType,
+          quantity: Math.abs(delta),
+          unitPrice: parseFloat(product.cost_price || product.sell_price || "0"),
+          referenceType: "ADJUSTMENT",
+          referenceId: null,
+          referenceNo: `ADJ-${Date.now().toString().slice(-6)}`,
+          date: new Date(),
+          note: reason || `Manual Stock Adjustment: ${currentQty} -> ${targetQty}`,
+          userId,
+          allowNegativeStock: false,
+        },
+        tx
+      );
+
+      return { product, delta, newQty: targetQty };
     });
 
     return NextResponse.json({
       status: "success",
-      message: `Stock updated for ${updated.product_name} (${reason || "Physical Adjustment"})`,
-      new_quantity: parseFloat(updated.quantity || "0"),
+      message: `Stock updated for ${result.product.product_name} (${reason || "Physical Adjustment"})`,
+      new_quantity: result.newQty,
+      delta: result.delta,
     });
   } catch (error: any) {
-    return NextResponse.json({ status: "fail", message: error?.message }, { status: 500 });
+    console.error("Stock Adjustment Error:", error);
+    return NextResponse.json(
+      { status: "fail", message: error?.message || "Stock adjustment failed" },
+      { status: 500 }
+    );
   }
 }

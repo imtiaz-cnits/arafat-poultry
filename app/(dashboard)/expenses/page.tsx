@@ -82,6 +82,7 @@ export default function ExpensesPage() {
     expense_amount: "",
     expense_details: "",
     date: new Date().toISOString().split("T")[0],
+    payment_method: "Cash",
   });
 
   const [saving, setSaving] = useState(false);
@@ -152,6 +153,7 @@ export default function ExpensesPage() {
       expense_amount: String(exp.expense_amount),
       expense_details: exp.expense_details,
       date: exp.date,
+      payment_method: "Cash",
     });
     setIsModalOpen(true);
   };
@@ -179,6 +181,7 @@ export default function ExpensesPage() {
           expense_amount: formData.expense_amount,
           expense_details: formData.expense_details,
           date: formData.date,
+          payment_method: formData.payment_method,
         }),
       });
 
@@ -192,6 +195,7 @@ export default function ExpensesPage() {
           expense_amount: "",
           expense_details: "",
           date: new Date().toISOString().split("T")[0],
+          payment_method: "Cash",
         });
         toast.success(
           selectedExpense
@@ -278,10 +282,10 @@ export default function ExpensesPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Daily Expense Register
+              দৈনন্দিন খরচ ও পরিচালন ব্যয় (Expenses & Operations)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Track daily operating overheads, utilities, staff salaries, and misc costs
+              খামার পরিচালনা, পরিবহন, ফিড ও ওষুধ হ্যান্ডলিং এবং কর্মচারীদের বেতন ও অগ্রিম ভাউচার
             </p>
           </div>
         </div>
@@ -303,7 +307,7 @@ export default function ExpensesPage() {
             className="h-[38px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
           >
             <Tag className="w-4 h-4" />
-            <span>Categories</span>
+            <span>খরচের খাত</span>
           </Link>
 
           <Link
@@ -311,7 +315,7 @@ export default function ExpensesPage() {
             className="h-[38px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
           >
             <Users className="w-4 h-4" />
-            <span>Staff</span>
+            <span>কর্মচারী</span>
           </Link>
 
           <button
@@ -323,13 +327,14 @@ export default function ExpensesPage() {
                 expense_amount: "",
                 expense_details: "",
                 date: new Date().toISOString().split("T")[0],
+                payment_method: "Cash",
               });
               setIsModalOpen(true);
             }}
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Expense</span>
+            <span>+ খরচ যুক্ত করুন</span>
           </button>
         </div>
       </div>
@@ -339,52 +344,52 @@ export default function ExpensesPage() {
         {/* Today's Cash Opening Float */}
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Cash Float (Opening)</span>
+            <span>প্রারম্ভিক ক্যাশ ড্রয়ার (Opening)</span>
             <Coins className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
             {openingBalance ? formatBdCurrency(openingBalance) : "৳ 0.00"}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            Initial counter drawer cash
+            দোকানের ক্যাশ ড্রয়ার প্রারম্ভিক জমা
           </div>
         </div>
 
         {/* Today's Expense */}
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Today's Expenses</span>
+            <span>আজকের মোট খরচ (Today)</span>
             <Calendar className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
             {formatBdCurrency(summary?.today_amount || 0)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Spent today so far</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">আজকের সর্বমোট প্রদানকৃত খরচ</div>
         </div>
 
         {/* This Month's Expense */}
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>This Month's Overhead</span>
+            <span>চলতি মাসের খরচ (This Month)</span>
             <TrendingDown className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-black text-amber-700 dark:text-amber-400 mt-1">
             {formatBdCurrency(summary?.this_month_amount || 0)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Current month total</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">চলতি মাসের সর্বমোট ব্যয়</div>
         </div>
 
         {/* All Time Total */}
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Total Recorded</span>
+            <span>সর্বমোট রেকর্ডকৃত খরচ</span>
             <DollarSign className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
             {formatBdCurrency(summary?.total_amount || 0)}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            Across {summary?.total_records || 0} vouchers
+            মোট {summary?.total_records || 0} টি ভাউচারে
           </div>
         </div>
       </div>
@@ -471,13 +476,13 @@ export default function ExpensesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Date / Entry ID</th>
-                <th className="py-3 px-3">Expense Category</th>
-                <th className="py-3 px-3">Staff / Beneficiary</th>
-                <th className="py-3 px-3">Description / Remarks</th>
-                <th className="py-3 px-3 text-right">Amount (৳)</th>
-                <th className="py-3 px-4 text-center w-24">Actions</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং</th>
+                <th className="py-3 px-4">তারিখ ও ভাউচার নং</th>
+                <th className="py-3 px-3">খরচের খাত</th>
+                <th className="py-3 px-3">সুবিধাভোগী / কর্মচারী</th>
+                <th className="py-3 px-3">বিবরণ ও মন্তব্য</th>
+                <th className="py-3 px-3 text-right">খরচের পরিমাণ (৳)</th>
+                <th className="py-3 px-4 text-center w-24">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -645,7 +650,7 @@ export default function ExpensesPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  {selectedExpense ? "Edit Expense Entry" : "Record New Expense"}
+                  {selectedExpense ? "খরচ ভাউচার সম্পাদন (Edit Expense)" : "নতুন খরচ ভাউচার এন্ট্রি (Record Expense)"}
                 </h3>
               </div>
               <button
@@ -667,13 +672,31 @@ export default function ExpensesPage() {
               {/* Expense Category */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Expense Category / Head <span className="text-red-500">*</span>
+                  খরচের খাত / ক্যাটাগরি (Expense Category) <span className="text-red-500">*</span>
                 </label>
                 <CustomSelect
                   options={expenseTypes.map((t) => ({ value: t.id, label: t.type_name }))}
                   value={formData.expense_type_id}
                   onChange={(val) => setFormData({ ...formData, expense_type_id: String(val) })}
-                  placeholder="Select Category..."
+                  placeholder="খরচের খাত নির্বাচন করুন..."
+                />
+              </div>
+
+              {/* Payment Method Selector */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  পরিশোধের মাধ্যম (Payment Account) <span className="text-red-500">*</span>
+                </label>
+                <CustomSelect
+                  options={[
+                    { value: "Cash", label: "ক্যাশ / নগদ ড্রয়ার (Main Farm Cash Drawer)" },
+                    { value: "Bank", label: "ব্যাংক হিসাব (Islami Bank Bangladesh Ltd)" },
+                    { value: "bKash", label: "বিকাশ মার্চেন্ট একাউন্ট (bKash Account)" },
+                    { value: "Nagad", label: "নগদ মার্চেন্ট একাউন্ট (Nagad Account)" },
+                  ]}
+                  value={formData.payment_method}
+                  onChange={(val) => setFormData({ ...formData, payment_method: String(val) })}
+                  placeholder="পেমেন্ট মাধ্যম নির্বাচন করুন..."
                 />
               </div>
 
@@ -751,7 +774,7 @@ export default function ExpensesPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Expense</span>
+                  <span>খরচ সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>
@@ -856,9 +879,9 @@ export default function ExpensesPage() {
           }
         }}
         onConfirm={confirmDeleteExpense}
-        title="Delete Expense Record"
+        title="খরচ ভাউচার মুছে ফেলুন"
         itemName={expenseToDelete ? `${expenseToDelete.type_name} (${formatBdCurrency(expenseToDelete.expense_amount)})` : ""}
-        description="Are you sure you want to delete this expense record? This will permanently remove the expense transaction from accounts."
+        description="আপনি কি নিশ্চিতভাবে এই খরচ রেকর্ডটি মুছে ফেলতে চান? এটি আর্থিক খাতা ও একাউন্ট ব্যালেন্স থেকে বাতিল করা হবে।"
         loading={isDeleting}
         error={deleteError}
       />

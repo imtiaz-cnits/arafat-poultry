@@ -23,6 +23,9 @@ import {
   Trash2,
   Printer,
   RefreshCw,
+  Wallet,
+  Activity,
+  Utensils,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
@@ -33,7 +36,16 @@ interface Flock {
   shed_name: string;
   breed: string;
   current_birds: number;
+  initial_chicks_count?: number;
+  mortality_count?: number;
+  age_display?: string;
+  age_months?: number;
+  age_days?: number;
+  expected_daily_feed_kg?: number;
+  actual_feed_consumed_kg?: number;
+  total_expenses?: number;
   status: string;
+  housing_date?: string;
 }
 
 interface GradeProduct {
@@ -116,6 +128,34 @@ export default function EggProductionPage() {
   const [flockShedName, setFlockShedName] = useState("");
   const [flockBreed, setFlockBreed] = useState("BV-300 Layer");
   const [flockChicksCount, setFlockChicksCount] = useState("1000");
+  const [flockHousingDate, setFlockHousingDate] = useState(new Date().toISOString().split("T")[0]);
+  const [flockNote, setFlockNote] = useState("");
+  const [isPurchaseFlock, setIsPurchaseFlock] = useState(false);
+  const [flockSupplierId, setFlockSupplierId] = useState<number | "">("");
+  const [flockUnitPrice, setFlockUnitPrice] = useState("45");
+  const [flockPaidAmount, setFlockPaidAmount] = useState("0");
+  const [flockPaymentMethod, setFlockPaymentMethod] = useState("Cash");
+
+  // Mortality Modal State
+  const [isMortalityModalOpen, setIsMortalityModalOpen] = useState(false);
+  const [selectedFlockForMortality, setSelectedFlockForMortality] = useState<Flock | null>(null);
+  const [mortalityCount, setMortalityCount] = useState("1");
+  const [mortalityReason, setMortalityReason] = useState("স্বাভাবিক মৃত্যু / হিট স্ট্রোক");
+  const [mortalityDate, setMortalityDate] = useState(new Date().toISOString().split("T")[0]);
+  const [submittingMortality, setSubmittingMortality] = useState(false);
+
+  // Flock Expense Modal State
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [selectedFlockForExpense, setSelectedFlockForExpense] = useState<Flock | null>(null);
+  const [expenseAmount, setExpenseAmount] = useState("");
+  const [expenseType, setExpenseType] = useState("ওষুধ ও ভ্যাকসিন");
+  const [expenseDetails, setExpenseDetails] = useState("");
+  const [expensePaymentMethod, setExpensePaymentMethod] = useState("Cash");
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split("T")[0]);
+  const [submittingExpense, setSubmittingExpense] = useState(false);
+
+  // Suppliers List
+  const [suppliersList, setSuppliersList] = useState<Array<{ id: number; name: string; company?: string }>>([]);
 
   // Action Modals State
   const [viewCollection, setViewCollection] = useState<EggCollection | null>(null);
@@ -125,12 +165,20 @@ export default function EggProductionPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/egg/collections");
-      const json = await res.json();
+      const [eggRes, suppRes] = await Promise.all([
+        fetch("/api/egg/collections"),
+        fetch("/api/suppliers"),
+      ]);
+      const json = await eggRes.json();
       if (json.status === "success") {
         setData(json.data);
       } else {
         toast.error(json.message || "ডিম উৎপাদন ডাটা লোড করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+
+      const suppJson = await suppRes.json();
+      if (suppJson.status === "success" && Array.isArray(suppJson.data)) {
+        setSuppliersList(suppJson.data);
       }
     } catch (err: any) {
       toast.error(err.message || "নেটওয়ার্ক সমস্যা", "ত্রুটি");
@@ -340,21 +388,38 @@ export default function EggProductionPage() {
 
     try {
       setSubmittingFlock(true);
+      const payload: any = {
+        shed_name: flockShedName.trim(),
+        breed: flockBreed.trim(),
+        initial_chicks_count: parseInt(flockChicksCount) || 0,
+        housing_date: flockHousingDate,
+        note: flockNote.trim() || undefined,
+      };
+
+      if (isPurchaseFlock) {
+        if (!flockSupplierId) {
+          toast.error("সরবরাহকারী নির্বাচন করুন", "সতর্কতা");
+          setSubmittingFlock(false);
+          return;
+        }
+        payload.supplier_id = flockSupplierId;
+        payload.unit_price = parseFloat(flockUnitPrice) || 0;
+        payload.paid_amount = parseFloat(flockPaidAmount) || 0;
+        payload.payment_method = flockPaymentMethod;
+      }
+
       const res = await fetch("/api/egg/flocks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          shed_name: flockShedName.trim(),
-          breed: flockBreed.trim(),
-          initial_chicks_count: parseInt(flockChicksCount) || 0,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const resData = await res.json();
       if (resData.status === "success") {
-        toast.success("নতুন পোল্ট্রি ফ্লক সফলভাবে তৈরি হয়েছে!", "সফল");
+        toast.success(resData.message || "নতুন পোল্ট্রি ফ্লক সফলভাবে তৈরি হয়েছে!", "সফল");
         setIsFlockModalOpen(false);
         setFlockShedName("");
+        setIsPurchaseFlock(false);
         await loadData();
       } else {
         toast.error(resData.message || "ফ্লক তৈরি ব্যর্থ হয়েছে", "ব্যর্থ");
@@ -363,6 +428,100 @@ export default function EggProductionPage() {
       toast.error(err.message || "সার্ভার এরর", "ত্রুটি");
     } finally {
       setSubmittingFlock(false);
+    }
+  };
+
+  const handleOpenMortalityForFlock = (flock: Flock) => {
+    setSelectedFlockForMortality(flock);
+    setMortalityCount("1");
+    setMortalityReason("স্বাভাবিক মৃত্যু / হিট স্ট্রোক");
+    setMortalityDate(new Date().toISOString().split("T")[0]);
+    setIsMortalityModalOpen(true);
+  };
+
+  const handleMortalitySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFlockForMortality) return;
+    const count = parseInt(mortalityCount) || 0;
+    if (count <= 0) {
+      toast.error("সঠিক সংখ্যা প্রদান করুন", "সতর্কতা");
+      return;
+    }
+
+    try {
+      setSubmittingMortality(true);
+      const res = await fetch("/api/egg/flocks/mortality", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          flock_id: selectedFlockForMortality.id,
+          mortality_count: count,
+          reason: mortalityReason,
+          date: mortalityDate,
+        }),
+      });
+
+      const resData = await res.json();
+      if (resData.status === "success") {
+        toast.success(resData.message || "মৃত্যুর হিসাব সফলভাবে সংরক্ষিত হয়েছে", "সফল");
+        setIsMortalityModalOpen(false);
+        await loadData();
+      } else {
+        toast.error(resData.message || "মৃত্যু সংরক্ষণ ব্যর্থ হয়েছে", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setSubmittingMortality(false);
+    }
+  };
+
+  const handleOpenExpenseForFlock = (flock: Flock) => {
+    setSelectedFlockForExpense(flock);
+    setExpenseAmount("");
+    setExpenseType("ওষুধ ও ভ্যাকসিন");
+    setExpenseDetails("");
+    setExpensePaymentMethod("Cash");
+    setExpenseDate(new Date().toISOString().split("T")[0]);
+    setIsExpenseModalOpen(true);
+  };
+
+  const handleFlockExpenseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFlockForExpense) return;
+    const amt = parseFloat(expenseAmount) || 0;
+    if (amt <= 0) {
+      toast.error("সঠিক খরচের পরিমাণ দিন", "সতর্কতা");
+      return;
+    }
+
+    try {
+      setSubmittingExpense(true);
+      const res = await fetch("/api/egg/flocks/expense", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          flock_id: selectedFlockForExpense.id,
+          amount: amt,
+          expense_type: expenseType,
+          expense_details: expenseDetails,
+          payment_method: expensePaymentMethod,
+          date: expenseDate,
+        }),
+      });
+
+      const resData = await res.json();
+      if (resData.status === "success") {
+        toast.success(resData.message || "ফ্লকের খরচ সফলভাবে যোগ হয়েছে", "সফল");
+        setIsExpenseModalOpen(false);
+        await loadData();
+      } else {
+        toast.error(resData.message || "খরচ সংরক্ষণ ব্যর্থ", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setSubmittingExpense(false);
     }
   };
 
@@ -687,31 +846,59 @@ export default function EggProductionPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-emerald-800 text-white font-medium">
-                  <th className="py-3 px-4">ফ্লক কোড</th>
-                  <th className="py-3 px-4">শেডের নাম</th>
+                  <th className="py-3 px-4">ফ্লক ও শেড</th>
                   <th className="py-3 px-4">মুরগির জাত (Breed)</th>
-                  <th className="py-3 px-4 text-center">বর্তমান মুরগির সংখ্যা</th>
+                  <th className="py-3 px-4 text-center">বয়স (৩০ দিন/মাস)</th>
+                  <th className="py-3 px-4 text-center">লাইভ মুরগি / মোট</th>
+                  <th className="py-3 px-4 text-center">দৈনিক ফিড (১২০g/দিন)</th>
+                  <th className="py-3 px-4 text-right">মোট উৎপাদন ব্যয়</th>
                   <th className="py-3 px-4 text-center">স্ট্যাটাস</th>
-                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
+                  <th className="py-3 px-4 text-center w-52">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {!data?.flocks || data.flocks.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
                       কোনো পোল্ট্রি ফ্লক নেই।
                     </td>
                   </tr>
                 ) : (
                   data.flocks.map((f) => (
                     <tr key={f.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-4 font-mono font-medium text-emerald-700 dark:text-emerald-400">
-                        {f.flock_code}
+                      <td className="py-3 px-4">
+                        <div className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                          {f.flock_code}
+                        </div>
+                        <div className="text-[11px] text-gray-900 dark:text-white font-medium">{f.shed_name}</div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{f.shed_name}</td>
-                      <td className="py-3 px-4">{f.breed}</td>
-                      <td className="py-3 px-4 text-center font-bold text-gray-900 dark:text-white font-mono">
-                        {f.current_birds} টি
+                      <td className="py-3 px-4">
+                        <span className="font-medium text-gray-800 dark:text-gray-200">{f.breed}</span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                          <Calendar className="w-3 h-3 text-sky-600" />
+                          <span>{f.age_display || "০ দিন"}</span>
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono">
+                        <div className="font-bold text-gray-900 dark:text-white text-sm">
+                          {f.current_birds} টি
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          শুরু: {f.initial_chicks_count ?? f.current_birds} | মৃত: {f.mortality_count ?? 0}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono">
+                        <div className="font-bold text-orange-600 dark:text-orange-400">
+                          {f.expected_daily_feed_kg ?? ((f.current_birds * 0.12).toFixed(1))} কেজি
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          খাওয়া শেষ: {f.actual_feed_consumed_kg ?? 0} kg
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                        {formatBdCurrency(f.total_expenses ?? 0)}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -719,15 +906,35 @@ export default function EggProductionPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenCollectionForFlock(f)}
-                          className="h-[28px] px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold text-[11px] flex items-center gap-1 mx-auto transition-all cursor-pointer shadow-xs"
-                          title="এই ফ্লক থেকে ডিম সংগ্রহ করুন"
-                        >
-                          <Egg className="w-3 h-3" />
-                          <span>ডিম সংগ্রহ</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCollectionForFlock(f)}
+                            className="h-[28px] px-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-semibold text-[11px] flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                            title="এই ফ্লক থেকে ডিম সংগ্রহ করুন"
+                          >
+                            <Egg className="w-3 h-3" />
+                            <span>ডিম</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMortalityForFlock(f)}
+                            className="h-[28px] px-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-semibold text-[11px] flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                            title="মৃত মুরগির হিসাব এন্ট্রি করুন"
+                          >
+                            <BadgeAlert className="w-3 h-3" />
+                            <span>মৃত্যু</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenExpenseForFlock(f)}
+                            className="h-[28px] px-2 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 font-semibold text-[11px] flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                            title="ফ্লকের ওষুধ/ভ্যাকসিন/লেবার খরচ এন্ট্রি"
+                          >
+                            <Wallet className="w-3 h-3" />
+                            <span>খরচ</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -1043,11 +1250,11 @@ export default function EggProductionPage() {
       {/* New Flock Modal */}
       {isFlockModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-emerald-800 to-green-700 px-6 py-4 text-white flex justify-between items-center">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-emerald-800 to-green-700 px-6 py-4 text-white flex justify-between items-center shrink-0">
               <div className="flex items-center gap-2">
                 <Home className="w-5 h-5 text-emerald-200" />
-                <h3 className="font-bold text-base">নতুন পোল্ট্রি ফ্লক / শেড যোগ</h3>
+                <h3 className="font-bold text-base">নতুন পোল্ট্রি ফ্লক / শেড ও মুরগি সংগ্রহ</h3>
               </div>
               <button
                 onClick={() => setIsFlockModalOpen(false)}
@@ -1057,45 +1264,188 @@ export default function EggProductionPage() {
               </button>
             </div>
 
-            <form onSubmit={handleFlockSubmit} className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  শেডের নাম <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="যেমন: শেড ১ (লেয়ার ব্যাচ)"
-                  value={flockShedName}
-                  onChange={(e) => setFlockShedName(e.target.value)}
-                  required
-                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
-                />
+            <form onSubmit={handleFlockSubmit} className="p-6 space-y-4 text-xs overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    শেডের নাম <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="যেমন: শেড ১ (লেয়ার ব্যাচ)"
+                    value={flockShedName}
+                    onChange={(e) => setFlockShedName(e.target.value)}
+                    required
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    মুরগির জাত (Breed) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="যেমন: BV-300 Layer, Novogen"
+                    value={flockBreed}
+                    onChange={(e) => setFlockBreed(e.target.value)}
+                    required
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    মুরগির সংখ্যা (Chicks Count) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={flockChicksCount}
+                    onChange={(e) => setFlockChicksCount(e.target.value)}
+                    required
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    শেডে তোলার তারিখ
+                  </label>
+                  <input
+                    type="date"
+                    value={flockHousingDate}
+                    onChange={(e) => setFlockHousingDate(e.target.value)}
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Purchase Toggle */}
+              <div className="p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-emerald-900 dark:text-emerald-200 text-xs">
+                      সরবরাহকারী থেকে মুরগি ক্রয় (Flock Purchase)?
+                    </span>
+                    <p className="text-[10px] text-emerald-700 dark:text-emerald-400">
+                      সরাসরি ইনভেন্টরি ও সরবরাহকারী লেজারে বাকি/পরিশোধের হিসাব যুক্ত হবে
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isPurchaseFlock}
+                    onChange={(e) => setIsPurchaseFlock(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 rounded-md focus:ring-emerald-500 cursor-pointer"
+                  />
+                </div>
+
+                {isPurchaseFlock && (
+                  <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60 space-y-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        সরবরাহকারী নির্বাচন করুন <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={flockSupplierId}
+                        onChange={(e) => setFlockSupplierId(e.target.value ? Number(e.target.value) : "")}
+                        required={isPurchaseFlock}
+                        className="w-full h-[42px] px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs cursor-pointer"
+                      >
+                        <option value="">-- সরবরাহকারী নির্বাচন করুন --</option>
+                        {suppliersList.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name} {s.company ? `(${s.company})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          প্রতি মুরগির দর (৳)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          value={flockUnitPrice}
+                          onChange={(e) => setFlockUnitPrice(e.target.value)}
+                          className="w-full h-[42px] px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          মোট ক্রয়মূল্য (স্বয়ংক্রিয়)
+                        </label>
+                        <div className="w-full h-[42px] px-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold flex items-center text-emerald-700 dark:text-emerald-400">
+                          {formatBdCurrency((parseInt(flockChicksCount) || 0) * (parseFloat(flockUnitPrice) || 0))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          পরিশোধিত অর্থ (৳)
+                        </label>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          value={flockPaidAmount}
+                          onChange={(e) => setFlockPaidAmount(e.target.value)}
+                          className="w-full h-[42px] px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold text-sky-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          পেমেন্ট মেথড
+                        </label>
+                        <select
+                          value={flockPaymentMethod}
+                          onChange={(e) => setFlockPaymentMethod(e.target.value)}
+                          className="w-full h-[42px] px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs cursor-pointer"
+                        >
+                          <option value="Cash">নগদ (Cash)</option>
+                          <option value="Bank">ব্যাংক (Bank)</option>
+                          <option value="bKash">বিকাশ (bKash)</option>
+                          <option value="Nagad">নগদ (Nagad)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-[11px] p-2 bg-white/70 dark:bg-slate-900/70 rounded-lg">
+                      <span className="text-gray-600 dark:text-gray-400">সরবরাহকারীর নিকট বকেয়া:</span>
+                      <strong className="text-rose-600 font-mono font-bold text-xs">
+                        {formatBdCurrency(
+                          Math.max(
+                            0,
+                            (parseInt(flockChicksCount) || 0) * (parseFloat(flockUnitPrice) || 0) -
+                              (parseFloat(flockPaidAmount) || 0)
+                          )
+                        )}
+                      </strong>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  মুরগির জাত (Breed) <span className="text-red-500">*</span>
+                  মন্তব্য / বিবরণ
                 </label>
                 <input
                   type="text"
-                  placeholder="যেমন: BV-300 Layer, Novogen White"
-                  value={flockBreed}
-                  onChange={(e) => setFlockBreed(e.target.value)}
-                  required
+                  placeholder="অতিরিক্ত কোনো তথ্য থাকলে লিখুন"
+                  value={flockNote}
+                  onChange={(e) => setFlockNote(e.target.value)}
                   className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  প্রারম্ভিক বাচ্চা সংখ্যা (Chicks Count)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={flockChicksCount}
-                  onChange={(e) => setFlockChicksCount(e.target.value)}
-                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"
                 />
               </div>
 
@@ -1113,7 +1463,225 @@ export default function EggProductionPage() {
                   className="px-6 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
                 >
                   {submittingFlock ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  <span>ফ্লক সংরক্ষণ করুন</span>
+                  <span>{isPurchaseFlock ? "ক্রয় ও ফ্লক সংরক্ষণ" : "ফ্লক সংরক্ষণ করুন"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mortality Modal */}
+      {isMortalityModalOpen && selectedFlockForMortality && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-rose-800 to-red-700 px-6 py-4 text-white flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <BadgeAlert className="w-5 h-5 text-rose-200" />
+                <h3 className="font-bold text-base">মৃত মুরগির হিসাব এন্ট্রি (Flock Mortality)</h3>
+              </div>
+              <button
+                onClick={() => setIsMortalityModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleMortalitySubmit} className="p-6 space-y-4 text-xs">
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900">
+                <div className="text-gray-900 dark:text-white font-bold text-xs">{selectedFlockForMortality.shed_name}</div>
+                <div className="text-[11px] font-mono text-rose-700 dark:text-rose-400">
+                  ফ্লক: {selectedFlockForMortality.flock_code} | বর্তমান মুরগি: <strong>{selectedFlockForMortality.current_birds} টি</strong>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  মৃত মুরগির সংখ্যা <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={selectedFlockForMortality.current_birds}
+                  value={mortalityCount}
+                  onChange={(e) => setMortalityCount(e.target.value)}
+                  required
+                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-rose-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  মৃত্যুর তারিখ
+                </label>
+                <input
+                  type="date"
+                  value={mortalityDate}
+                  onChange={(e) => setMortalityDate(e.target.value)}
+                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  মৃত্যুর কারণ / বিবরণ
+                </label>
+                <input
+                  type="text"
+                  placeholder="যেমন: অতিরিক্ত গরম, স্বাভাবিক মৃত্যু, ইত্যাদি"
+                  value={mortalityReason}
+                  onChange={(e) => setMortalityReason(e.target.value)}
+                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                />
+              </div>
+
+              <div className="text-[11px] text-slate-500 flex justify-between p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                <span>মৃত্যুর পর অবশিষ্ট থাকবে:</span>
+                <strong className="text-emerald-700 dark:text-emerald-400 font-mono">
+                  {Math.max(0, selectedFlockForMortality.current_birds - (parseInt(mortalityCount) || 0))} টি
+                </strong>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsMortalityModalOpen(false)}
+                  className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingMortality}
+                  className="px-6 py-2 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-medium text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                >
+                  {submittingMortality ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  <span>মৃত্যু রেকর্ড নিশ্চিত করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Flock Expense Modal */}
+      {isExpenseModalOpen && selectedFlockForExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-amber-700 to-amber-600 px-6 py-4 text-white flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-amber-200" />
+                <h3 className="font-bold text-base">ফ্লকের প্রত্যক্ষ খরচ এন্ট্রি (Farm Expense)</h3>
+              </div>
+              <button
+                onClick={() => setIsExpenseModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleFlockExpenseSubmit} className="p-6 space-y-4 text-xs">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900">
+                <div className="text-gray-900 dark:text-white font-bold text-xs">{selectedFlockForExpense.shed_name}</div>
+                <div className="text-[11px] font-mono text-amber-700 dark:text-amber-400">
+                  ফ্লক কোড: {selectedFlockForExpense.flock_code} | বর্তমান খরচ: {formatBdCurrency(selectedFlockForExpense.total_expenses ?? 0)}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  খরচের খাত <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={expenseType}
+                  onChange={(e) => setExpenseType(e.target.value)}
+                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs cursor-pointer"
+                >
+                  <option value="ওষুধ ও ভ্যাকসিন">ওষুধ ও ভ্যাকসিন (Medicine & Vaccine)</option>
+                  <option value="লিটার ও বেডিং">লিটার ও বেডিং উপাদান (Litter & Bedding)</option>
+                  <option value="লেবার মজুরি">লেবার ও পরিচর্যা মজুরি (Labor Wages)</option>
+                  <option value="বিদ্যুৎ ও জ্বালানি">বিদ্যুৎ, জেনারেটর ও হিটিং (Electricity/Heating)</option>
+                  <option value="শেড রক্ষণাবেক্ষণ">শেড মেরামত ও চুনকাম (Shed Maintenance)</option>
+                  <option value="অন্যান্য প্রত্যক্ষ খরচ">অন্যান্য প্রত্যক্ষ খরচ (Other Direct Expense)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    টাকার পরিমাণ (৳) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    value={expenseAmount}
+                    onChange={(e) => setExpenseAmount(e.target.value)}
+                    required
+                    placeholder="যেমন: ১৫০০"
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    পেমেন্ট মেথড
+                  </label>
+                  <select
+                    value={expensePaymentMethod}
+                    onChange={(e) => setExpensePaymentMethod(e.target.value)}
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs cursor-pointer"
+                  >
+                    <option value="Cash">নগদ (Cash)</option>
+                    <option value="Bank">ব্যাংক (Bank)</option>
+                    <option value="bKash">বিকাশ (bKash)</option>
+                    <option value="Nagad">নগদ (Nagad)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  তারিখ
+                </label>
+                <input
+                  type="date"
+                  value={expenseDate}
+                  onChange={(e) => setExpenseDate(e.target.value)}
+                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  খরচের বিবরণ / ভাউচার রেফারেন্স
+                </label>
+                <input
+                  type="text"
+                  placeholder="যেমন: রানীক্ষেত ভ্যাকসিনের ডোজ সংগ্রহ"
+                  value={expenseDetails}
+                  onChange={(e) => setExpenseDetails(e.target.value)}
+                  className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsExpenseModalOpen(false)}
+                  className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs transition-colors"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingExpense}
+                  className="px-6 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                >
+                  {submittingExpense ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  <span>খরচ যোগ করুন</span>
                 </button>
               </div>
             </form>

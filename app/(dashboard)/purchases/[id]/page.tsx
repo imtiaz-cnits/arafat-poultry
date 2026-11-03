@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
-import { formatTileOrItemQty } from "@/lib/tiles-calculator";
 
 interface PurchaseDetail {
   id: number;
@@ -192,32 +191,22 @@ export default function PurchaseBillPage({
         <div className="sheet-top-content">
           {/* Header: Responsive on Mobile, Horizontal on Desktop & Print */}
           <div className="flex flex-col sm:flex-row print:flex-row justify-between items-center sm:items-start print:items-start gap-3 sm:gap-2 print:gap-0 pb-2 border-b border-slate-200">
-            {/* Brand Logo & Name */}
-            <div className="flex items-start gap-2.5">
-              <div className="w-12 h-12 rounded-lg border-2 border-[#166534] p-1 flex items-center justify-center bg-white shrink-0 shadow-xs">
-                <Image
-                  src="/logo1.png"
-                  alt="Arafat Poultry & Fisheries"
-                  width={42}
-                  height={42}
-                  className="w-full h-full object-contain"
-                  priority
-                />
-              </div>
-              <div className="flex flex-col">
-                <h1 className="text-xl sm:text-2xl print:text-2xl font-black tracking-wide text-[#166534] m-0 leading-tight">
-                  ARAFAT POULTRY &amp; FISHERIES
-                </h1>
-                <div className="text-[10px] sm:text-[11px] print:text-[11px] font-bold text-[#15803d] border-t border-[#166534] pt-0.5 mt-0.5 whitespace-normal sm:whitespace-nowrap print:whitespace-nowrap">
-                  Quality Products. Trusted Service.
-                </div>
-              </div>
+            {/* Brand Logo (Enlarged, Official) */}
+            <div className="flex items-center">
+              <Image
+                src="/logo1.png"
+                alt="Arafat Poultry & Fisheries"
+                width={200}
+                height={65}
+                className="h-14 sm:h-16 print:h-16 w-auto object-contain"
+                priority
+              />
             </div>
 
             {/* Middle "Purchase Bill" Badge */}
             <div className="self-center">
               <span className="px-4 sm:px-5 py-0.5 sm:py-1 print:py-1 rounded bg-[#166534] text-white font-serif font-black text-base sm:text-lg print:text-lg tracking-wider">
-                Purchase Bill
+                ক্রয় মেমো (PURCHASE MEMO)
               </span>
             </div>
 
@@ -287,11 +276,11 @@ export default function PurchaseBillPage({
             <table className="w-full text-left border-collapse border border-black text-[12px] min-w-[500px] sm:min-w-0 print:min-w-0">
               <thead>
                 <tr className="bg-slate-50 text-black font-bold text-center border-b border-black">
-                  <th className="border border-black py-1 px-2 w-[50px]">Sl.No.</th>
-                  <th className="border border-black py-1 px-3 text-left">Description</th>
-                  <th className="border border-black py-1 px-2 w-[110px] text-right">Cost Rate</th>
-                  <th className="border border-black py-1 px-2 w-[70px] text-center">Qty.</th>
-                  <th className="border border-black py-1 px-3 w-[120px] text-right">Amount</th>
+                  <th className="border border-black py-1 px-2 w-[50px]">ক্রমিক</th>
+                  <th className="border border-black py-1 px-3 text-left">পণ্যের বিবরণ (Description)</th>
+                  <th className="border border-black py-1 px-2 w-[110px] text-right">দর (Rate)</th>
+                  <th className="border border-black py-1 px-2 w-[80px] text-center">পরিমাণ</th>
+                  <th className="border border-black py-1 px-3 w-[120px] text-right">মোট টাকা (৳)</th>
                 </tr>
               </thead>
               <tbody>
@@ -302,17 +291,14 @@ export default function PurchaseBillPage({
                     </td>
                     <td className="border border-black py-1 px-3 font-semibold">
                       {item.product_name}
-                      {item.tile_size && (
+                      {item.unit && (
                         <span className="text-[10px] text-slate-600 block">
-                          Size: {item.tile_size} | Grade: {item.grade || "Standard"}
+                          একক: {item.unit}
                         </span>
                       )}
                     </td>
-                    <td className="border border-black py-1 px-2 text-right font-mono">
-                      {item.cost_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
                     <td className="border border-black py-1 px-2 text-center font-bold whitespace-nowrap">
-                      {formatTileOrItemQty(item.quantity, item)}
+                      {item.quantity} {item.unit || "একক"}
                     </td>
                     <td className="border border-black py-1 px-3 text-right font-mono font-bold">
                       {item.subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -386,13 +372,19 @@ export default function PurchaseBillPage({
             </div>
           </div>
 
-          {/* Signatures */}
-          <div className="flex justify-between items-end pt-8 pb-3 text-[12px] font-semibold text-black gap-4">
-            <div className="w-36 sm:w-40 print:w-40 text-center border-t border-dotted border-black pt-1">
-              Supplier&apos;s Signature
+          {/* Signatures (Rule 12.3: 3 signature areas) */}
+          <div className="flex justify-between items-end pt-12 pb-3 text-[11px] font-semibold text-black gap-4">
+            <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
+              প্রস্তুতকারীর স্বাক্ষর
+              <span className="block text-[9px] text-slate-500 font-normal">Prepared By</span>
             </div>
-            <div className="w-36 sm:w-40 print:w-40 text-center border-t border-dotted border-black pt-1">
-              Store In-Charge Signature
+            <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
+              গ্রহণকারীর স্বাক্ষর
+              <span className="block text-[9px] text-slate-500 font-normal">Received By</span>
+            </div>
+            <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
+              অনুমোদনকারীর স্বাক্ষর
+              <span className="block text-[9px] text-slate-500 font-normal">Authorized By</span>
             </div>
           </div>
 

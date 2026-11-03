@@ -4,7 +4,7 @@ import { recordStockMovement } from "@/lib/stock-service";
 import { recordPartyTransaction } from "@/lib/party-ledger-service";
 import { recordFinancialTransaction, getAccountByPaymentMethod } from "@/lib/financial-service";
 import { logAudit } from "@/lib/audit-service";
-import { convertEggUnits } from "@/lib/unit-service";
+import { convertEggUnits, calculateAgeInMonthsAndDays, calculateDailyFeedRequirementKg } from "@/lib/unit-service";
 
 export interface GradeAllocation {
   productId: bigint | number;
@@ -656,14 +656,30 @@ export async function getEggPerformanceAndProfitability() {
       avg_cost_per_accepted_egg: parseFloat(avgCostPerEgg.toFixed(4)),
       laying_rate_percent: parseFloat(layingRate.toFixed(2)),
     },
-    flocks: flocks.map((f) => ({
-      id: Number(f.id),
-      flock_code: f.flock_code,
-      shed_name: f.shed_name,
-      breed: f.breed,
-      current_birds: f.current_birds_count,
-      status: f.status,
-    })),
+    flocks: flocks.map((f) => {
+      const age = calculateAgeInMonthsAndDays(f.housing_date, new Date());
+      const expectedDailyFeedKg = calculateDailyFeedRequirementKg(f.current_birds_count, 120).dailyKg;
+      const mortalityCount = Math.max(0, f.initial_chicks_count - f.current_birds_count);
+
+      return {
+        id: Number(f.id),
+        flock_code: f.flock_code,
+        shed_name: f.shed_name,
+        breed: f.breed,
+        housing_date: f.housing_date.toISOString().split("T")[0],
+        initial_chicks_count: f.initial_chicks_count,
+        current_birds: f.current_birds_count,
+        mortality_count: mortalityCount,
+        age_display: age.display,
+        age_months: age.months,
+        age_days: age.days,
+        age_total_days: age.totalDays,
+        expected_daily_feed_kg: parseFloat(expectedDailyFeedKg.toFixed(2)),
+        actual_feed_consumed_kg: Number(f.feed_consumed_kg),
+        total_expenses: Number(f.total_expenses),
+        status: f.status,
+      };
+    }),
     recent_collections: collections.map((c) => ({
       id: Number(c.id),
       collection_no: c.collection_no,

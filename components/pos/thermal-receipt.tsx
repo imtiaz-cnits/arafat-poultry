@@ -1,7 +1,6 @@
 "use client";
 
 import { formatBdCurrency } from "@/lib/utils";
-import { formatTileOrItemQty } from "@/lib/tiles-calculator";
 import Image from "next/image";
 import { Printer, X, Truck, Phone, MapPin, Calendar, FileText } from "lucide-react";
 
@@ -122,19 +121,16 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
         <div id="printable-invoice" className="flex-1 overflow-y-auto p-6 sm:p-8 font-sans text-xs text-slate-800 thermal-sheet print:p-0">
           {/* Store Branding Header */}
           <div className="text-center pb-4 border-b-2 border-slate-900">
-            <div className="flex justify-center mb-1.5">
+            <div className="flex justify-center mb-2">
               <Image
                 src="/logo1.png"
                 alt="Arafat Poultry & Fisheries"
-                width={48}
-                height={48}
-                className="w-12 h-12 object-contain"
+                width={220}
+                height={75}
+                className="h-16 w-auto object-contain"
                 priority
               />
             </div>
-            <h1 className="text-2xl font-black text-emerald-900 tracking-wider uppercase m-0 leading-tight">
-              ARAFAT POULTRY &amp; FISHERIES
-            </h1>
             <p className="text-xs text-slate-600 font-medium mt-1">
               Quality Products. Trusted Service.
             </p>
@@ -199,11 +195,11 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
                 <thead>
                   <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px]">
                     <th className="py-2.5 px-3 w-10 text-center">#</th>
-                    <th className="py-2.5 px-3">Item Description</th>
-                    <th className="py-2.5 px-3 text-center">Specs / Size</th>
-                    <th className="py-2.5 px-3 text-center w-14">Qty</th>
-                    <th className="py-2.5 px-3 text-right w-24">Rate (৳)</th>
-                    <th className="py-2.5 px-3 text-right w-28">Total (৳)</th>
+                    <th className="py-2.5 px-3">পণ্যের বিবরণ (Description)</th>
+                    <th className="py-2.5 px-3 text-center">ক্যাটাগরি / একক</th>
+                    <th className="py-2.5 px-3 text-center w-16">পরিমাণ</th>
+                    <th className="py-2.5 px-3 text-right w-24">দর (৳)</th>
+                    <th className="py-2.5 px-3 text-right w-28">মোট (৳)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-800">
@@ -216,12 +212,10 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
                         {item.product_name}
                       </td>
                       <td className="py-2 px-3 text-center text-slate-600 text-[11px]">
-                        {item.tile_size ? `Size: ${item.tile_size} ` : "-"}
-                        {item.sqft_per_box ? `(${(item.quantity * item.sqft_per_box).toFixed(1)} Sft)` : ""}
-                        {item.grade ? ` [★${item.grade}]` : ""}
+                        {item.category || item.unit || "একক"}
                       </td>
                       <td className="py-2 px-3 text-center font-bold font-mono whitespace-nowrap">
-                        {formatTileOrItemQty(item.quantity, item)}
+                        {item.quantity} {item.unit || ""}
                       </td>
                       <td className="py-2 px-3 text-right font-mono">
                         {item.price.toFixed(2)}
@@ -240,10 +234,10 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             {/* Notes / Terms */}
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-[11px]">
-              <span className="font-bold text-slate-700">Terms & Conditions:</span>
+              <span className="font-bold text-slate-700">শর্তাবলী / Terms:</span>
               <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
-                <li>Please preserve this invoice for all warranty claims and returns.</li>
-                <li>Sold items may be exchanged within 7 days in original packed condition.</li>
+                <li>যেকোনো প্রশ্ন বা তথ্যের জন্য এই রসিদ সংরক্ষণ করুন।</li>
+                <li>ডেলিভারির সময় ডিম বা মাছের পরিমাণ ও গুণমান যাচাই করে গ্রহণ করুন।</li>
                 {receiptData.order_note && (
                   <li className="font-semibold text-slate-900">Note: {receiptData.order_note}</li>
                 )}
@@ -304,16 +298,24 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
             </div>
           </div>
 
-          {/* Signature Protocols */}
-          <div className="pt-10 grid grid-cols-2 gap-8 text-center text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+          {/* Signature Protocols (Strict Rule: 3 signature areas) */}
+          <div className="pt-10 grid grid-cols-3 gap-4 text-center text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
             <div>
-              <div className="border-t border-slate-400 pt-1.5 w-3/4 mx-auto font-bold text-slate-800">
-                Customer Signature
+              <div className="border-t border-slate-400 pt-1.5 w-full mx-auto font-bold text-slate-800">
+                বিক্রয় সহকারী / ক্যাশিয়ার
+                <span className="block text-[8px] text-slate-400 font-normal">Cashier</span>
               </div>
             </div>
             <div>
-              <div className="border-t border-slate-400 pt-1.5 w-3/4 mx-auto font-bold text-slate-800">
-                Authorized Signature / Cashier
+              <div className="border-t border-slate-400 pt-1.5 w-full mx-auto font-bold text-slate-800">
+                ক্রেতার স্বাক্ষর
+                <span className="block text-[8px] text-slate-400 font-normal">Customer Signature</span>
+              </div>
+            </div>
+            <div>
+              <div className="border-t border-slate-400 pt-1.5 w-full mx-auto font-bold text-slate-800">
+                অনুমোদনকারীর স্বাক্ষর
+                <span className="block text-[8px] text-slate-400 font-normal">Authorized By</span>
               </div>
             </div>
           </div>

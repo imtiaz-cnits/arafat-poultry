@@ -224,10 +224,10 @@ export default function InvoicesPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Sales Invoices Register
+              বিক্রয় মেমো রেজিস্টার (Sales Invoices)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Track customer sales, payments, print vouchers, and collect due
+              কাস্টমার বিক্রয় মেমো, পেমেন্ট, চালান প্রিন্ট ও বকেয়া আদায়ের সমন্বিত হিসাব
             </p>
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function InvoicesPage() {
           {/* Revenue */}
           <div className="h-[38px] px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-2">
             <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">
-              Sales Revenue:
+              মোট বিক্রয়:
             </span>
             <span className="text-xs font-black text-emerald-800 dark:text-emerald-300">
               {formatBdCurrency(totalSalesRevenue)}
@@ -246,7 +246,7 @@ export default function InvoicesPage() {
           {/* Sales Due */}
           <div className="h-[38px] px-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 flex items-center gap-2">
             <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase">
-              Sales Due:
+              মোট বকেয়া:
             </span>
             <span className="text-xs font-black text-rose-800 dark:text-rose-300">
               {formatBdCurrency(totalSalesDue)}
@@ -429,14 +429,7 @@ export default function InvoicesPage() {
                           </button>
                         )}
 
-                        {/* Sales Return */}
-                        <Link
-                          href={`/returns?tab=sales&order_no=${encodeURIComponent(inv.order_no)}`}
-                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Process Sales Return"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                        </Link>
+
 
                         {/* Collect Due */}
                         {inv.due_amount > 0 && (
@@ -562,15 +555,7 @@ export default function InvoicesPage() {
                 <span>Print</span>
               </button>
 
-              {/* Return Button */}
-              <Link
-                href={`/returns?tab=sales&order_no=${encodeURIComponent(inv.order_no)}`}
-                className="h-[30px] w-full px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold text-xs flex items-center justify-center gap-1"
-                title="Process Sales Return"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Return</span>
-              </Link>
+
 
               {/* View Button */}
               <Link

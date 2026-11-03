@@ -26,6 +26,7 @@ import {
   Egg,
   Fish,
   Scale,
+  Activity,
 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 
@@ -46,103 +47,92 @@ interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    label: "ড্যাশবোর্ড",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
     id: "pos",
-    label: "Point of Sale",
+    label: "বিক্রয়",
     href: "/pos",
     icon: ShoppingCart,
   },
   {
-    id: "feed",
-    label: "Feed Trading",
-    href: "/feed",
-    icon: Boxes,
+    id: "purchases",
+    label: "ক্রয়",
+    href: "/purchases",
+    icon: Truck,
   },
   {
-    id: "eggs",
-    label: "Egg Production",
-    href: "/eggs",
+    id: "poultry",
+    label: "মুরগির হিসাব",
+    href: "/chicken",
     icon: Egg,
   },
   {
     id: "fish",
-    label: "Fish Farming",
+    label: "মাছের হিসাব",
     href: "/fish",
     icon: Fish,
   },
   {
-    id: "inventory",
-    label: "Inventory",
-    icon: Package,
-    children: [
-      { label: "Stock Overview", href: "/inventory", icon: Boxes },
-      { label: "Product List", href: "/products", icon: Package },
-      { label: "Categories", href: "/categories", icon: Layers },
-      { label: "Brands", href: "/brands", icon: Tag },
-    ],
-  },
-  {
-    id: "sales",
-    label: "Sales & Invoices",
-    icon: Receipt,
-    children: [
-      { label: "Invoices List", href: "/invoices", icon: Receipt },
-      { label: "Sales Return", href: "/returns", icon: RotateCcw },
-    ],
-  },
-  {
-    id: "purchases",
-    label: "Purchases",
-    icon: Truck,
-    children: [
-      { label: "Purchase List", href: "/purchases", icon: ShoppingCart },
-      { label: "Purchase Return", href: "/purchase-returns", icon: RotateCcw },
-      { label: "Suppliers", href: "/suppliers", icon: Users },
-      { label: "Supplier Due Pay", href: "/supplier-dues", icon: Wallet },
-    ],
+    id: "suppliers",
+    label: "সরবরাহকারী",
+    href: "/suppliers",
+    icon: Users,
   },
   {
     id: "customers",
-    label: "Customers",
+    label: "কাস্টমার",
+    href: "/customers",
     icon: Users,
+  },
+  {
+    id: "memo",
+    label: "মেমো",
+    href: "/invoices",
+    icon: Receipt,
+  },
+  {
+    id: "stock",
+    label: "স্টক",
+    icon: Package,
     children: [
-      { label: "Customer List", href: "/customers", icon: Users },
-      { label: "Customer Due", href: "/customer-dues", icon: Wallet },
+      { label: "ডিমের স্টক", href: "/stock/eggs", icon: Egg },
+      { label: "মাছের স্টক", href: "/stock/fish", icon: Fish },
+      { label: "ফিডের স্টক", href: "/feed", icon: Boxes },
+      { label: "মুরগির স্টক", href: "/stock/chicken", icon: Package },
     ],
+  },
+  {
+    id: "medications",
+    label: "ওষুধ ও ভ্যাকসিন",
+    href: "/medications",
+    icon: Activity,
   },
   {
     id: "expenses",
-    label: "Expenses & Staff",
+    label: "খরচসমূহ",
+    href: "/expenses",
     icon: Wallet,
-    children: [
-      { label: "Daily Expenses", href: "/expenses", icon: Wallet },
-      { label: "Expense Categories", href: "/expense-types", icon: Layers },
-      { label: "Staff & Payroll", href: "/staff", icon: Users },
-    ],
   },
   {
     id: "reports",
-    label: "Reports",
+    label: "রিপোর্ট",
     icon: FileSpreadsheet,
     children: [
-      { label: "Consolidated P&L", href: "/reports/accounting", icon: Scale },
-      { label: "Income & Expense", href: "/reports/income-expense", icon: Wallet },
-      { label: "Sales Report", href: "/reports/sales", icon: FileSpreadsheet },
-      { label: "Daily Ledger", href: "/reports/daily-ledger", icon: FileSpreadsheet },
-      { label: "Stock-Out Report", href: "/reports/stock-out", icon: AlertTriangle },
+      { label: "আয় ও ব্যয়", href: "/reports/income-expense", icon: Wallet },
+      { label: "বিক্রয় রিপোর্ট", href: "/reports/sales", icon: FileSpreadsheet },
+      { label: "লেজার", href: "/reports/daily-ledger", icon: Scale },
     ],
   },
   {
     id: "settings",
-    label: "Settings",
+    label: "সেটিংস",
     icon: Settings,
     children: [
-      { label: "User List & Roles", href: "/users", icon: Users },
-      { label: "Profile", href: "/profile", icon: User },
+      { label: "ইউজার ও রোল", href: "/users", icon: Users },
+      { label: "প্রোফাইল", href: "/profile", icon: User },
     ],
   },
 ];
@@ -195,6 +185,43 @@ export function Sidebar({
   const [flyoutTop, setFlyoutTop] = useState<number>(0);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRefs = useRef<{ [key: string]: HTMLElement | null }>({});
+
+  // User Role & Permissions State
+  const [userRole, setUserRole] = useState<string>("admin");
+  const [userPermissions, setUserPermissions] = useState<Record<string, boolean> | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u.role) setUserRole(u.role);
+        if (u.permissions) setUserPermissions(u.permissions);
+      }
+    } catch {}
+  }, []);
+
+  const hasAccess = (item: NavItem) => {
+    if (userRole === "admin") return true;
+    if (!userPermissions) return true;
+    const permKeyMap: Record<string, string> = {
+      dashboard: "dashboard",
+      pos: "pos",
+      poultry: "products",
+      fish: "products",
+      stock: "products",
+      memo: "pos",
+      suppliers: "purchases",
+      purchases: "purchases",
+      customers: "customers",
+      expenses: "expenses",
+      reports: "reports",
+      settings: "users",
+    };
+    const key = permKeyMap[item.id];
+    if (!key) return true;
+    return userPermissions[key] !== false;
+  };
 
   // Close flyouts on outside click or Escape
   useEffect(() => {
@@ -276,8 +303,10 @@ export function Sidebar({
   const activeFlyoutMenuId = pinnedFlyoutId || hoveredFlyoutId;
   const activeFlyoutItem = NAV_ITEMS.find((n) => n.id === activeFlyoutMenuId);
 
-  // Main scrollable items (Dashboard through Reports)
-  const scrollableItems = NAV_ITEMS.filter((item) => item.id !== "settings");
+  // Main scrollable items (Dashboard through Reports filtered by access)
+  const scrollableItems = useMemo(() => {
+    return NAV_ITEMS.filter((item) => item.id !== "settings" && hasAccess(item));
+  }, [userRole, userPermissions]);
   const settingsItem = NAV_ITEMS.find((item) => item.id === "settings")!;
 
   return (
@@ -307,10 +336,10 @@ export function Sidebar({
           >
             <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
               <Image
-                src="/fav.jpg"
+                src="/logo1.png"
                 alt="Arafat Poultry & Fisheries"
-                width={28}
-                height={28}
+                width={36}
+                height={36}
                 className="w-full h-full object-contain rounded-lg"
                 priority
               />
@@ -343,7 +372,7 @@ export function Sidebar({
           <div className="relative flex-1 overflow-hidden w-full">
             {/* 1. Main Navigation Panel (Slides Left when drilled) */}
             <div
-              className={`absolute inset-0 w-full h-full overflow-y-auto px-2 py-2.5 space-y-1 text-xs transition-transform duration-300 ease-in-out scrollbar-thin ${drilledParent !== null
+              className={`absolute inset-0 w-full h-full overflow-y-auto px-2 py-2.5 space-y-1 text-xs transition-transform duration-300 ease-in-out sidebar-scrollbar ${drilledParent !== null
                 ? "-translate-x-full pointer-events-none"
                 : "translate-x-0 pointer-events-auto"
                 }`}
@@ -413,7 +442,7 @@ export function Sidebar({
             {NAV_ITEMS.filter((item) => item.children).map((parent) => (
               <div
                 key={parent.id}
-                className={`absolute inset-0 w-full h-full overflow-y-auto px-2 py-2.5 space-y-1 text-xs transition-transform duration-300 ease-in-out scrollbar-thin ${drilledParent === parent.id
+                className={`absolute inset-0 w-full h-full overflow-y-auto px-2 py-2.5 space-y-1 text-xs transition-transform duration-300 ease-in-out sidebar-scrollbar ${drilledParent === parent.id
                   ? "translate-x-0 pointer-events-auto"
                   : "translate-x-full pointer-events-none"
                   }`}
@@ -529,19 +558,39 @@ export function Sidebar({
             onMouseLeave={() => handleTriggerLeave("settings")}
             className="relative"
           >
-            <Link
-              href={settingsItem.href || "/users"}
-              onClick={() => {
-                if (isOpen) onClose();
-              }}
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${isActive(settingsItem.href)
-                ? "bg-white text-emerald-950 shadow-md font-bold"
-                : "text-emerald-100 hover:bg-white/10 hover:text-white"
-                } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full"}`}
-            >
-              <Settings className={`shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4 opacity-90"}`} />
-              {!isCollapsed && <span>{settingsItem.label}</span>}
-            </Link>
+            {settingsItem.children && settingsItem.children.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => handleTriggerClick("settings")}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${
+                  activeParentId === "settings" || pathname === "/users" || pathname === "/profile"
+                    ? "bg-white/15 text-white font-bold border-l-[3px] border-white shadow-xs"
+                    : "text-emerald-100 hover:bg-white/10 hover:text-white"
+                } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full text-start"}`}
+              >
+                <Settings className={`shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4 opacity-90"}`} />
+                {!isCollapsed && <span className="truncate">{settingsItem.label}</span>}
+                {!isCollapsed && (
+                  <span className="ml-auto w-5 h-5 rounded-md bg-white/10 flex items-center justify-center text-white/70">
+                    <ChevronRight className="w-3 h-3" />
+                  </span>
+                )}
+              </button>
+            ) : (
+              <Link
+                href={settingsItem.href || "/users"}
+                onClick={() => {
+                  if (isOpen) onClose();
+                }}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${isActive(settingsItem.href)
+                  ? "bg-white text-emerald-950 shadow-md font-bold"
+                  : "text-emerald-100 hover:bg-white/10 hover:text-white"
+                  } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full"}`}
+              >
+                <Settings className={`shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4 opacity-90"}`} />
+                {!isCollapsed && <span>{settingsItem.label}</span>}
+              </Link>
+            )}
           </div>
         </div>
       </aside>

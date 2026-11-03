@@ -699,10 +699,12 @@ export default function FishFarmingPage() {
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
                   <th className="p-3.5">ব্যাচ নং ও তারিখ</th>
-                  <th className="p-3.5">পুকুর ও মাছের প্রজাতি</th>
+                  <th className="p-3.5">পুকুর ও মাছের জাত</th>
+                  <th className="p-3.5 text-center">বয়স (দিন)</th>
+                  <th className="p-3.5 text-center">মাছের সাইজ</th>
                   <th className="p-3.5 text-right">মজুদ পোনা</th>
                   <th className="p-3.5 text-right">বর্তমান জীবন্ত মাছ</th>
-                  <th className="p-3.5 text-right">গড় ওজন (গ্রাম)</th>
+                  <th className="p-3.5 text-right">গড় ওজন</th>
                   <th className="p-3.5 text-right">সম্ভাব্য বায়োমাস</th>
                   <th className="p-3.5 text-right">মোট আহরণ (কেজি)</th>
                   <th className="p-3.5 text-right">মোট উৎপাদন ব্যয়</th>
@@ -732,6 +734,20 @@ export default function FishFarmingPage() {
                       <td className="p-3.5">
                         <div className="font-medium text-slate-800 dark:text-slate-100">{b.pond_name}</div>
                         <div className="text-[11px] text-sky-600 dark:text-sky-400">{b.species_name}</div>
+                      </td>
+                      <td className="p-3.5 text-center font-bold text-slate-700 dark:text-slate-300">
+                        {Math.max(1, Math.floor((new Date().getTime() - new Date(b.stocking_date).getTime()) / 86400000))} দিন
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          b.latest_avg_weight_g > 800
+                            ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
+                            : b.latest_avg_weight_g >= 200
+                            ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300"
+                            : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                        }`}>
+                          {b.latest_avg_weight_g > 800 ? "বড় মাছ" : b.latest_avg_weight_g >= 200 ? "মাঝারি মাছ" : "পোনা মাছ"}
+                        </span>
                       </td>
                       <td className="p-3.5 text-right text-slate-600 dark:text-slate-300">
                         {b.fingerling_count.toLocaleString()}
