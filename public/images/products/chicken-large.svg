@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bodyLarge" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#E67E22" />
+      <stop offset="50%" stop-color="#C0392B" />
+      <stop offset="90%" stop-color="#78281F" />
+      <stop offset="100%" stop-color="#4A1713" />
+    </radialGradient>
+    <filter id="shadowLargeCh" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3.5" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <ellipse cx="50" cy="82" rx="28" ry="6.5" fill="#64748b" opacity="0.3" />
+  <g filter="url(#shadowLargeCh)">
+    <!-- Impressive Rooster / Large Chicken Tail Feathers -->
+    <path d="M 26,45 C 10,28 6,10 20,16 C 14,14 10,32 26,48 Z" fill="#1A5276" />
+    <path d="M 28,42 C 14,20 18,6 28,12 C 22,12 20,26 30,44 Z" fill="#145A32" />
+    <path d="M 32,42 C 22,22 26,10 34,16 C 30,18 28,28 36,44 Z" fill="#922B21" />
+    <!-- Main Full Plump Body -->
+    <path d="M 28,44 C 28,30 42,26 56,32 C 68,36 76,46 74,62 C 72,76 48,78 34,70 C 28,64 28,52 28,44 Z" fill="url(#bodyLarge)" />
+    <!-- Wing with Golden Highlights -->
+    <path d="M 36,48 C 44,40 56,42 62,52 C 64,62 52,70 42,68 C 34,66 32,56 36,48 Z" fill="#922B21" />
+    <!-- Golden Neck Hackles -->
+    <path d="M 54,34 C 60,22 66,14 74,14 C 78,14 82,18 80,26 C 76,36 68,44 60,48 Z" fill="#D35400" />
+    <!-- Large Vibrant Red Comb -->
+    <path d="M 70,12 C 70,6 75,6 76,10 C 79,5 83,6 83,10 C 86,7 89,9 87,14 C 82,16 75,16 70,12 Z" fill="#C0392B" />
+    <!-- Red Wattle -->
+    <path d="M 80,24 C 83,29 86,30 84,33 C 81,34 78,32 78,27 Z" fill="#C0392B" />
+    <!-- Beak -->
+    <polygon points="82,19 90,21 82,24" fill="#F39C12" />
+    <!-- Eye -->
+    <circle cx="76.5" cy="18.5" r="2" fill="#17202A" />
+    <circle cx="77" cy="18" r="0.7" fill="#FFFFFF" />
+    <!-- Robust Legs -->
+    <line x1="45" y1="74" x2="43" y2="84" stroke="#F39C12" stroke-width="3" stroke-linecap="round" />
+    <line x1="43" y1="84" x2="36" y2="85" stroke="#F39C12" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="43" y1="84" x2="46" y2="85" stroke="#F39C12" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="57" y1="74" x2="57" y2="84" stroke="#F39C12" stroke-width="3" stroke-linecap="round" />
+    <line x1="57" y1="84" x2="52" y2="85" stroke="#F39C12" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="57" y1="84" x2="61" y2="85" stroke="#F39C12" stroke-width="2.5" stroke-linecap="round" />
+  </g>
+</svg>
+

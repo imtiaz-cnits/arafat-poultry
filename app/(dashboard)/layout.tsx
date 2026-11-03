@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { Footer } from "@/components/footer";
@@ -40,6 +41,9 @@ export default function DashboardLayout({
     }
   };
 
+  const pathname = usePathname();
+  const isPos = pathname === "/pos" || pathname?.startsWith("/pos/");
+
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-[#0b0f19] transition-colors">
       {/* Sidebar: Expanded (215px) or Collapsed (70px) + Mobile Drawer */}
@@ -70,7 +74,11 @@ export default function DashboardLayout({
         <Topbar onToggleSidebar={handleToggleSidebar} />
 
         {/* Page Content Viewport */}
-        <main className="flex-1 p-2.5 sm:p-4 md:p-6 transition-all">
+        <main
+          className={`flex-1 transition-all ${
+            isPos ? "p-2 sm:p-3 overflow-hidden flex flex-col" : "p-2.5 sm:p-4 md:p-6"
+          }`}
+        >
           {children}
         </main>
 

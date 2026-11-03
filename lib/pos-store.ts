@@ -15,6 +15,7 @@ export interface CartItem {
   weight_gram?: number;
   size_tag?: string;
   category?: string | null;
+  line_discount?: number;
   manual_line_total?: number | null;
 }
 
@@ -47,6 +48,7 @@ interface PosState {
   addItem: (item: Omit<CartItem, "quantity">, qty?: number) => void;
   updateQty: (productId: number, qty: number) => void;
   updatePrice: (productId: number, price: number) => void;
+  updateLineDiscount: (productId: number, discount: number) => void;
   updateUnitSelection: (
     productId: number,
     data: {
@@ -147,6 +149,19 @@ export const usePosStore = create<PosState>((set, get) => ({
     });
   },
 
+  updateLineDiscount: (productId, lineDiscount) => {
+    const { cart } = get();
+    set({
+      cart: cart.map((item) => {
+        if (item.product_id === productId) {
+          const maxDiscount = item.selling_price * item.quantity;
+          return { ...item, line_discount: Math.min(maxDiscount, Math.max(0, lineDiscount)) };
+        }
+        return item;
+      }),
+    });
+  },
+
   updateUnitSelection: (productId, data) => {
     const { cart } = get();
     set({
@@ -217,12 +232,17 @@ export const usePosStore = create<PosState>((set, get) => ({
 
   getCalculatedDiscount: () => {
     const sub = get().getSubTotal();
-    const { discount, discountType } = get();
-    if (discount <= 0) return 0;
-    if (discountType === "percent") {
-      return (sub * discount) / 100;
+    const { discount, discountType, cart } = get();
+    const lineDiscounts = cart.reduce((sum, item) => sum + (item.line_discount || 0), 0);
+    let overallDiscount = 0;
+    if (discount > 0) {
+      if (discountType === "percent") {
+        overallDiscount = (sub * discount) / 100;
+      } else {
+        overallDiscount = discount;
+      }
     }
-    return discount;
+    return Math.min(sub, lineDiscounts + overallDiscount);
   },
 
   getGrandTotal: () => {

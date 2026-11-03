@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" width="100%" height="100%">
+  <defs>
+    <radialGradient id="yolkGrad" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#FFF176" />
+      <stop offset="40%" stop-color="#FFA726" />
+      <stop offset="90%" stop-color="#FB8C00" />
+      <stop offset="100%" stop-color="#E65100" />
+    </radialGradient>
+    <radialGradient id="shellOuter" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#FFF3E0" />
+      <stop offset="60%" stop-color="#E0A96D" />
+      <stop offset="100%" stop-color="#A86E36" />
+    </radialGradient>
+    <filter id="shadowCrack" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <ellipse cx="50" cy="65" rx="38" ry="8" fill="#94a3b8" opacity="0.3" />
+  <g filter="url(#shadowCrack)">
+    <!-- Back whole egg -->
+    <path d="M 16,48 C 16,32 24,22 32,22 C 40,22 48,32 48,48 C 48,60 41,65 32,65 C 23,65 16,60 16,48 Z" fill="url(#shellOuter)" transform="rotate(-15 32 46)" />
+    <!-- Egg white puddle -->
+    <ellipse cx="58" cy="58" rx="28" ry="10" fill="#FFFFFF" fill-opacity="0.85" stroke="#FFF8E1" stroke-width="1.5" />
+    <!-- Golden Yolk -->
+    <circle cx="56" cy="54" r="14" fill="url(#yolkGrad)" />
+    <ellipse cx="52" cy="49" rx="3.5" ry="2" fill="#FFFFFF" opacity="0.8" />
+    <!-- Broken shell piece left -->
+    <path d="M 40,58 L 44,46 L 49,52 L 53,44 L 56,58 C 50,66 42,65 40,58 Z" fill="url(#shellOuter)" />
+    <!-- Broken shell piece right -->
+    <path d="M 64,56 L 68,44 L 73,50 L 78,42 L 82,55 C 80,64 70,64 64,56 Z" fill="url(#shellOuter)" />
+  </g>
+</svg>
+

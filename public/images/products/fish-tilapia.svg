@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 65" width="100%" height="100%">
+  <defs>
+    <linearGradient id="tilapiaBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="35%" stop-color="#475569" />
+      <stop offset="70%" stop-color="#CBD5E1" />
+      <stop offset="100%" stop-color="#94A3B8" />
+    </linearGradient>
+    <radialGradient id="tilapiaFin" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="60%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
+    </radialGradient>
+    <filter id="shadowTilapia" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <ellipse cx="55" cy="56" rx="40" ry="4" fill="#94a3b8" opacity="0.3" />
+  <g filter="url(#shadowTilapia)">
+    <!-- Broad Rounded Tail Fin with Red Edge -->
+    <path d="M 84,33 L 102,20 C 100,28 100,38 102,46 Z" fill="url(#tilapiaFin)" stroke="#DC2626" stroke-width="0.8" />
+    <!-- Spiny Long Dorsal Fin -->
+    <path d="M 32,20 C 44,10 68,10 80,24 Z" fill="url(#tilapiaFin)" stroke="#DC2626" stroke-width="0.7" />
+    <!-- Anal Fin -->
+    <path d="M 58,45 L 74,48 L 76,43 Z" fill="url(#tilapiaFin)" />
+    <!-- Deep Body Shape -->
+    <path d="M 12,34 C 18,20 40,16 66,22 C 80,25 86,31 86,33 C 86,35 80,41 66,44 C 40,50 18,48 12,34 Z" fill="url(#tilapiaBody)" />
+    <!-- Pectoral Fin -->
+    <path d="M 28,34 C 36,36 40,40 40,42 C 34,42 30,38 26,36 Z" fill="url(#tilapiaFin)" />
+    <!-- Gill cover arc with dark spot -->
+    <path d="M 26,26 C 30,29 30,38 26,41" stroke="#334155" stroke-width="1.4" fill="none" />
+    <circle cx="28" cy="28" r="2" fill="#0F172A" opacity="0.7" />
+    <!-- Eye with orange rim -->
+    <circle cx="18" cy="30" r="2.8" fill="#F97316" />
+    <circle cx="18" cy="30" r="1.8" fill="#0F172A" />
+    <circle cx="18.5" cy="29.5" r="0.6" fill="#FFFFFF" />
+    <!-- Vertical Stripes / Bands -->
+    <path d="M 40,21 L 38,45" stroke="#334155" stroke-width="1.8" opacity="0.3" stroke-linecap="round" />
+    <path d="M 48,20 L 46,47" stroke="#334155" stroke-width="1.8" opacity="0.3" stroke-linecap="round" />
+    <path d="M 56,21 L 54,46" stroke="#334155" stroke-width="1.8" opacity="0.3" stroke-linecap="round" />
+    <path d="M 64,22 L 62,44" stroke="#334155" stroke-width="1.8" opacity="0.3" stroke-linecap="round" />
+    <path d="M 72,25 L 70,41" stroke="#334155" stroke-width="1.8" opacity="0.3" stroke-linecap="round" />
+  </g>
+</svg>
+

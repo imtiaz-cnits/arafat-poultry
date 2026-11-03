@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -15,6 +15,8 @@ import {
   User as UserIcon,
   ShoppingCart,
   ChevronDown,
+  Calendar,
+  Building,
 } from "lucide-react";
 import { getInitialTheme, applyTheme } from "@/lib/theme";
 import { NotificationDropdown } from "@/components/notification-dropdown";
@@ -90,6 +92,9 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
     }
   }
 
+  const pathname = usePathname();
+  const isPos = pathname === "/pos" || pathname?.startsWith("/pos/");
+
   return (
     <header className="sticky top-0 z-30 h-[60px] bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-md border-b border-[#cbd5e1] dark:border-[#334155] px-4 sm:px-6 flex items-center justify-between transition-colors">
       {/* Left: Sidebar Toggle & Page Title */}
@@ -101,18 +106,46 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         >
           <Menu className="w-5 h-5 stroke-[2]" />
         </button>
+
+        {isPos && (
+          <div className="hidden sm:block">
+            <h1 className="text-xs sm:text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight leading-tight">
+              ARAFAT POULTRY &amp; FISHERIES POS
+            </h1>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">
+              পোল্ট্রি, ডিম, মাছ ও ফিডের সমন্বিত বিক্রয় ব্যবস্থা
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Right: POS Quick Button, Mode, Fullscreen, User */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Quick Launch POS Button */}
-        <Link
-          href="/pos"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all"
-        >
-          <ShoppingCart className="w-3.5 h-3.5" />
-          <span>বিক্রয়</span>
-        </Link>
+        {isPos ? (
+          <>
+            {/* Live Date Badge */}
+            <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+              <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>০৩ নভেম্বর, ২০২৬</span>
+            </div>
+
+            {/* Warehouse Selector */}
+            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer hover:border-emerald-500 transition-colors">
+              <Building className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>মূল গুদাম</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </div>
+          </>
+        ) : (
+          /* Quick Launch POS Button */
+          <Link
+            href="/pos"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#166534] to-[#15803d] hover:from-[#14532d] hover:to-[#166534] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span>বিক্রয়</span>
+          </Link>
+        )}
 
         {/* Low Stock & Store Notifications */}
         <NotificationDropdown />

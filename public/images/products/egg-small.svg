@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80" width="100%" height="100%">
+  <defs>
+    <radialGradient id="eggGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#FDE8C8" />
+      <stop offset="100%" stop-color="#E2B175" />
+    </radialGradient>
+    <radialGradient id="eggBrown" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FDE5C5" />
+      <stop offset="50%" stop-color="#D49B60" />
+      <stop offset="100%" stop-color="#9C6228" />
+    </radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <!-- Basket / Base -->
+  <ellipse cx="50" cy="65" rx="36" ry="8" fill="#cbd5e1" opacity="0.4" />
+  <!-- Eggs -->
+  <g filter="url(#shadow)">
+    <!-- Back egg -->
+    <path d="M 36,44 C 36,26 44,16 50,16 C 56,16 64,26 64,44 C 64,56 58,62 50,62 C 42,62 36,56 36,44 Z" fill="url(#eggBrown)" />
+    <!-- Left egg -->
+    <path d="M 24,50 C 24,34 32,24 38,24 C 44,24 50,34 50,50 C 50,60 44,65 38,65 C 31,65 24,60 24,50 Z" fill="url(#eggGrad)" transform="rotate(-15 38 48)" />
+    <!-- Right egg -->
+    <path d="M 50,50 C 50,34 56,24 62,24 C 68,24 76,34 76,50 C 76,60 70,65 62,65 C 55,65 50,60 50,50 Z" fill="url(#eggBrown)" transform="rotate(15 62 48)" />
+  </g>
+</svg>
+

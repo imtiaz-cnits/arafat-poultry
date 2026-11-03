@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bodyBrown" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#DE893C" />
+      <stop offset="60%" stop-color="#B2551A" />
+      <stop offset="100%" stop-color="#732B07" />
+    </radialGradient>
+    <filter id="shadowCh" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <ellipse cx="50" cy="80" rx="26" ry="6" fill="#94a3b8" opacity="0.3" />
+  <g filter="url(#shadowCh)">
+    <!-- Tail feathers -->
+    <path d="M 28,45 C 18,32 14,18 24,24 C 18,22 15,36 28,48 Z" fill="#692403" />
+    <path d="M 32,44 C 20,26 22,14 30,20 C 26,20 25,32 34,46 Z" fill="#8C350A" />
+    <!-- Main Body -->
+    <path d="M 30,46 C 30,34 42,30 54,34 C 64,38 72,48 70,62 C 68,74 48,76 36,68 C 30,62 30,52 30,46 Z" fill="url(#bodyBrown)" />
+    <!-- Wing -->
+    <path d="M 38,50 C 44,44 54,46 58,54 C 60,62 50,68 42,66 C 36,64 34,56 38,50 Z" fill="#8C350A" />
+    <!-- Neck & Head -->
+    <path d="M 54,36 C 58,26 64,18 70,18 C 74,18 78,22 76,28 C 72,36 66,42 60,46 Z" fill="url(#bodyBrown)" />
+    <!-- Comb (Red) -->
+    <path d="M 68,16 C 68,11 72,11 73,14 C 75,10 78,11 78,14 C 80,12 83,14 81,18 C 77,20 72,20 68,16 Z" fill="#DC2626" />
+    <!-- Wattle (Red) -->
+    <path d="M 76,26 C 78,30 80,31 79,33 C 77,34 75,32 75,28 Z" fill="#DC2626" />
+    <!-- Beak (Yellow) -->
+    <polygon points="78,22 86,24 78,27" fill="#FBBF24" />
+    <!-- Eye -->
+    <circle cx="73" cy="22" r="1.8" fill="#1E293B" />
+    <circle cx="73.5" cy="21.5" r="0.6" fill="#FFFFFF" />
+    <!-- Legs -->
+    <line x1="46" y1="72" x2="44" y2="82" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="44" y1="82" x2="39" y2="83" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" />
+    <line x1="44" y1="82" x2="47" y2="83" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" />
+    <line x1="56" y1="72" x2="56" y2="82" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="56" y1="82" x2="52" y2="83" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" />
+    <line x1="56" y1="82" x2="59" y2="83" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" />
+  </g>
+</svg>
+
