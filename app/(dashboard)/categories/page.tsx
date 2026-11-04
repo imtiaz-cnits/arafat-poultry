@@ -147,7 +147,7 @@ export default function CategoriesPage() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-white tracking-tight leading-none m-0 p-0">
-              Product Categories
+              ক্যাটাগরিসমূহ (Categories)
             </h1>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function CategoriesPage() {
           className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer self-start md:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Category</span>
+          <span>নতুন ক্যাটাগরি (Add Category)</span>
         </button>
       </div>
 
@@ -188,10 +188,10 @@ export default function CategoriesPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">SL</th>
-                <th className="p-[10px]">Category Name</th>
-                <th className="p-[10px] text-center">Status</th>
-                <th className="p-[10px] text-center w-[85px] rounded-tr-xl">Action</th>
+                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">ক্র: নং (SL)</th>
+                <th className="p-[10px]">ক্যাটাগরির নাম (Category Name)</th>
+                <th className="p-[10px] text-center">স্ট্যাটাস (Status)</th>
+                <th className="p-[10px] text-center w-[95px] rounded-tr-xl">অ্যাকশন (Action)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
@@ -324,7 +324,7 @@ export default function CategoriesPage() {
           <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[16px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
             <div className="sticky top-0 z-20 modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between shrink-0">
               <h3 className="text-base font-bold text-white tracking-tight m-0">
-                {editingItem ? "Edit Category" : "Add New Category"}
+                {editingItem ? "ক্যাটাগরি সংশোধন (Edit Category)" : "নতুন ক্যাটাগরি যোগ (Add Category)"}
               </h3>
               <button
                 type="button"
@@ -344,7 +344,7 @@ export default function CategoriesPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Category Name *
+                  ক্যাটাগরির নাম (Category Name) *
                 </label>
                 <input
                   type="text"
@@ -377,7 +377,7 @@ export default function CategoriesPage() {
                   onClick={() => setModalOpen(false)}
                   className="px-5 py-2 rounded-lg bg-[#dc2626] text-white font-semibold text-xs cursor-pointer"
                 >
-                  Cancel
+                  বাতিল (Cancel)
                 </button>
                 <button
                   type="submit"

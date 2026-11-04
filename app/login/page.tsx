@@ -103,7 +103,7 @@ export default function LoginPage() {
           <div className="relative z-10 my-10 space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-xs font-bold tracking-wide uppercase">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Modern Farm ERP &amp; Smart POS</span>
+              <span>Modern Farm Management App</span>
             </div>
 
             <div className="space-y-2">
@@ -124,7 +124,7 @@ export default function LoginPage() {
               </div>
               <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
                 <ShoppingBag className="w-5 h-5 text-emerald-200 shrink-0" />
-                <span className="text-xs font-semibold">Full-Screen POS</span>
+                <span className="text-xs font-semibold">Smart Sales Portal</span>
               </div>
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function LoginPage() {
               Welcome Back
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-              Enter your credentials to access the POS &amp; Admin Dashboard
+              Enter your credentials to access the Management &amp; Admin Dashboard
             </p>
           </div>
 

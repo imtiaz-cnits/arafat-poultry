@@ -323,14 +323,14 @@ export default function SuppliersPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Supplier / ID</th>
-                <th className="py-3 px-3">Company</th>
-                <th className="py-3 px-3">Contact</th>
-                <th className="py-3 px-3">Address</th>
-                <th className="py-3 px-3 text-center">Purchases</th>
-                <th className="py-3 px-3 text-right">Payable Due</th>
-                <th className="py-3 px-4 text-center w-28">Actions</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
+                <th className="py-3 px-4">সরবরাহকারী / আইডি (Supplier)</th>
+                <th className="py-3 px-3">কোম্পানি (Company)</th>
+                <th className="py-3 px-3">যোগাযোগ (Contact)</th>
+                <th className="py-3 px-3">ঠিকানা (Address)</th>
+                <th className="py-3 px-3 text-center">ক্রয় (Purchases)</th>
+                <th className="py-3 px-3 text-right">মোট দেনা (Payable ৳)</th>
+                <th className="py-3 px-4 text-center w-28">অ্যাকশন (Actions)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

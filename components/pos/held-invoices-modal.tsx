@@ -42,7 +42,7 @@ export function HeldInvoicesModal({
           <div className="flex items-center gap-2.5">
             <FolderOpen className="w-5 h-5 text-white" />
             <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-              Held Invoices ({heldList.length})
+              স্থগিত ইনভয়েসসমূহ (Held Invoices - {heldList.length})
             </h3>
           </div>
           <button
@@ -59,9 +59,9 @@ export function HeldInvoicesModal({
           {heldList.length === 0 ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-400">
               <ShoppingCart className="w-12 h-12 stroke-[1.5] mb-2 opacity-50" />
-              <p className="text-sm font-bold">No Held Invoices</p>
+              <p className="text-sm font-bold">কোনো স্থগিত ইনভয়েস নেই (No Held Invoices)</p>
               <p className="text-xs text-slate-500">
-                You can hold the current active cart anytime by clicking the Hold button.
+                আপনি যেকোনো সময় Hold বাটনে ক্লিক করে বর্তমান কার্ট স্থগিত রাখতে পারেন।
               </p>
             </div>
           ) : (
@@ -73,7 +73,7 @@ export function HeldInvoicesModal({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-black text-slate-800 dark:text-slate-100">
-                      {item.customer?.customer_name || "Walk-in Customer"}
+                      {item.customer?.customer_name || "সাধারণ কাস্টমার (Walk-in)"}
                     </span>
                     {item.customer?.mobile && (
                       <span className="text-[11px] text-slate-500 font-medium">
@@ -88,11 +88,11 @@ export function HeldInvoicesModal({
                     </span>
                     <span>&bull;</span>
                     <span className="font-semibold text-rose-600 dark:text-rose-400">
-                      {item.cart.length} item(s)
+                      {item.cart.length} টি পণ্য
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-600 dark:text-slate-300">
-                    Total Amount:{" "}
+                    মোট মূল্য (Total):{" "}
                     <strong className="text-slate-900 dark:text-white font-bold text-xs">
                       {formatBdCurrency(item.grandTotal)}
                     </strong>
@@ -131,9 +131,7 @@ export function HeldInvoicesModal({
             type="button"
             onClick={onClose}
             className="h-[36px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
-          >
-            Close
-          </button>
+          >বন্ধ করুন (Close)</button>
         </div>
       </div>
     </div>

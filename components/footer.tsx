@@ -11,8 +11,13 @@ export function Footer() {
     setYear(new Date().getFullYear());
   }, []);
 
-  // Strict Rule: POS screen fills 100vh without bottom copyright footer; all other pages show footer.
-  if (pathname === "/pos" || pathname?.startsWith("/pos/")) {
+  // Strict Rule: Sales Portal screen fills 100vh without bottom copyright footer; all other pages show footer.
+  if (
+    pathname === "/sales-portal" ||
+    pathname?.startsWith("/sales-portal/") ||
+    pathname === "/pos" ||
+    pathname?.startsWith("/pos/")
+  ) {
     return null;
   }
 

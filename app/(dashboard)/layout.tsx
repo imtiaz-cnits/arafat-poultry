@@ -42,11 +42,15 @@ export default function DashboardLayout({
   };
 
   const pathname = usePathname();
-  const isPos = pathname === "/pos" || pathname?.startsWith("/pos/");
+  const isSalesPortal =
+    pathname === "/sales-portal" ||
+    pathname?.startsWith("/sales-portal/") ||
+    pathname === "/pos" ||
+    pathname?.startsWith("/pos/");
 
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-[#0b0f19] transition-colors">
-      {/* Sidebar: Expanded (215px) or Collapsed (70px) + Mobile Drawer */}
+      {/* Sidebar: Expanded (195px) or Collapsed (70px) + Mobile Drawer */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -67,7 +71,7 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div
         className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
-          isCollapsed ? "lg:ml-[70px]" : "lg:ml-[215px]"
+          isCollapsed ? "lg:ml-[70px]" : "lg:ml-[195px]"
         }`}
       >
         {/* Sticky Topbar */}
@@ -76,7 +80,9 @@ export default function DashboardLayout({
         {/* Page Content Viewport */}
         <main
           className={`flex-1 transition-all ${
-            isPos ? "p-2 sm:p-3 overflow-hidden flex flex-col" : "p-2.5 sm:p-4 md:p-6"
+            isSalesPortal
+              ? "p-2.5 sm:p-3.5 lg:p-4 overflow-y-auto lg:overflow-hidden flex flex-col min-h-0 lg:h-[calc(100vh-60px)] lg:max-h-[calc(100vh-60px)]"
+              : "p-2.5 sm:p-4 md:p-6"
           }`}
         >
           {children}

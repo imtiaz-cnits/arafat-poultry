@@ -17,6 +17,7 @@ export interface CustomSelectProps {
   onChange: (value: any) => void;
   placeholder?: string;
   className?: string;
+  triggerClassName?: string;
   disabled?: boolean;
   required?: boolean;
   searchThreshold?: number; // default 5: if options > 5, show search; else hide
@@ -26,12 +27,33 @@ export interface CustomSelectProps {
   minPopoverWidth?: number;
 }
 
+const UNIT_SYNONYMS: Record<string, string> = {
+  "পিস": "piece",
+  "piece": "piece",
+  "pcs": "piece",
+  "হালি": "hali",
+  "hali": "hali",
+  "ডজন": "dozen",
+  "dozen": "dozen",
+  "খাঁচা": "tray",
+  "tray": "tray",
+  "case": "tray",
+  "কেজি": "kg",
+  "kg": "kg",
+  "গ্রাম": "gram",
+  "gram": "gram",
+  "gm": "gram",
+  "বস্তা": "bag",
+  "bag": "bag",
+};
+
 export function CustomSelect({
   options,
   value,
   onChange,
   placeholder = "Select an option",
   className = "",
+  triggerClassName = "",
   disabled = false,
   required = false,
   searchThreshold = 5,
@@ -153,7 +175,24 @@ export function CustomSelect({
 
   // Find currently selected option
   const selectedOption = useMemo(() => {
-    return normalizedOptions.find((opt) => String(opt.value) === String(value));
+    if (value === undefined || value === null) return undefined;
+    const strVal = String(value).trim().toLowerCase();
+    const synonym = UNIT_SYNONYMS[strVal] || strVal;
+
+    return normalizedOptions.find((opt) => {
+      const optVal = String(opt.value).trim().toLowerCase();
+      const optLabel = String(opt.label).trim().toLowerCase();
+      const optSynonym = UNIT_SYNONYMS[optVal] || optVal;
+      const optLabelSynonym = UNIT_SYNONYMS[optLabel] || optLabel;
+
+      return (
+        optVal === strVal ||
+        optSynonym === synonym ||
+        optLabel === strVal ||
+        optLabelSynonym === synonym ||
+        String(opt.value) === String(value)
+      );
+    });
   }, [normalizedOptions, value]);
 
   // Determine whether search box should be shown (more than searchThreshold items)
@@ -230,7 +269,7 @@ export function CustomSelect({
             setSearchQuery("");
           }
         }}
-        className={`w-full min-h-[42px] px-3.5 rounded-xl border-[1.5px] flex items-center justify-between gap-2 transition-all cursor-pointer shadow-2xs select-none text-left ${
+        className={`w-full border-[1.5px] flex items-center justify-between gap-1.5 transition-all cursor-pointer shadow-2xs select-none text-left ${triggerClassName ? triggerClassName : "min-h-[42px] px-3.5 rounded-xl"} ${
           disabled
             ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800 border-[#cbd5e1] dark:border-[#334155]"
             : isOpen
@@ -348,7 +387,7 @@ export function CustomSelect({
             )}
 
             {/* OPTIONS LIST WITH SLEEK CUSTOM SCROLLBAR */}
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-1.5 custom-select-scrollbar">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-1 pr-1 custom-select-scrollbar">
               {filteredOptions.length === 0 ? (
                 <div className="py-5 text-center text-xs text-slate-400 font-medium">
                   No matching options found
@@ -366,34 +405,42 @@ export function CustomSelect({
                           : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
                       }`}
                     >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className="whitespace-nowrap font-medium">
-                          {opt.label}
-                        </span>
-                        {opt.subLabel && (
-                          <span
-                            className={`text-[10px] whitespace-nowrap overflow-hidden text-ellipsis ${
-                              isSelected ? "text-white/80" : "text-slate-400"
-                            }`}
-                          >
-                            ({opt.subLabel})
+                      <div className="w-full min-w-0">
+                        {/* Line 1: Primary Label & Checkmark */}
+                        <div className="flex items-center justify-between gap-2 min-w-0">
+                          <span className="font-semibold text-xs truncate">
+                            {opt.label}
                           </span>
-                        )}
-                      </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5] shrink-0" />}
+                        </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        {opt.badge && (
-                          <span
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                              isSelected
-                                ? "bg-white/20 text-white"
-                                : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                            }`}
-                          >
-                            {opt.badge}
-                          </span>
+                        {/* Line 2: Sublabel and Badge cleanly separated on second line */}
+                        {(opt.subLabel || opt.badge) && (
+                          <div className="flex items-center justify-between gap-2 mt-1 text-[11px] min-w-0">
+                            {opt.subLabel ? (
+                              <span
+                                className={`truncate text-[10.5px] ${
+                                  isSelected ? "text-white/80" : "text-slate-500 dark:text-slate-400"
+                                }`}
+                              >
+                                {opt.subLabel}
+                              </span>
+                            ) : (
+                              <span />
+                            )}
+                            {opt.badge && (
+                              <span
+                                className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap ${
+                                  isSelected
+                                    ? "bg-white/20 text-white"
+                                    : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                }`}
+                              >
+                                {opt.badge}
+                              </span>
+                            )}
+                          </div>
                         )}
-                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
                       </div>
                     </div>
                   );

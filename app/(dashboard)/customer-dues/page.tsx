@@ -179,12 +179,12 @@ export default function CustomerDuesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Customer Name / ID</th>
-                <th className="py-3 px-3">Mobile Phone</th>
-                <th className="py-3 px-3">Address / Area</th>
-                <th className="py-3 px-3 text-right">Outstanding Due</th>
-                <th className="py-3 px-4 text-center w-32">Action</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
+                <th className="py-3 px-4">কাস্টমার নাম / আইডি (Customer)</th>
+                <th className="py-3 px-3">মোবাইল নম্বর (Mobile)</th>
+                <th className="py-3 px-3">ঠিকানা (Address)</th>
+                <th className="py-3 px-3 text-right">মোট বকেয়া (Due ৳)</th>
+                <th className="py-3 px-4 text-center w-32">অ্যাকশন (Action)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -338,7 +338,7 @@ export default function CustomerDuesPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  Collect Customer Due
+                  কাস্টমার বকেয়া আদায় (Collect Due)
                 </h3>
               </div>
               <button
@@ -368,7 +368,7 @@ export default function CustomerDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Collected Amount (৳) <span className="text-red-500">*</span>
+                  আদায়কৃত টাকা (Collected Amount ৳) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -385,7 +385,7 @@ export default function CustomerDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Discount / Concession (৳)
+                  ছাড় / সমন্বয় (Discount ৳)
                 </label>
                 <input
                   type="number"
@@ -401,7 +401,7 @@ export default function CustomerDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Payment Method
+                  পরিশোধের মাধ্যম (Payment Method)
                 </label>
                 <CustomSelect
                   value={collectionData.payment_method}

@@ -46,8 +46,25 @@ export async function POST(req: NextRequest) {
       payment_method,
       transaction_id,
       payment_status,
-      products, // Array of { product_id, quantity, price, selling_price }
+      products: incomingProducts,
+      items: incomingItems,
     } = body;
+
+    // Normalize products list from either 'products' or 'items' payload
+    const rawProducts = Array.isArray(incomingProducts) && incomingProducts.length > 0
+      ? incomingProducts
+      : Array.isArray(incomingItems) && incomingItems.length > 0
+      ? incomingItems
+      : [];
+
+    const products = rawProducts.map((p: any) => ({
+      product_id: Number(p.product_id),
+      quantity: parseFloat(String(p.quantity || 0)),
+      price: parseFloat(String(p.price || p.cost_price || 0)),
+      selling_price: parseFloat(String(p.selling_price || p.unit_price || p.price || 0)),
+      unit: p.unit || "Piece",
+      product_name: p.product_name,
+    }));
 
     if (!customer_id) {
       return NextResponse.json(
@@ -56,9 +73,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!Array.isArray(products) || products.length === 0) {
+    if (products.length === 0) {
       return NextResponse.json(
-        { status: "fail", message: "Cart cannot be empty!" },
+        { status: "fail", message: "কার্ট খালি! অনুগ্রহ করে পণ্য যুক্ত করুন।" },
         { status: 400 }
       );
     }

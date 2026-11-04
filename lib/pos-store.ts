@@ -6,11 +6,12 @@ export interface CartItem {
   barcode: string;
   cost_price: number;
   selling_price: number;
+  base_price?: number;
   quantity: number;
   stock: number;
   unit: string;
   // Specific agricultural / aquaculture unit breakdown
-  selected_unit?: "pcs" | "hali" | "dozen" | "tray" | "kg" | "gram";
+  selected_unit?: string;
   weight_kg?: number;
   weight_gram?: number;
   size_tag?: string;
@@ -35,12 +36,13 @@ interface PosState {
   discountType: "flat" | "percent";
   deliveryCharge: number;
   returnAdjustment: number; // Also serves as Exchange Amount
-  exchangeType: "NONE" | "EGGS" | "FEED" | "CUSTOM";
+  exchangeType: "NONE" | "EGGS" | "FEED" | "BAGS" | "CUSTOM";
   exchangeEggQty: number;
   exchangeEggRate: number;
   exchangeNote: string;
   paidAmount: number;
   paymentMethod: string;
+  paymentAccount: string;
   transactionId: string;
   orderNote: string;
 
@@ -49,11 +51,12 @@ interface PosState {
   updateQty: (productId: number, qty: number) => void;
   updatePrice: (productId: number, price: number) => void;
   updateLineDiscount: (productId: number, discount: number) => void;
+  updateUnit: (productId: number, unit: string) => void;
   updateUnitSelection: (
     productId: number,
     data: {
       quantity: number;
-      selected_unit?: "pcs" | "hali" | "dozen" | "tray" | "kg" | "gram";
+      selected_unit?: string;
       weight_kg?: number;
       weight_gram?: number;
       price?: number;
@@ -68,7 +71,7 @@ interface PosState {
   setDeliveryCharge: (val: number) => void;
   setReturnAdjustment: (val: number) => void;
   setExchangeData: (data: {
-    type: "NONE" | "EGGS" | "FEED" | "CUSTOM";
+    type: "NONE" | "EGGS" | "FEED" | "BAGS" | "CUSTOM";
     amount: number;
     eggQty?: number;
     eggRate?: number;
@@ -76,6 +79,7 @@ interface PosState {
   }) => void;
   setPaidAmount: (val: number) => void;
   setPaymentMethod: (method: string) => void;
+  setPaymentAccount: (account: string) => void;
   setTransactionId: (id: string) => void;
   setOrderNote: (note: string) => void;
 
@@ -100,6 +104,7 @@ export const usePosStore = create<PosState>((set, get) => ({
   exchangeNote: "",
   paidAmount: 0,
   paymentMethod: "Cash",
+  paymentAccount: "",
   transactionId: "",
   orderNote: "",
 
@@ -113,7 +118,16 @@ export const usePosStore = create<PosState>((set, get) => ({
       set({ cart: updated });
     } else {
       set({
-        cart: [...cart, { ...product, quantity: qty, selected_unit: "pcs" }],
+        cart: [
+          ...cart,
+          {
+            ...product,
+            quantity: qty,
+            base_price: product.selling_price,
+            unit: product.unit || "Piece",
+            selected_unit: product.unit || "Piece",
+          },
+        ],
       });
     }
   },
@@ -162,15 +176,54 @@ export const usePosStore = create<PosState>((set, get) => ({
     });
   },
 
+  updateUnit: (productId, newUnit) => {
+    const { cart } = get();
+    set({
+      cart: cart.map((item) => {
+        if (item.product_id === productId) {
+          const base = item.base_price || item.selling_price;
+          let newPrice = item.selling_price;
+          const normUnit = (newUnit || "").toLowerCase();
+          const cat = (item.category || "").toLowerCase();
+          const name = (item.product_name || "").toLowerCase();
+          const isEgg = cat.includes("egg") || cat.includes("ডিম") || name.includes("egg") || name.includes("ডিম");
+
+          if (isEgg) {
+            if (normUnit.includes("hali") || normUnit.includes("হালি")) {
+              newPrice = Number((base * 4).toFixed(2));
+            } else if (normUnit.includes("dozen") || normUnit.includes("ডজন")) {
+              newPrice = Number((base * 12).toFixed(2));
+            } else if (normUnit.includes("tray") || normUnit.includes("খাঁচা") || normUnit.includes("case")) {
+              newPrice = Number((base * 30).toFixed(2));
+            } else if (normUnit.includes("piece") || normUnit.includes("পিস") || normUnit.includes("pcs")) {
+              newPrice = Number(base.toFixed(2));
+            }
+          }
+
+          return {
+            ...item,
+            unit: newUnit,
+            selected_unit: newUnit,
+            selling_price: newPrice,
+            base_price: base,
+          };
+        }
+        return item;
+      }),
+    });
+  },
+
   updateUnitSelection: (productId, data) => {
     const { cart } = get();
     set({
       cart: cart.map((item) => {
         if (item.product_id === productId) {
+          const nextUnit = data.selected_unit || item.unit;
           return {
             ...item,
             quantity: data.quantity,
-            selected_unit: data.selected_unit ?? item.selected_unit,
+            unit: nextUnit,
+            selected_unit: nextUnit,
             weight_kg: data.weight_kg ?? item.weight_kg,
             weight_gram: data.weight_gram ?? item.weight_gram,
             selling_price: data.price !== undefined ? data.price : item.selling_price,
@@ -223,6 +276,7 @@ export const usePosStore = create<PosState>((set, get) => ({
 
   setPaidAmount: (paidAmount) => set({ paidAmount }),
   setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
+  setPaymentAccount: (paymentAccount) => set({ paymentAccount }),
   setTransactionId: (transactionId) => set({ transactionId }),
   setOrderNote: (orderNote) => set({ orderNote }),
 

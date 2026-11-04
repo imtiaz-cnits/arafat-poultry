@@ -402,15 +402,15 @@ export default function PurchasesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Purchase ID / Date</th>
-                <th className="py-3 px-3">Supplier / Company</th>
-                <th className="py-3 px-3">Ref Memo No</th>
-                <th className="py-3 px-3 text-center">Items Inward</th>
-                <th className="py-3 px-3 text-right">Total Amount</th>
-                <th className="py-3 px-3 text-right">Paid Amount</th>
-                <th className="py-3 px-3 text-right">Due Amount</th>
-                <th className="py-3 px-4 text-center w-24">Actions</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
+                <th className="py-3 px-4">ক্রয় আইডি / তারিখ (Purchase ID / Date)</th>
+                <th className="py-3 px-3">সরবরাহকারী (Supplier)</th>
+                <th className="py-3 px-3">চালান / মেমো নং (Ref Memo)</th>
+                <th className="py-3 px-3 text-center">আইটেম সংখ্যা (Items)</th>
+                <th className="py-3 px-3 text-right">মোট টাকা (Total ৳)</th>
+                <th className="py-3 px-3 text-right">পরিশোধিত (Paid ৳)</th>
+                <th className="py-3 px-3 text-right">বকেয়া দেনা (Due ৳)</th>
+                <th className="py-3 px-4 text-center w-24">অ্যাকশন (Actions)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -641,7 +641,7 @@ export default function PurchasesPage() {
                       onClick={() => setIsSupplierModalOpen(true)}
                       className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <Plus className="w-3 h-3" /> + নতুন সরবরাহকারী
+                      <Plus className="w-3 h-3" />নতুন সরবরাহকারী
                     </button>
                   </div>
                   <CustomSelect

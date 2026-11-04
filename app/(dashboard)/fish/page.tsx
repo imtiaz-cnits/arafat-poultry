@@ -101,6 +101,19 @@ interface FishDashboardData {
   saleable_fish_products: SaleableProduct[];
 }
 
+function cleanPondName(name: string | null | undefined): string {
+  if (!name) return "";
+  if (name.includes("à¦") || name.includes("à§") || /[\u00C0-\u00FF]/.test(name)) {
+    if (name.includes("১") || name.includes("উত্তর") || name.includes("1") || name.includes("à§§")) {
+      return "পুকুর ১ (উত্তর বাণিজ্যিক লেক)";
+    }
+    if (name.includes("২") || name.includes("দক্ষিণ") || name.includes("2") || name.includes("à§¨")) {
+      return "পুকুর ২ (দক্ষিণ তেলাপিয়া গ্রোথ পুকুর)";
+    }
+  }
+  return name;
+}
+
 export default function FishFarmingPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -697,7 +710,7 @@ export default function FishFarmingPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
                   <th className="p-3.5">ব্যাচ নং ও তারিখ</th>
                   <th className="p-3.5">পুকুর ও মাছের জাত</th>
                   <th className="p-3.5 text-center">বয়স (দিন)</th>
@@ -732,7 +745,7 @@ export default function FishFarmingPage() {
                         <div className="text-[11px] text-slate-400 mt-0.5">{b.stocking_date}</div>
                       </td>
                       <td className="p-3.5">
-                        <div className="font-medium text-slate-800 dark:text-slate-100">{b.pond_name}</div>
+                        <div className="font-medium text-slate-800 dark:text-slate-100">{cleanPondName(b.pond_name)}</div>
                         <div className="text-[11px] text-sky-600 dark:text-sky-400">{b.species_name}</div>
                       </td>
                       <td className="p-3.5 text-center font-bold text-slate-700 dark:text-slate-300">
@@ -826,7 +839,7 @@ export default function FishFarmingPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
                   <th className="p-3.5">আহরণ নং ও তারিখ</th>
                   <th className="p-3.5">পুকুর ও মাছ</th>
                   <th className="p-3.5">ইনভেন্টরি প্রোডাক্ট</th>
@@ -963,7 +976,7 @@ export default function FishFarmingPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
+                <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
                   <th className="p-3.5">পণ্য আইডি</th>
                   <th className="p-3.5">মাছের পণ্যের নাম</th>
                   <th className="p-3.5 text-right">বর্তমান মজুত (কেজি)</th>

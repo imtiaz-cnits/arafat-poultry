@@ -214,15 +214,6 @@ export default function DashboardPage() {
             <RotateCw className={`w-4 h-4 ${loading ? "animate-spin text-emerald-600" : ""}`} />
           </button>
 
-          {/* POS Terminal Button */}
-          <Link
-            href="/pos"
-            className="h-[38px] px-4 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-bold text-xs flex items-center gap-2 shadow-xs hover:shadow-sm transition-all shrink-0"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span>POS Terminal</span>
-          </Link>
-
           {/* Products Button */}
           <Link
             href="/products"
@@ -234,144 +225,147 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 2. 1st Line: 4 Prominent KPI Cards (INCOME, CASH COLLECTION, EXPENSE, PROFIT) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* INCOME */}
-        <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              INCOME
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-              <Receipt className="w-4 h-4" />
+      {/* 2. Stat Cards Section (Uniform Row & Column Gaps Everywhere) */}
+      <div className="space-y-3.5 sm:space-y-4">
+        {/* 1st Line: 4 Prominent KPI Cards (INCOME, CASH COLLECTION, EXPENSE, PROFIT) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          {/* INCOME */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                INCOME
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                <Receipt className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
+              {formatBdCurrency(summary.income)}
+            </div>
+            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-sky-600 dark:text-sky-400 font-bold">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Total Sales Revenue</span>
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
-            {formatBdCurrency(summary.income)}
-          </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-sky-600 dark:text-sky-400 font-bold">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Total Sales Revenue</span>
-          </div>
-        </div>
 
-        {/* CASH COLLECTION */}
-        <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              CASH COLLECTION
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center">
-              <Wallet className="w-4 h-4" />
+          {/* CASH COLLECTION */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                CASH COLLECTION
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+                <Wallet className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
+              {formatBdCurrency(summary.cashCollection)}
+            </div>
+            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-teal-600 dark:text-teal-400 font-bold">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>Paid at Counter &amp; Dues</span>
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
-            {formatBdCurrency(summary.cashCollection)}
-          </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-teal-600 dark:text-teal-400 font-bold">
-            <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>Paid at Counter &amp; Dues</span>
-          </div>
-        </div>
 
-        {/* EXPENSE */}
-        <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              EXPENSE
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
+          {/* EXPENSE */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                EXPENSE
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Clock className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
+              {formatBdCurrency(summary.expense)}
+            </div>
+            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-amber-600 dark:text-amber-400 font-bold">
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>Operating Expenses</span>
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
-            {formatBdCurrency(summary.expense)}
-          </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-amber-600 dark:text-amber-400 font-bold">
-            <AlertCircle className="w-3.5 h-3.5" />
-            <span>Operating Expenses</span>
-          </div>
-        </div>
 
-        {/* PROFIT */}
-        <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              PROFIT
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
+          {/* PROFIT */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                PROFIT
+              </span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
+              {formatBdCurrency(summary.profit)}
+            </div>
+            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Net Business Profit</span>
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
-            {formatBdCurrency(summary.profit)}
-          </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Net Business Profit</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. 2nd Line: 4 Compact Cards (Noticeably Shorter Height) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-        {/* RECEIVABLE DUE */}
-        <div className="card bg-white dark:bg-slate-900 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] py-2.5 px-3.5 shadow-xs flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-            <Users className="w-4 h-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-              RECEIVABLE DUE
-            </p>
-            <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
-              {formatBdCurrency(summary.receivableDue)}
-            </p>
-          </div>
         </div>
 
-        {/* PAYABLE DUE */}
-        <div className="card bg-white dark:bg-slate-900 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] py-2.5 px-3.5 shadow-xs flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
-            <Truck className="w-4 h-4" />
+        {/* 2nd Line: 4 Compact Cards (Identical Grid Columns & Gaps) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+          {/* RECEIVABLE DUE */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-3.5 sm:p-4 shadow-xs flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <Users className="w-4.5 h-4.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                RECEIVABLE DUE
+              </p>
+              <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
+                {formatBdCurrency(summary.receivableDue)}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-              PAYABLE DUE
-            </p>
-            <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
-              {formatBdCurrency(summary.payableDue)}
-            </p>
-          </div>
-        </div>
 
-        {/* RETURN */}
-        <div className="card bg-white dark:bg-slate-900 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] py-2.5 px-3.5 shadow-xs flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-            <RotateCcw className="w-4 h-4" />
+          {/* PAYABLE DUE */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-3.5 sm:p-4 shadow-xs flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+              <Truck className="w-4.5 h-4.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                PAYABLE DUE
+              </p>
+              <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
+                {formatBdCurrency(summary.payableDue)}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-              RETURN
-            </p>
-            <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
-              {formatBdCurrency(summary.returnAmount)}
-            </p>
-          </div>
-        </div>
 
-        {/* DISCOUNT */}
-        <div className="card bg-white dark:bg-slate-900 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] py-2.5 px-3.5 shadow-xs flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-            <Percent className="w-4 h-4" />
+          {/* RETURN */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-3.5 sm:p-4 shadow-xs flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <RotateCcw className="w-4.5 h-4.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                RETURN
+              </p>
+              <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
+                {formatBdCurrency(summary.returnAmount)}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-              DISCOUNT
-            </p>
-            <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
-              {formatBdCurrency(summary.discountAmount)}
-            </p>
+
+          {/* DISCOUNT */}
+          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-3.5 sm:p-4 shadow-xs flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <Percent className="w-4.5 h-4.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
+                DISCOUNT
+              </p>
+              <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
+                {formatBdCurrency(summary.discountAmount)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -496,7 +490,7 @@ export default function DashboardPage() {
               {recentOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
-                    No orders recorded yet. Launch the POS terminal to start ringing sales!
+                    No orders recorded yet. Launch the Sales Portal to start ringing sales!
                   </td>
                 </tr>
               ) : (

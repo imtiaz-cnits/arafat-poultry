@@ -1,6 +1,3 @@
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas-pro";
-
 export interface PdfExportOptions {
   filename?: string;
   reportTitle?: string;
@@ -14,6 +11,15 @@ export async function exportReportToPdf(
   elementOrSelector: HTMLElement | string,
   options?: PdfExportOptions
 ): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  // Dynamic import on client only to avoid SSR Turbopack module resolution errors
+  const [{ default: jsPDF }, html2canvasModule] = await Promise.all([
+    import("jspdf"),
+    import("html2canvas-pro"),
+  ]);
+  const html2canvas = (html2canvasModule as any).default || html2canvasModule;
+
   const filename = (options?.filename || "arafat-poultry-report").replace(/\.pdf$/i, "") + ".pdf";
 
   let targetEl: HTMLElement | null = null;
@@ -126,4 +132,3 @@ export async function exportReportToPdf(
     }
   }
 }
-

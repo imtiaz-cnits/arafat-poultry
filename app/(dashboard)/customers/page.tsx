@@ -240,12 +240,12 @@ export default function CustomersPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Customer / ID</th>
-                <th className="py-3 px-3">Mobile Phone</th>
-                <th className="py-3 px-3">Address</th>
-                <th className="py-3 px-3 text-right">Outstanding Due</th>
-                <th className="py-3 px-4 text-center w-24">Actions</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
+                <th className="py-3 px-4">কাস্টমার নাম / আইডি (Customer)</th>
+                <th className="py-3 px-3">মোবাইল নম্বর (Mobile)</th>
+                <th className="py-3 px-3">ঠিকানা (Address)</th>
+                <th className="py-3 px-3 text-right">মোট বকেয়া (Due ৳)</th>
+                <th className="py-3 px-4 text-center w-24">অ্যাকশন (Actions)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

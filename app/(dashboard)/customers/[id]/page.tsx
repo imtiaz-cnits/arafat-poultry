@@ -430,12 +430,12 @@ export default function CustomerProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
-                  <th className="p-3">Invoice No</th>
-                  <th className="p-3">Order Date</th>
-                  <th className="p-3 text-right">Total Amount</th>
-                  <th className="p-3 text-right">Paid Amount</th>
-                  <th className="p-3 text-right">Due Amount</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
+                  <th className="p-3">ইনভয়েস নং (Invoice No)</th>
+                  <th className="p-3">তারিখ (Date)</th>
+                  <th className="p-3 text-right">মোট টাকা (Total ৳)</th>
+                  <th className="p-3 text-right">পরিশোধিত (Paid ৳)</th>
+                  <th className="p-3 text-right">বকেয়া (Due ৳)</th>
                   <th className="p-3 text-center">Status</th>
                   <th className="p-3 text-center">Action</th>
                 </tr>
@@ -503,13 +503,13 @@ export default function CustomerProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
-                  <th className="p-3">Collection Date</th>
-                  <th className="p-3 text-right">Previous Due</th>
-                  <th className="p-3 text-right">Collected Amount</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
+                  <th className="p-3">আদায়ের তারিখ (Date)</th>
+                  <th className="p-3 text-right">পূর্বের বকেয়া (Prev Due)</th>
+                  <th className="p-3 text-right">আদায়কৃত টাকা (Collected ৳)</th>
                   <th className="p-3 text-right">Discount</th>
-                  <th className="p-3 text-right">Remaining Due</th>
-                  <th className="p-3 text-center">Method</th>
+                  <th className="p-3 text-right">অবশিষ্ট বকেয়া (Due ৳)</th>
+                  <th className="p-3 text-center">পদ্ধতি (Method)</th>
                   <th className="p-3 text-center">Trx ID</th>
                   <th className="p-3 text-center">Status</th>
                 </tr>
@@ -576,11 +576,11 @@ export default function CustomerProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
-                  <th className="p-3">Return Date</th>
-                  <th className="p-3">Order ID</th>
-                  <th className="p-3 text-center">Returned Qty</th>
-                  <th className="p-3 text-right">Refund / Adjusted Amount</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
+                  <th className="p-3">ফেরতের তারিখ (Date)</th>
+                  <th className="p-3">অর্ডার আইডি (Order ID)</th>
+                  <th className="p-3 text-center">ফেরত পরিমাণ (Qty)</th>
+                  <th className="p-3 text-right">ফেরত / সমন্বয় মূল্য (Amount ৳)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
@@ -622,7 +622,7 @@ export default function CustomerProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
                   <th className="p-3">তারিখ</th>
                   <th className="p-3">ভাউচার / রেফারেন্স নং</th>
                   <th className="p-3">লেনদেনের ধরন</th>
@@ -655,7 +655,13 @@ export default function CustomerProfilePage({
                         </span>
                       </td>
                       <td className="p-3 font-bold text-slate-700 dark:text-slate-300">
-                        {ple.transaction_type}
+                        {ple.reference_no?.startsWith("EXC-") || ple.note?.includes("বিনিময়") ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 inline-flex items-center gap-1">
+                            🔄 পণ্য বিনিময় (Exchange)
+                          </span>
+                        ) : (
+                          ple.transaction_type
+                        )}
                       </td>
                       <td className="p-3 text-slate-500 dark:text-slate-400 max-w-xs truncate">
                         {ple.note || "-"}

@@ -434,13 +434,13 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
-                  <th className="p-3">Purchase Memo</th>
-                  <th className="p-3">Reference No</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
+                  <th className="p-3">ক্রয় চালান / মেমো (Purchase Memo)</th>
+                  <th className="p-3">রেফারেন্স নং (Ref No)</th>
                   <th className="p-3">Date</th>
-                  <th className="p-3 text-right">Total Amount</th>
-                  <th className="p-3 text-right">Paid Amount</th>
-                  <th className="p-3 text-right">Due Amount</th>
+                  <th className="p-3 text-right">মোট টাকা (Total ৳)</th>
+                  <th className="p-3 text-right">পরিশোধিত (Paid ৳)</th>
+                  <th className="p-3 text-right">বকেয়া দেনা (Due ৳)</th>
                   <th className="p-3 text-center">Action</th>
                 </tr>
               </thead>
@@ -499,12 +499,12 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
-                  <th className="p-3">Payment Date</th>
-                  <th className="p-3 text-right">Previous Payable</th>
-                  <th className="p-3 text-right">Paid Amount</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
+                  <th className="p-3">পরিশোধের তারিখ (Date)</th>
+                  <th className="p-3 text-right">পূর্বের দেনা (Prev Payable)</th>
+                  <th className="p-3 text-right">পরিশোধিত (Paid ৳)</th>
                   <th className="p-3 text-right">Discount</th>
-                  <th className="p-3 text-right">Remaining Due</th>
+                  <th className="p-3 text-right">অবশিষ্ট দেনা (Due ৳)</th>
                   <th className="p-3 text-center">Method</th>
                   <th className="p-3 text-center">Trx ID</th>
                   <th className="p-3 text-center">Status</th>
@@ -572,12 +572,12 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
-                  <th className="p-3">Return Date</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
+                  <th className="p-3">ফেরতের তারিখ (Date)</th>
                   <th className="p-3">Purchase ID</th>
-                  <th className="p-3">Returned Item</th>
+                  <th className="p-3">ফেরতকৃত পণ্য (Returned Item)</th>
                   <th className="p-3 text-center">Qty</th>
-                  <th className="p-3 text-right">Refund / Adjusted Amount</th>
+                  <th className="p-3 text-right">ফেরত / সমন্বয় মূল্য (Amount ৳)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
@@ -622,7 +622,7 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">SL</th>
+                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
                   <th className="p-3">তারিখ</th>
                   <th className="p-3">ভাউচার / রেফারেন্স নং</th>
                   <th className="p-3">লেনদেনের ধরন</th>
@@ -655,7 +655,13 @@ export default function SupplierProfilePage({
                         </span>
                       </td>
                       <td className="p-3 font-bold text-slate-700 dark:text-slate-300">
-                        {ple.transaction_type}
+                        {ple.reference_no?.startsWith("EXC-") || ple.note?.includes("বিনিময়") ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 inline-flex items-center gap-1">
+                            🔄 পণ্য বিনিময় (Exchange)
+                          </span>
+                        ) : (
+                          ple.transaction_type
+                        )}
                       </td>
                       <td className="p-3 text-slate-500 dark:text-slate-400 max-w-xs truncate">
                         {ple.note || "-"}

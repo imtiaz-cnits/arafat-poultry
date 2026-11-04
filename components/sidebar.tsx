@@ -52,9 +52,9 @@ export const NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    id: "pos",
-    label: "বিক্রয়",
-    href: "/pos",
+    id: "sales-portal",
+    label: "বিক্রয় পোর্টাল",
+    href: "/sales-portal",
     icon: ShoppingCart,
   },
   {
@@ -198,7 +198,7 @@ export function Sidebar({
         if (u.role) setUserRole(u.role);
         if (u.permissions) setUserPermissions(u.permissions);
       }
-    } catch {}
+    } catch { }
   }, []);
 
   const hasAccess = (item: NavItem) => {
@@ -206,6 +206,7 @@ export function Sidebar({
     if (!userPermissions) return true;
     const permKeyMap: Record<string, string> = {
       dashboard: "dashboard",
+      "sales-portal": "pos",
       pos: "pos",
       poultry: "products",
       fish: "products",
@@ -323,7 +324,7 @@ export function Sidebar({
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 bg-gradient-to-b from-[#14532d] via-[#166534] to-[#0f3d20] text-white flex flex-col transition-all duration-300 ease-in-out border-r border-white/10 shadow-2xl select-none ${isCollapsed
           ? "w-[70px] -translate-x-full lg:translate-x-0"
-          : "w-[215px] " +
+          : "w-[195px] " +
           (isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0")
           }`}
       >
@@ -331,25 +332,25 @@ export function Sidebar({
         <div className="h-[60px] px-3 flex items-center justify-between border-b border-white/10 shrink-0">
           <Link
             href="/dashboard"
-            className={`flex items-center gap-2.5 ${isCollapsed ? "justify-center w-full" : ""
+            className={`flex items-center gap-2 ${isCollapsed ? "justify-center w-full" : ""
               }`}
           >
-            <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
               <Image
                 src="/logo1.png"
                 alt="Arafat Poultry & Fisheries"
-                width={36}
-                height={36}
-                className="w-full h-full object-contain rounded-lg"
+                width={28}
+                height={28}
+                className="w-full h-full object-contain rounded-md"
                 priority
               />
             </div>
             {!isCollapsed && (
               <div className="min-w-0">
-                <h1 className="text-xs font-black tracking-wider text-white leading-none truncate">
+                <h1 className="text-[11.5px] font-black tracking-wider text-white leading-none truncate">
                   ARAFAT POULTRY
                 </h1>
-                <p className="text-[10px] text-emerald-200/90 tracking-tight mt-1 font-medium truncate">
+                <p className="text-[9.5px] text-emerald-200/90 tracking-tight mt-1 font-medium truncate">
                   Poultry &amp; Fisheries
                 </p>
               </div>
@@ -372,7 +373,7 @@ export function Sidebar({
           <div className="relative flex-1 overflow-hidden w-full">
             {/* 1. Main Navigation Panel (Slides Left when drilled) */}
             <div
-              className={`absolute inset-0 w-full h-full overflow-y-auto px-2 py-2.5 space-y-1 text-xs transition-transform duration-300 ease-in-out sidebar-scrollbar ${drilledParent !== null
+              className={`absolute inset-0 w-full h-full overflow-y-auto px-2 py-2 space-y-1 text-[13px] transition-transform duration-300 ease-in-out sidebar-scrollbar ${drilledParent !== null
                 ? "-translate-x-full pointer-events-none"
                 : "translate-x-0 pointer-events-auto"
                 }`}
@@ -389,24 +390,23 @@ export function Sidebar({
                       key={item.id}
                       type="button"
                       onClick={() => handleTriggerClick(item.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold transition-all duration-200 cursor-pointer group text-start ${isParentActive
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-[16px] font-semibold transition-all duration-200 cursor-pointer group text-start ${isParentActive
                         ? "bg-white/15 text-white font-bold border-l-[3px] border-white shadow-xs"
                         : "text-emerald-100 hover:bg-white/10 hover:text-white"
                         }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
                         <Icon className="w-4 h-4 shrink-0 opacity-90 group-hover:scale-110 transition-transform" />
                         <span className="truncate">{item.label}</span>
                       </div>
-                      <span className="shrink-0 w-5 h-5 rounded-md bg-white/10 flex items-center justify-center text-white/70 group-hover:text-white group-hover:bg-white/20 transition-all">
+                      <span className="shrink-0 w-4.5 h-4.5 rounded-md bg-white/10 flex items-center justify-center text-white/70 group-hover:text-white group-hover:bg-white/20 transition-all">
                         <ChevronRight className="w-3 h-3" />
                       </span>
                     </button>
                   );
                 }
 
-                // B. Single Item (Dashboard, POS, Customers, etc.)
-                // Point of Sale now renders exactly like other normal menus without special border/bg
+                // B. Single Item (Dashboard, Sales Portal, Customers, etc.)
                 return (
                   <Link
                     key={item.id}
@@ -414,25 +414,15 @@ export function Sidebar({
                     onClick={() => {
                       if (isOpen) onClose();
                     }}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold transition-all ${isSingleActive
+                    className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-[16px] font-semibold transition-all ${isSingleActive
                       ? "bg-white text-emerald-950 shadow-md font-bold"
                       : "text-emerald-100 hover:bg-white/10 hover:text-white"
                       }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <Icon className="w-4 h-4 shrink-0 opacity-90" />
                       <span className="truncate">{item.label}</span>
                     </div>
-                    {item.id === "pos" && (
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 ${isSingleActive
-                          ? "bg-emerald-900 text-white"
-                          : "bg-white text-emerald-900 shadow-xs"
-                          }`}
-                      >
-                        POS
-                      </span>
-                    )}
                   </Link>
                 );
               })}
@@ -451,7 +441,7 @@ export function Sidebar({
                 <button
                   type="button"
                   onClick={() => setDrilledParent(null)}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-emerald-100 bg-white/10 hover:bg-white/20 border border-white/15 font-bold text-xs transition-all shadow-xs mb-2 cursor-pointer group"
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-emerald-100 bg-white/10 hover:bg-white/20 border border-white/15 font-bold text-[16px] transition-all shadow-xs mb-2 cursor-pointer group"
                 >
                   <ChevronLeft className="w-4 h-4 text-emerald-200 group-hover:text-white transition-transform group-hover:-translate-x-0.5" />
                   <span className="truncate">{parent.label}</span>
@@ -469,7 +459,7 @@ export function Sidebar({
                         onClick={() => {
                           if (isOpen) onClose();
                         }}
-                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all ${isChildActive
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[16px] transition-all ${isChildActive
                           ? "bg-white text-emerald-950 font-bold shadow-md"
                           : "text-emerald-100/90 hover:text-white hover:bg-white/10"
                           }`}
@@ -562,11 +552,10 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={() => handleTriggerClick("settings")}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${
-                  activeParentId === "settings" || pathname === "/users" || pathname === "/profile"
-                    ? "bg-white/15 text-white font-bold border-l-[3px] border-white shadow-xs"
-                    : "text-emerald-100 hover:bg-white/10 hover:text-white"
-                } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full text-start"}`}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${activeParentId === "settings" || pathname === "/users" || pathname === "/profile"
+                  ? "bg-white/15 text-white font-bold border-l-[3px] border-white shadow-xs"
+                  : "text-emerald-100 hover:bg-white/10 hover:text-white"
+                  } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full text-start"}`}
               >
                 <Settings className={`shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4 opacity-90"}`} />
                 {!isCollapsed && <span className="truncate">{settingsItem.label}</span>}

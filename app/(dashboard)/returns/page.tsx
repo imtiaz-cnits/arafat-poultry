@@ -561,20 +561,20 @@ function ReturnsManagementContent() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                <th className="p-3 text-center w-[45px]">SL</th>
-                <th className="p-3 w-[120px] whitespace-nowrap">Return Date</th>
+                <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
+                <th className="p-3 w-[120px] whitespace-nowrap">ফেরতের তারিখ (Date)</th>
                 <th className="p-3 min-w-[170px] whitespace-nowrap">
                   {activeTab === "purchase" ? "Purchase Memo No" : "Invoice No"}
                 </th>
                 <th className="p-3">
                   {activeTab === "purchase" ? "Supplier Name" : "Customer Name"}
                 </th>
-                <th className="p-3">Returned Product</th>
-                <th className="p-3 text-center w-[110px]">Qty</th>
+                <th className="p-3">ফেরতকৃত পণ্য (Product)</th>
+                <th className="p-3 text-center w-[110px]">পরিমাণ (Qty)</th>
                 <th className="p-3 text-right w-[150px]">
                   {activeTab === "purchase" ? "Adjusted Amount" : "Refund Amount"}
                 </th>
-                <th className="p-3 text-center w-[120px] whitespace-nowrap">Action</th>
+                <th className="p-3 text-center w-[120px] whitespace-nowrap">অ্যাকশন (Action)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">

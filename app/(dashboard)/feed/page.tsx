@@ -476,14 +476,15 @@ export default function FeedTradingPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-emerald-800 text-white font-medium">
-                  <th className="py-3 px-4">খাদ্যের নাম</th>
-                  <th className="py-3 px-4 text-center">টার্গেট</th>
-                  <th className="py-3 px-4 text-center">বস্তার ওজন (কেজি)</th>
-                  <th className="py-3 px-4 text-center">বর্তমান মজুত</th>
-                  <th className="py-3 px-4 text-center">স্টক অবস্থা</th>
-                  <th className="py-3 px-4 text-right">ক্রয় দর (বস্তা)</th>
-                  <th className="py-3 px-4 text-right">ক্রয় দর (কেজি)</th>
-                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
+                  <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
+                  <th className="py-3 px-4">খাদ্যের নাম (Feed Name)</th>
+                  <th className="py-3 px-4 text-center">টার্গেট (Target)</th>
+                  <th className="py-3 px-4 text-center">বস্তার ওজন (Bag Weight)</th>
+                  <th className="py-3 px-4 text-center">বর্তমান মজুত (Current Stock)</th>
+                  <th className="py-3 px-4 text-center">স্টক অবস্থা (Status)</th>
+                  <th className="py-3 px-4 text-right">ক্রয় দর (Cost/Bag ৳)</th>
+                  <th className="py-3 px-4 text-right">কেজি প্রতি দর (Cost/Kg ৳)</th>
+                  <th className="py-3 px-4 text-center w-28">অ্যাকশন (Action)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
@@ -496,15 +497,16 @@ export default function FeedTradingPage() {
                   </tr>
                 ) : !data?.feed_products || data.feed_products.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <td colSpan={9} className="py-12 text-center text-slate-400">
                       কোনো ফিড পণ্য পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  data.feed_products.map((p) => {
+                  data.feed_products.map((p, idx) => {
                     const costPerKg = p.bag_weight_kg > 0 ? p.cost_price / p.bag_weight_kg : p.cost_price;
                     return (
                       <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3 px-3 text-center font-bold text-slate-400">{idx + 1}</td>
                         <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{p.product_name}</td>
                         <td className="py-3 px-4 text-center">
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">

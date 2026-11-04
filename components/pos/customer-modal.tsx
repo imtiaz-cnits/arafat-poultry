@@ -27,7 +27,7 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!formData.customer_name.trim() || !formData.mobile.trim()) {
-      setError("Customer name and mobile number are required!");
+      setError("কাস্টমারের নাম ও মোবাইল নম্বর আবশ্যক!");
       return;
     }
 
@@ -60,10 +60,10 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
         });
         onClose();
       } else {
-        setError(data.message || "Failed to create customer");
+        setError(data.message || "কাস্টমার তৈরি করতে ব্যর্থ হয়েছে");
       }
     } catch (err: any) {
-      setError(err?.message || "Server communication error");
+      setError(err?.message || "সার্ভার যোগাযোগে ত্রুটি হয়েছে");
     } finally {
       setLoading(false);
     }
@@ -76,8 +76,8 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
         <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
           <div className="flex items-center gap-2.5">
             <UserPlus className="w-5 h-5 text-white" />
-            <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-              Add New Customer
+            <h3 className="text-sm font-bold tracking-wide m-0 text-white">
+              নতুন কাস্টমার যোগ করুন (Add Customer)
             </h3>
           </div>
           <button
@@ -101,12 +101,12 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
             {/* Customer Name */}
             <div className="md:col-span-2 space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Customer Name <span className="text-red-500">*</span>
+                কাস্টমারের নাম (Customer Name) <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Haji Abdur Rahim"
+                placeholder="যেমন: হাজী আব্দুর রহিম"
                 value={formData.customer_name}
                 onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
                 className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
@@ -116,12 +116,12 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
             {/* Mobile */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Mobile Number <span className="text-red-500">*</span>
+                মোবাইল নম্বর (Mobile Number) <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
                 required
-                placeholder="017xxxxxxxx"
+                placeholder="০১৭১xxxxxxx"
                 value={formData.mobile}
                 onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                 className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
@@ -131,7 +131,7 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
             {/* Previous Due */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Previous Due (৳)
+                পূর্বের বকেয়া (Previous Due ৳)
               </label>
               <input
                 type="number"
@@ -147,11 +147,11 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
             {/* Address */}
             <div className="md:col-span-2 space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Address / Location
+                ঠিকানা / অবস্থান (Address / Location)
               </label>
               <input
                 type="text"
-                placeholder="e.g. Sonargaon, Narayanganj"
+                placeholder="যেমন: সোনারগাঁও, নারায়ণগঞ্জ"
                 value={formData.address_details}
                 onChange={(e) => setFormData({ ...formData, address_details: e.target.value })}
                 className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
@@ -161,7 +161,7 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
             {/* Email (Optional) */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Email (Optional)
+                ইমেইল (Email - ঐচ্ছিক)
               </label>
               <input
                 type="email"
@@ -175,11 +175,11 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
             {/* NID (Optional) */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                NID Number (Optional)
+                জাতীয় পরিচয়পত্র / NID (ঐচ্ছিক)
               </label>
               <input
                 type="text"
-                placeholder="National ID"
+                placeholder="এনআইডি নম্বর"
                 value={formData.nid}
                 onChange={(e) => setFormData({ ...formData, nid: e.target.value })}
                 className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
@@ -195,7 +195,7 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
               disabled={loading}
               className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
             >
-              Cancel
+              বাতিল (Cancel)
             </button>
             <button
               type="submit"
@@ -203,7 +203,7 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
               className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Save Customer</span>
+              <span>কাস্টমার সংরক্ষণ করুন (Save)</span>
             </button>
           </div>
         </form>

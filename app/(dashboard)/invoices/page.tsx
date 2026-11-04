@@ -302,15 +302,15 @@ export default function InvoicesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Invoice # / Date</th>
-                <th className="py-3 px-3">Customer</th>
-                <th className="py-3 px-3 text-center">Items</th>
-                <th className="py-3 px-3 text-right">Net Payable</th>
-                <th className="py-3 px-3 text-right">Paid Amount</th>
-                <th className="py-3 px-3 text-right">Due Amount</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
+                <th className="py-3 px-4">মেমো নং / তারিখ (Invoice # / Date)</th>
+                <th className="py-3 px-3">কাস্টমার (Customer)</th>
+                <th className="py-3 px-3 text-center">আইটেম (Items)</th>
+                <th className="py-3 px-3 text-right">পরিশোধযোগ্য (Net Payable ৳)</th>
+                <th className="py-3 px-3 text-right">পরিশোধিত (Paid ৳)</th>
+                <th className="py-3 px-3 text-right">বকেয়া (Due ৳)</th>
                 <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-4 text-center w-36">Actions</th>
+                <th className="py-3 px-4 text-center w-36">অ্যাকশন (Actions)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

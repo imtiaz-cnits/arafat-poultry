@@ -570,13 +570,13 @@ export default function UsersPage() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-bold whitespace-nowrap uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 text-center w-12">SL</th>
-                <th className="py-3 px-4">User Info</th>
-                <th className="py-3 px-3">Mobile Number</th>
-                <th className="py-3 px-3 text-center">Role</th>
-                <th className="py-3 px-3">Active Module Permissions</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-4 text-center w-28">Actions</th>
+                <th className="py-3 px-4 text-center w-12">ক্র: নং (SL)</th>
+                <th className="py-3 px-4">ব্যবহারকারী (User Info)</th>
+                <th className="py-3 px-3">মোবাইল নম্বর (Mobile)</th>
+                <th className="py-3 px-3 text-center">পদবী (Role)</th>
+                <th className="py-3 px-3">সক্রিয় পারমিশন (Permissions)</th>
+                <th className="py-3 px-3 text-center">অবস্থা (Status)</th>
+                <th className="py-3 px-4 text-center w-28">অ্যাকশন (Actions)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">

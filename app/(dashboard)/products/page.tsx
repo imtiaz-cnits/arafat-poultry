@@ -794,15 +794,15 @@ export default function ProductsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">SL</th>
-                <th className="p-[10px]">Product Name</th>
-                <th className="p-[10px]">Category</th>
-                <th className="p-[10px]">Brand</th>
-                <th className="p-[10px] text-right">Cost Price</th>
-                <th className="p-[10px] text-right">Sell Price</th>
-                <th className="p-[10px] text-center">Stock</th>
-                <th className="p-[10px] text-center">Status</th>
-                <th className="p-[10px] text-center w-[85px] rounded-tr-xl">Action</th>
+                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">ক্র: নং (SL)</th>
+                <th className="p-[10px]">পণ্যের নাম (Product Name)</th>
+                <th className="p-[10px]">ক্যাটাগরি (Category)</th>
+                <th className="p-[10px]">ব্র্যান্ড (Brand)</th>
+                <th className="p-[10px] text-right">ক্রয় মূল্য (Cost ৳)</th>
+                <th className="p-[10px] text-right">বিক্রয় মূল্য (Sell ৳)</th>
+                <th className="p-[10px] text-center">মজুত (Stock)</th>
+                <th className="p-[10px] text-center">অবস্থা (Status)</th>
+                <th className="p-[10px] text-center w-[95px] rounded-tr-xl">অ্যাকশন (Action)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">

@@ -160,10 +160,10 @@ export function ChallanModal({
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-wide leading-none text-white">
-                  Delivery Challan Management
+                  ডেলিভারি চালান ব্যবস্থাপনা (Delivery Challan)
                 </h3>
-                <p className="text-[10px] text-rose-100/80 mt-0.5">
-                  Tiles Warehousing & Logistics Dispatch
+                <p className="text-[10px] text-emerald-100/90 mt-0.5">
+                  পণ্য ডেলিভারি ও গুদাম স্টক ডিসপ্যাচ
                 </p>
               </div>
             </div>
@@ -178,15 +178,15 @@ export function ChallanModal({
           {/* Body Content */}
           {loading ? (
             <div className="flex-1 overflow-y-auto p-5 flex flex-col items-center justify-center gap-3 text-slate-400">
-              <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
-              <p className="text-xs font-medium">Checking invoice eligibility...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+              <p className="text-xs font-medium">ইনভয়েস তথ্য যাচাই করা হচ্ছে (Checking invoice)...</p>
             </div>
           ) : error ? (
             <div className="flex-1 overflow-y-auto p-5">
               <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-xs flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold">Error Checking Invoice</p>
+                  <p className="font-bold">ত্রুটি (Error Checking Invoice)</p>
                   <p className="mt-0.5">{error}</p>
                 </div>
               </div>
@@ -198,7 +198,7 @@ export function ChallanModal({
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Invoice Reference
+                      ইনভয়েস নং (Invoice No)
                     </span>
                     <p className="font-mono font-bold text-sm text-slate-900 dark:text-white">
                       {invoiceData?.order_no}
@@ -206,39 +206,39 @@ export function ChallanModal({
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Status
+                      স্ট্যাটাস (Status)
                     </span>
                     <div className="mt-0.5">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
-                        Delivered ({invoiceData.existing_challan?.challan_no})
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+                        ডেলিভার্ড ({invoiceData.existing_challan?.challan_no})
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-700/60 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
                   <div>
-                    Customer: <span className="font-bold text-slate-900 dark:text-white">{invoiceData?.customer?.name}</span>
+                    কাস্টমার (Customer): <span className="font-bold text-slate-900 dark:text-white">{invoiceData?.customer?.name}</span>
                   </div>
                   {invoiceData?.customer?.mobile && (
                     <div>
-                      Mobile: <span className="font-mono">{invoiceData.customer.mobile}</span>
+                      মোবাইল (Mobile): <span className="font-mono">{invoiceData.customer.mobile}</span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Already Issued Notice */}
-              <div className="p-4 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 space-y-3 text-center">
-                <CheckCircle2 className="w-10 h-10 text-rose-600 mx-auto" />
+              <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 space-y-3 text-center">
+                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
                 <div>
-                  <h4 className="font-bold text-sm text-rose-950 dark:text-rose-200">
-                    Delivery Challan Already Issued
+                  <h4 className="font-bold text-sm text-emerald-950 dark:text-emerald-200">
+                    ডেলিভারি চালান তৈরি সম্পন্ন হয়েছে (Challan Issued)
                   </h4>
-                  <p className="text-xs text-rose-700 dark:text-rose-400 mt-1">
-                    Challan No: <span className="font-mono font-bold">{invoiceData.existing_challan?.challan_no}</span>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+                    চালান নং (Challan No): <span className="font-mono font-bold">{invoiceData.existing_challan?.challan_no}</span>
                   </p>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Stock was already deducted upon Challan generation. You can view or reprint the document safely without mutating stock.
+                    এই চালানের জন্য গুদাম স্টক ইতিমধ্যে সমন্বয় করা হয়েছে। আপনি চালানটি দেখতে বা পুনঃমুদ্রণ করতে পারেন।
                   </p>
                 </div>
                 <button
@@ -246,7 +246,7 @@ export function ChallanModal({
                   className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs inline-flex items-center gap-2 shadow-xs cursor-pointer transition-colors"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>View & Reprint Challan</span>
+                  <span>চালান দেখুন ও প্রিন্ট করুন (View & Print)</span>
                 </button>
               </div>
             </div>
@@ -393,13 +393,13 @@ export function ChallanModal({
                 <div className="space-y-3 pt-1">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Delivery Destination Address
+                      ডেলিভারির গন্তব্য ঠিকানা (Delivery Destination Address)
                     </label>
                     <input
                       type="text"
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder="e.g. Construction Site, Road 4, Pabna"
+                      placeholder="e.g. ফার্ম বা ডেলিভারি স্পট, পাবনা"
                       className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                     />
                   </div>
@@ -407,19 +407,19 @@ export function ChallanModal({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Driver Name <span className="text-slate-400 font-normal">(Optional)</span>
+                        ড্রাইভারের নাম (Driver Name - ঐচ্ছিক)
                       </label>
                       <input
                         type="text"
                         value={driverName}
                         onChange={(e) => setDriverName(e.target.value)}
-                        placeholder="e.g. Md. Karim"
+                        placeholder="e.g. মোঃ করিম"
                         className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Driver Phone No <span className="text-slate-400 font-normal">(Optional)</span>
+                        ড্রাইভারের মোবাইল নম্বর (Driver Phone - ঐচ্ছিক)
                       </label>
                       <input
                         type="text"
@@ -433,13 +433,13 @@ export function ChallanModal({
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Dispatch Note <span className="text-slate-400 font-normal">(Optional)</span>
+                      ডেলিভারি নোট (Dispatch Note - ঐচ্ছিক)
                     </label>
                     <input
                       type="text"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      placeholder="e.g. Handle with care, offload ground floor"
+                      placeholder="e.g. সাবধানে আনলোড করতে হবে"
                       className="h-[42px] w-full px-3 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                     />
                   </div>
@@ -449,34 +449,34 @@ export function ChallanModal({
                 <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-[11px] text-amber-900 dark:text-amber-300 flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                   <span>
-                    Generating this Challan will permanently decrement physical warehouse stock for the listed Tiles items and mark this invoice as Delivered.
+                    এই চালান তৈরি করার মাধ্যমে গুদাম থেকে তালিকাভুক্ত পণ্য স্টক কমিয়ে ইনভয়েসটি ডেলিভার্ড হিসেবে চিহ্নিত হবে।
                   </span>
                 </div>
               </div>
 
-              {/* Sticky Footer Action Buttons (Header-like sticky pinned to bottom) */}
+              {/* Sticky Footer Action Buttons */}
               <div className="shrink-0 px-5 py-3.5 bg-slate-50 dark:bg-[#1e293b]/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shadow-xs">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-[42px] px-5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="h-[38px] px-5 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল (Cancel)
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="h-[42px] px-6 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="h-[38px] px-6 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] disabled:opacity-50 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Processing & Deducting Stock...</span>
+                      <span>প্রসেসিং হচ্ছে...</span>
                     </>
                   ) : (
                     <>
                       <Truck className="w-4 h-4" />
-                      <span>Generate & Dispatch Challan</span>
+                      <span>চালান তৈরি করুন (Generate Challan)</span>
                     </>
                   )}
                 </button>

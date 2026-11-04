@@ -239,7 +239,7 @@ export default function ChickenManagementPage() {
           className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>+ নতুন মুরগি / বাচ্চা যুক্ত করুন</span>
+          <span>নতুন মুরগি / বাচ্চা যুক্ত করুন</span>
         </button>
       </div>
 
@@ -344,7 +344,7 @@ export default function ChickenManagementPage() {
               ) : filteredFlocks.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="py-10 text-center text-slate-400 font-bold">
-                    কোনো মুরগির শেড পাওয়া যায়নি। "+ নতুন মুরগি / বাচ্চা যুক্ত করুন" বাটনে ক্লিক করুন।
+                    কোনো মুরগির শেড পাওয়া যায়নি। "নতুন মুরগি / বাচ্চা যুক্ত করুন" বাটনে ক্লিক করুন।
                   </td>
                 </tr>
               ) : (
@@ -361,8 +361,14 @@ export default function ChickenManagementPage() {
                         <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                           {flock.shed_name}
                         </div>
-                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                          {flock.flock_code} &bull; আগমন: {flock.housing_date || "—"}
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium">
+                            {flock.flock_code}
+                          </span>
+                          <span className="text-[10px] text-slate-300 dark:text-slate-700">•</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 text-[10.5px] font-bold shadow-2xs">
+                            📅 আগমন: {flock.housing_date || "—"}
+                          </span>
                         </div>
                       </td>
                       <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
@@ -459,7 +465,7 @@ export default function ChickenManagementPage() {
                 {/* Shed Name */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    শেডের নাম / নম্বর <span className="text-red-500">*</span>
+                    শেডের নাম / নম্বর (Shed Name / No) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -474,7 +480,7 @@ export default function ChickenManagementPage() {
                 {/* Breed / Type */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    মুরগির জাত / প্রকার <span className="text-red-500">*</span>
+                    মুরগির জাত / প্রকার (Breed / Type) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -491,7 +497,7 @@ export default function ChickenManagementPage() {
                 {/* Initial Chicks Count */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    বাচ্চার সংখ্যা (পিস) <span className="text-red-500">*</span>
+                    বাচ্চার সংখ্যা (Initial Chicks Count) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -507,7 +513,7 @@ export default function ChickenManagementPage() {
                 {/* Housing Date */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    আগমনের তারিখ <span className="text-red-500">*</span>
+                    আগমনের তারিখ (Housing Date) <span className="text-red-500">*</span>
                   </label>
                   <CustomDatePicker
                     value={newFlock.housing_date}
@@ -520,7 +526,7 @@ export default function ChickenManagementPage() {
                 {/* Chick Weight */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    বাচ্চার গড় ওজন (গ্রাম / কেজি)
+                    বাচ্চার গড় ওজন (Avg Weight)
                   </label>
                   <input
                     type="text"
@@ -534,7 +540,7 @@ export default function ChickenManagementPage() {
                 {/* Daily Feed Intake */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    দৈনিক খাবার বরাদ্দ (গ্রাম/মুরগি)
+                    দৈনিক খাবার বরাদ্দ (Daily Feed - g/day)
                   </label>
                   <input
                     type="number"
@@ -552,7 +558,7 @@ export default function ChickenManagementPage() {
               {/* Supplier (Optional) */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  সরবরাহকারী / হ্যাচারি (ঐচ্ছিক)
+                  সরবরাহকারী / হ্যাচারি (Supplier / Hatchery - ঐচ্ছিক)
                 </label>
                 <CustomSelect
                   options={[
@@ -569,7 +575,7 @@ export default function ChickenManagementPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    প্রতি বাচ্চার মূল্য (৳)
+                    প্রতি বাচ্চার মূল্য (Unit Price ৳)
                   </label>
                   <input
                     type="number"
@@ -583,7 +589,7 @@ export default function ChickenManagementPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    পরিশোধ মাধ্যম
+                    পরিশোধ মাধ্যম (Payment Method)
                   </label>
                   <CustomSelect
                     options={[
@@ -602,7 +608,7 @@ export default function ChickenManagementPage() {
               {/* Note */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  বিশেষ মন্তব্য / বিবরণ
+                  বিশেষ মন্তব্য / বিবরণ (Note / Remarks)
                 </label>
                 <textarea
                   rows={2}
@@ -620,7 +626,15 @@ export default function ChickenManagementPage() {
                   disabled={adding}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  বাতিল
+                  বাতিল (Cancel)
+                </button>
+                <button
+                  type="submit"
+                  disabled={adding}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  {adding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>বাচ্চা এন্ট্রি সংরক্ষণ করুন (Save)</span>
                 </button>
                 <button
                   type="submit"
@@ -669,7 +683,7 @@ export default function ChickenManagementPage() {
               {/* Dead Count */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  মৃত মুরগির সংখ্যা <span className="text-red-500">*</span>
+                  মৃত মুরগির সংখ্যা (Dead Count - pcs) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -685,7 +699,7 @@ export default function ChickenManagementPage() {
               {/* Date */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  মৃত্যুর তারিখ <span className="text-red-500">*</span>
+                  মৃত্যুর তারিখ (Date of Mortality) <span className="text-red-500">*</span>
                 </label>
                 <CustomDatePicker
                   value={mortalityDate}
@@ -696,7 +710,7 @@ export default function ChickenManagementPage() {
               {/* Reason */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  মৃত্যুর কারণ / লক্ষণ
+                  মৃত্যুর কারণ / লক্ষণ (Cause of Death / Symptoms)
                 </label>
                 <input
                   type="text"
@@ -714,7 +728,7 @@ export default function ChickenManagementPage() {
                   disabled={savingMortality}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  বাতিল
+                  বাতিল (Cancel)
                 </button>
                 <button
                   type="submit"
@@ -722,7 +736,7 @@ export default function ChickenManagementPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {savingMortality && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>মৃত্যু রেকর্ড সংরক্ষণ</span>
+                  <span>মৃত্যু রেকর্ড সংরক্ষণ করুন (Save)</span>
                 </button>
               </div>
             </form>

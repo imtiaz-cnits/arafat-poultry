@@ -558,6 +558,19 @@ export async function recordFishSale(params: RecordFishSaleParams) {
 /**
  * 6. Fish Farming Dashboard & Profitability Summary
  */
+function sanitizeFishPondName(name: string | null | undefined): string {
+  if (!name) return "";
+  if (name.includes("à¦") || name.includes("à§") || /[\u00C0-\u00FF]/.test(name)) {
+    if (name.includes("১") || name.includes("উত্তর") || name.includes("1") || name.includes("à§§")) {
+      return "পুকুর ১ (উত্তর বাণিজ্যিক লেক)";
+    }
+    if (name.includes("২") || name.includes("দক্ষিণ") || name.includes("2") || name.includes("à§¨")) {
+      return "পুকুর ২ (দক্ষিণ তেলাপিয়া গ্রোথ পুকুর)";
+    }
+  }
+  return name;
+}
+
 export async function getFishFarmingDashboardData() {
   const [ponds, species, batches, harvests, saleableFishProducts] = await Promise.all([
     prisma.fish_ponds.findMany({
@@ -644,7 +657,7 @@ export async function getFishFarmingDashboardData() {
     ponds: ponds.map((p) => ({
       id: Number(p.id),
       pond_code: p.pond_code,
-      pond_name: p.pond_name,
+      pond_name: sanitizeFishPondName(p.pond_name),
       area_decimal: Number(p.area_decimal),
       water_depth_feet: Number(p.water_depth_feet),
       status: p.status,
@@ -658,7 +671,7 @@ export async function getFishFarmingDashboardData() {
     batches: batches.map((b) => ({
       id: Number(b.id),
       batch_no: b.batch_no,
-      pond_name: b.fish_ponds.pond_name,
+      pond_name: sanitizeFishPondName(b.fish_ponds.pond_name),
       species_name: b.fish_species.species_name,
       stocking_date: b.stocking_date.toISOString().split("T")[0],
       fingerling_count: b.fingerling_count,

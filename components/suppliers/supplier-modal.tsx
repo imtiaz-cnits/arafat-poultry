@@ -95,8 +95,8 @@ export function SupplierModal({
         <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
           <div className="flex items-center gap-2.5">
             <Truck className="w-5 h-5 text-white" />
-            <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-              নতুন সরবরাহকারী যোগ করুন
+            <h3 className="text-sm font-bold tracking-wide m-0 text-white">
+              নতুন সরবরাহকারী যোগ করুন (Add Supplier)
             </h3>
           </div>
           <button
@@ -118,7 +118,7 @@ export function SupplierModal({
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              সরবরাহকারীর নাম <span className="text-red-500">*</span>
+              সরবরাহকারীর নাম (Supplier Name) <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -132,7 +132,7 @@ export function SupplierModal({
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              কোম্পানির নাম / ফার্ম <span className="text-red-500">*</span>
+              কোম্পানির নাম / ফার্ম (Company / Farm Name) <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -147,7 +147,7 @@ export function SupplierModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                মোবাইল নম্বর <span className="text-red-500">*</span>
+                মোবাইল নম্বর (Mobile Number) <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -161,7 +161,7 @@ export function SupplierModal({
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                পূর্বের বকেয়া / পাওনা (৳)
+                পূর্বের বকেয়া / পাওনা (Previous Due / Payable ৳)
               </label>
               <input
                 type="number"
@@ -179,7 +179,7 @@ export function SupplierModal({
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              ঠিকানা
+              ঠিকানা (Address / Location)
             </label>
             <input
               type="text"
@@ -192,7 +192,7 @@ export function SupplierModal({
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              ইমেইল (ঐচ্ছিক)
+              ইমেইল (Email - ঐচ্ছিক)
             </label>
             <input
               type="email"
@@ -211,7 +211,7 @@ export function SupplierModal({
               disabled={loading}
               className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
             >
-              বাতিল
+              বাতিল (Cancel)
             </button>
             <button
               type="submit"
@@ -219,7 +219,7 @@ export function SupplierModal({
               className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>সংরক্ষণ করুন</span>
+              <span>সংরক্ষণ করুন (Save)</span>
             </button>
           </div>
         </form>

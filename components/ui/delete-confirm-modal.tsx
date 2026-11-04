@@ -22,7 +22,7 @@ export function DeleteConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  title = "Confirm Deletion",
+  title = "মুছে ফেলার নিশ্চিতকরণ (Confirm Deletion)",
   recordIdentifier,
   itemName,
   warningMessage,
@@ -33,7 +33,10 @@ export function DeleteConfirmModal({
   error,
 }: DeleteConfirmModalProps) {
   const displayIdentifier = recordIdentifier ?? itemName;
-  const displayWarning = warningMessage ?? description ?? "Are you sure you want to delete this record? This action cannot be undone.";
+  const displayWarning =
+    warningMessage ??
+    description ??
+    "আপনি কি নিশ্চিত যে আপনি এই রেকর্ডটি মুছে ফেলতে চান? এই ক্রিয়াটি পূর্বাবস্থায় ফেরানো যাবে না।";
   const displayLoading = isLoading ?? loading ?? false;
   const displayError = errorMessage ?? error ?? null;
 
@@ -75,7 +78,7 @@ export function DeleteConfirmModal({
       setInternalError(null);
       await onConfirm();
     } catch (err: any) {
-      setInternalError(err?.message || "Failed to delete record. Please try again.");
+      setInternalError(err?.message || "মুছে ফেলা ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
     } finally {
       setInternalLoading(false);
     }
@@ -124,7 +127,7 @@ export function DeleteConfirmModal({
 
           {/* Primary Prompt */}
           <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1.5">
-            Are you sure?
+            আপনি কি নিশ্চিত? (Are you sure?)
           </h4>
 
           {/* Warning Message */}
@@ -132,7 +135,7 @@ export function DeleteConfirmModal({
             {displayWarning}
           </p>
 
-          {/* Error Message Alert (if deletion fails, keeps modal open with error) */}
+          {/* Error Message Alert */}
           {internalError && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs font-semibold text-left flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
@@ -148,10 +151,10 @@ export function DeleteConfirmModal({
               onClick={onClose}
               className="w-full h-10 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs disabled:opacity-50 cursor-pointer"
             >
-              No, Cancel
+              না, বাতিল (Cancel)
             </button>
             <button
-              type="button"
+              type="submit"
               disabled={busy}
               onClick={handleConfirm}
               className="w-full h-10 px-4 rounded-xl bg-gradient-to-r from-red-600 via-rose-700 to-red-700 hover:from-red-700 hover:to-rose-800 text-white text-xs font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
@@ -159,12 +162,12 @@ export function DeleteConfirmModal({
               {busy ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Deleting...</span>
+                  <span>মুছে ফেলা হচ্ছে...</span>
                 </>
               ) : (
                 <>
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Yes, Delete</span>
+                  <span>হ্যাঁ, মুছে ফেলুন (Delete)</span>
                 </>
               )}
             </button>
