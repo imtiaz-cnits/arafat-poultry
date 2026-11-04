@@ -175,7 +175,7 @@ export default function CustomersPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Customer Management
+              কাস্টমার ব্যবস্থাপনা (Customer Management)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
               Manage retail customers, contact directories, and ledger balances
@@ -186,7 +186,7 @@ export default function CustomersPage() {
         <div className="flex items-center gap-2">
           <div className="h-[38px] px-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 flex items-center gap-2">
             <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase">
-              Total Due:
+              মোট বকেয়া পাওনা:
             </span>
             <span className="text-xs font-black text-rose-800 dark:text-rose-300">
               {formatBdCurrency(totalCustomerDue)}
@@ -209,7 +209,7 @@ export default function CustomersPage() {
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Customer</span>
+            <span>নতুন কাস্টমার (Add Customer)</span>
           </button>
         </div>
       </div>
@@ -219,7 +219,7 @@ export default function CustomersPage() {
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder="Search by customer name, mobile, or ID..."
+            placeholder="কাস্টমারের নাম, মোবাইল বা আইডি দিয়ে খুঁজুন..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -230,7 +230,7 @@ export default function CustomersPage() {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
         </div>
         <span className="text-xs font-bold text-slate-500">
-          Total: {customers.length} Customer(s)
+          মোট: {customers.length} জন কাস্টমার
         </span>
       </div>
 
@@ -437,7 +437,7 @@ export default function CustomersPage() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  {selectedCustomer ? "Edit Customer" : "Add New Customer"}
+                  {selectedCustomer ? "কাস্টমার সম্পাদনা (Edit Customer)" : "নতুন কাস্টমার যোগ (Add New Customer)"}
                 </h3>
               </div>
               <button
@@ -459,7 +459,7 @@ export default function CustomersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Customer Name <span className="text-red-500">*</span>
+                    কাস্টমারের নাম (Customer Name) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -472,7 +472,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Mobile Phone <span className="text-red-500">*</span>
+                    মোবাইল নম্বর (Mobile Phone) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"

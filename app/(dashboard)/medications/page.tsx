@@ -248,7 +248,7 @@ export default function MedicationsPage() {
           className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>+ নতুন ওষুধ / ভ্যাকসিন শিডিউল</span>
+          <span>নতুন ওষুধ / ভ্যাকসিন শিডিউল</span>
         </button>
       </div>
 
@@ -308,41 +308,37 @@ export default function MedicationsPage() {
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setActiveTab("ALL")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "ALL"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === "ALL"
                 ? "bg-[#166534] text-white shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-            }`}
+              }`}
           >
             সকল ওষুধ ({totalCount})
           </button>
           <button
             onClick={() => setActiveTab("TODAY")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "TODAY"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === "TODAY"
                 ? "bg-amber-600 text-white shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-            }`}
+              }`}
           >
             আজকের প্রয়োগ ({dueTodayCount})
           </button>
           <button
             onClick={() => setActiveTab("POULTRY")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "POULTRY"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === "POULTRY"
                 ? "bg-[#166534] text-white shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-            }`}
+              }`}
           >
             মুরগি / পোল্ট্রি ({poultryCount})
           </button>
           <button
             onClick={() => setActiveTab("FISH")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "FISH"
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === "FISH"
                 ? "bg-[#166534] text-white shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
-            }`}
+              }`}
           >
             মাছ / মৎস্য ({fishCount})
           </button>

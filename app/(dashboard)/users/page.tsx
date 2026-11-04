@@ -17,11 +17,12 @@ import {
   Edit2,
   Trash2,
   Crown,
-  Receipt,
-  Calculator,
-  Sliders,
+  Briefcase,
+  UserCheck,
   Check,
   Camera,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { Pagination, DeleteConfirmModal, CustomSelect } from "@/components/ui";
@@ -35,81 +36,154 @@ interface UserItem {
   status: string;
   created_at: string;
   img_url?: string | null;
-  permissions?: {
-    pos?: boolean;
-    products?: boolean;
-    purchases?: boolean;
-    customers?: boolean;
-    expenses?: boolean;
-    reports?: boolean;
-    users?: boolean;
-  } | null;
+  permissions?: Record<string, boolean> | null;
 }
 
-const DEFAULT_PERMISSIONS = {
-  pos: true,
-  products: true,
-  purchases: false,
+export const SIDEBAR_MODULES: {
+  key: string;
+  label: string;
+  desc: string;
+  submenus?: { key: string; label: string; desc: string }[];
+}[] = [
+  { key: "dashboard", label: "ড্যাশবোর্ড (Dashboard)", desc: "মূল সার্বিক ড্যাশবোর্ড ওভারভিউ ও তথ্য" },
+  { key: "sales-portal", label: "বিক্রয় পোর্টাল (Sales Portal)", desc: "পণ্য নির্বাচন, নগদ বিক্রয় ও দ্রুত ক্যাশ বিলিং" },
+  { key: "purchases", label: "পণ্য ক্রয় (Purchases)", desc: "মাছ, ফিড ও অন্যান্য ক্রয় ও ইনওয়ার্ড স্টক" },
+  { key: "poultry", label: "মুরগির হিসাব (Poultry Management)", desc: "শেডভিত্তিক ব্যাচ, বয়স, খাবার ও মৃত্যুর হিসাব" },
+  { key: "fish", label: "মাছের হিসাব (Fisheries Management)", desc: "পুকুর ব্যবস্থাপনা, পোনা মজুদ, নমুনা ওজন ও আহরণ" },
+  { key: "suppliers", label: "সরবরাহকারী (Suppliers & Vendors)", desc: "সরবরাহকারীর প্রোফাইল ও ক্রয় বকেয়া দেনা" },
+  { key: "customers", label: "কাস্টমার (Customer Directory)", desc: "গ্রাহক তথ্য ও বাকির খাতা" },
+  { key: "memo", label: "মেমো (Memo & Invoices)", desc: "বিক্রয় ইনভয়েস, চালান ও প্রিন্ট ভাউচার" },
+  {
+    key: "stock",
+    label: "স্টক মডিউল (Stock Management)",
+    desc: "সকল পণ্যের লাইভ গুদাম ও মজুদ নিয়ন্ত্রণ",
+    submenus: [
+      { key: "stock_eggs", label: "ডিমের স্টক (Egg Stock)", desc: "দৈনিক সংগ্রহ, ভালো ও ফাটা ডিমের হিসাব" },
+      { key: "stock_fish", label: "মাছের স্টক (Fish Stock)", desc: "পুকুরভিত্তিক মাছের জীবন্ত মজুদ ও সাইজ" },
+      { key: "stock_feed", label: "ফিডের স্টক (Feed Stock)", desc: "খাদ্যের বস্তা ও কেজিভিত্তিক মজুদ" },
+      { key: "stock_chicken", label: "মুরগির স্টক (Chicken Stock)", desc: "শেডভিত্তিক বড়, মাঝারি ও বাচ্চার স্টক" },
+    ],
+  },
+  { key: "medications", label: "ওষুধ ও ভ্যাকসিন (Medications & Vaccines)", desc: "টিকা সূচি, ডোজ ও ভ্যাকসিনের স্টক" },
+  { key: "expenses", label: "খরচসমূহ (Expenses)", desc: "দৈনিক পরিচালন ও বিবিধ খামারের খরচ" },
+  {
+    key: "reports",
+    label: "রিপোর্ট ও অ্যানালিটিক্স (Reports)",
+    desc: "ব্যবসায়িক বিশ্লেষণ ও আর্থিক বিবরণী",
+    submenus: [
+      { key: "reports_income_expense", label: "আয় ও ব্যয় (Income & Expenses)", desc: "সার্বিক লাভ-ক্ষতি ও আয়-ব্যয়ের হিসাব" },
+      { key: "reports_sales", label: "বিক্রয় রিপোর্ট (Sales Report)", desc: "দৈনিক ও তারিখভিত্তিক বিক্রয় বিবরণী" },
+      { key: "reports_ledger", label: "দৈনিক লেজার (Daily Ledger)", desc: "গ্রাহক ও ভেন্ডর লেজার হিসাব" },
+    ],
+  },
+  {
+    key: "settings",
+    label: "সেটিংস মডিউল (Settings)",
+    desc: "সিস্টেম ও অ্যাকাউন্ট কনফিগারেশন",
+    submenus: [
+      { key: "settings_users", label: "ইউজার ও রোল (Users & Roles)", desc: "ব্যবহারকারী তৈরি ও পারমিশন নিয়ন্ত্রণ" },
+      { key: "settings_profile", label: "প্রোফাইল (Profile)", desc: "ব্যবহারকারীর নিজস্ব প্রোফাইল ও পাসওয়ার্ড" },
+    ],
+  },
+];
+
+export const DEFAULT_PERMISSIONS: Record<string, boolean> = {
+  dashboard: true,
+  "sales-portal": true,
+  purchases: true,
+  poultry: true,
+  fish: true,
+  suppliers: true,
   customers: true,
-  expenses: false,
-  reports: false,
-  users: false,
+  memo: true,
+  stock: true,
+  stock_eggs: true,
+  stock_fish: true,
+  stock_feed: true,
+  stock_chicken: true,
+  medications: true,
+  expenses: true,
+  reports: true,
+  reports_income_expense: true,
+  reports_sales: true,
+  reports_ledger: true,
+  settings: true,
+  settings_users: true,
+  settings_profile: true,
 };
 
-const ROLE_PRESETS: Record<string, typeof DEFAULT_PERMISSIONS> = {
+export const ROLE_PRESETS: Record<string, Record<string, boolean>> = {
   admin: {
-    pos: true,
-    products: true,
+    dashboard: true,
+    "sales-portal": true,
     purchases: true,
+    poultry: true,
+    fish: true,
+    suppliers: true,
     customers: true,
+    memo: true,
+    stock: true,
+    stock_eggs: true,
+    stock_fish: true,
+    stock_feed: true,
+    stock_chicken: true,
+    medications: true,
     expenses: true,
     reports: true,
-    users: true,
+    reports_income_expense: true,
+    reports_sales: true,
+    reports_ledger: true,
+    settings: true,
+    settings_users: true,
+    settings_profile: true,
   },
   manager: {
-    pos: true,
-    products: true,
+    dashboard: true,
+    "sales-portal": true,
     purchases: true,
+    poultry: true,
+    fish: true,
+    suppliers: true,
     customers: true,
+    memo: true,
+    stock: true,
+    stock_eggs: true,
+    stock_fish: true,
+    stock_feed: true,
+    stock_chicken: true,
+    medications: true,
     expenses: true,
     reports: true,
-    users: false,
-  },
-  cashier: {
-    pos: true,
-    products: false,
-    purchases: false,
-    customers: true,
-    expenses: false,
-    reports: false,
-    users: false,
-  },
-  accountant: {
-    pos: false,
-    products: false,
-    purchases: true,
-    customers: true,
-    expenses: true,
-    reports: true,
-    users: false,
+    reports_income_expense: true,
+    reports_sales: true,
+    reports_ledger: true,
+    settings: true,
+    settings_users: false,
+    settings_profile: true,
   },
   staff: {
-    pos: false,
-    products: false,
-    purchases: true,
+    dashboard: true,
+    "sales-portal": true,
+    purchases: false,
+    poultry: true,
+    fish: true,
+    suppliers: false,
     customers: true,
+    memo: true,
+    stock: true,
+    stock_eggs: true,
+    stock_fish: true,
+    stock_feed: true,
+    stock_chicken: true,
+    medications: true,
     expenses: true,
     reports: false,
-    users: false,
-  },
-  users: {
-    pos: false,
-    products: false,
-    purchases: false,
-    customers: false,
-    expenses: false,
-    reports: false,
-    users: false,
+    reports_income_expense: false,
+    reports_sales: false,
+    reports_ledger: false,
+    settings: false,
+    settings_users: false,
+    settings_profile: true,
   },
 };
 
@@ -131,15 +205,24 @@ export default function UsersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    email: string;
+    mobile: string;
+    password: string;
+    role: "admin" | "manager" | "staff";
+    status: string;
+    img_url: string;
+    permissions: Record<string, boolean>;
+  }>({
     name: "",
     email: "",
     mobile: "",
     password: "",
-    role: "cashier",
+    role: "staff",
     status: "approved",
     img_url: "",
-    permissions: { ...ROLE_PRESETS.cashier },
+    permissions: { ...ROLE_PRESETS.staff },
   });
 
   async function loadUsers() {
@@ -167,10 +250,10 @@ export default function UsersPage() {
       email: "",
       mobile: "",
       password: "",
-      role: "cashier",
+      role: "staff",
       status: "approved",
       img_url: "",
-      permissions: { ...ROLE_PRESETS.cashier },
+      permissions: { ...ROLE_PRESETS.staff },
     });
     setSelectedUser(null);
     setError("");
@@ -182,25 +265,34 @@ export default function UsersPage() {
   };
 
   const handleOpenEdit = (user: UserItem) => {
+    const rawRole = (user.role || "staff").toLowerCase();
+    const cleanRole: "admin" | "manager" | "staff" =
+      rawRole === "admin" || rawRole === "super_admin"
+        ? "admin"
+        : rawRole === "manager"
+        ? "manager"
+        : "staff";
+
+    const basePermissions = ROLE_PRESETS[cleanRole] || DEFAULT_PERMISSIONS;
+    const merged = { ...basePermissions, ...(user.permissions || {}) };
+
     setSelectedUser(user);
-    setError("");
     setFormData({
       name: user.name,
       email: user.email || "",
       mobile: user.mobile,
       password: "",
-      role: user.role,
-      status: user.status,
+      role: cleanRole,
+      status: user.status || "approved",
       img_url: user.img_url || "",
-      permissions: user.permissions
-        ? { ...DEFAULT_PERMISSIONS, ...user.permissions }
-        : { ...(ROLE_PRESETS[user.role] || DEFAULT_PERMISSIONS) },
+      permissions: merged,
     });
+    setError("");
     setModalOpen(true);
   };
 
-  const handleRoleChange = (newRole: string) => {
-    const preset = ROLE_PRESETS[newRole] || DEFAULT_PERMISSIONS;
+  const handleRoleChange = (newRole: "admin" | "manager" | "staff") => {
+    const preset = ROLE_PRESETS[newRole] || ROLE_PRESETS.staff;
     setFormData((prev) => ({
       ...prev,
       role: newRole,
@@ -208,14 +300,45 @@ export default function UsersPage() {
     }));
   };
 
-  const togglePermission = (key: keyof typeof DEFAULT_PERMISSIONS) => {
-    setFormData((prev) => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [key]: !prev.permissions[key],
-      },
-    }));
+  const togglePermission = (key: string) => {
+    setFormData((prev) => {
+      const nextVal = !prev.permissions[key];
+      const updated = { ...prev.permissions, [key]: nextVal };
+
+      // If toggling a parent module that has submenus, sync its children
+      const mod = SIDEBAR_MODULES.find((m) => m.key === key);
+      if (mod?.submenus) {
+        mod.submenus.forEach((sub) => {
+          updated[sub.key] = nextVal;
+        });
+      }
+
+      return {
+        ...prev,
+        permissions: updated,
+      };
+    });
+  };
+
+  const toggleSubmenu = (parentKey: string, subKey: string) => {
+    setFormData((prev) => {
+      const nextVal = !prev.permissions[subKey];
+      const updated = { ...prev.permissions, [subKey]: nextVal };
+
+      // If at least one submenu is enabled, ensure parent is enabled
+      const mod = SIDEBAR_MODULES.find((m) => m.key === parentKey);
+      if (mod?.submenus) {
+        const anySubActive = mod.submenus.some((s) => (s.key === subKey ? nextVal : updated[s.key]));
+        if (anySubActive) {
+          updated[parentKey] = true;
+        }
+      }
+
+      return {
+        ...prev,
+        permissions: updated,
+      };
+    });
   };
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,30 +432,18 @@ export default function UsersPage() {
       setCurrentPage(1);
       loadUsers();
     } catch (err: any) {
-      setError(err?.message || "An unexpected error occurred");
+      setError(err?.message || "Server communication error");
     } finally {
       setSubmitting(false);
     }
   }
-
-  // Dynamic KPI Stats calculated from actual DB records
-  const totalUsers = users.length;
-  const adminCount = users.filter(
-    (u) => u.role.toLowerCase() === "admin" || u.role.toLowerCase() === "super_admin"
-  ).length;
-  const cashierCount = users.filter(
-    (u) => u.role.toLowerCase() === "cashier" || u.role.toLowerCase() === "pos_operator"
-  ).length;
-  const managerCount = users.filter(
-    (u) => u.role.toLowerCase() === "manager" || u.role.toLowerCase() === "accountant"
-  ).length;
 
   const filteredUsers = users.filter((u) => {
     const q = search.toLowerCase();
     return (
       u.name.toLowerCase().includes(q) ||
       (u.email && u.email.toLowerCase().includes(q)) ||
-      u.mobile.toLowerCase().includes(q) ||
+      u.mobile.includes(q) ||
       u.role.toLowerCase().includes(q)
     );
   });
@@ -340,164 +451,46 @@ export default function UsersPage() {
   const startIndex = (currentPage - 1) * pageSize;
   const displayedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
 
-  const getRoleBadge = (role: string) => {
-    switch (role.toLowerCase()) {
-      case "admin":
-      case "super_admin":
-        return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-900";
-      case "manager":
-        return "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-900";
-      case "cashier":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900";
-      case "accountant":
-        return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-900";
-      default:
-        return "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
-    }
-  };
-
-  const renderPermissionBadge = (user: UserItem) => {
-    const role = user.role.toLowerCase();
-    if (role === "admin" || role === "super_admin") {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-2xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-          <span>All Modules</span>
-        </span>
-      );
-    }
-
-    const perms = user.permissions;
-    if (!perms) {
-      if (role === "manager") {
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-            <span>All Modules</span>
-          </span>
-        );
-      }
-      if (role === "cashier") {
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-            <span>POS Only</span>
-          </span>
-        );
-      }
-      if (role === "staff" || role === "accountant") {
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-600 text-white shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-            <span>Accounts Only</span>
-          </span>
-        );
-      }
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-500 text-white">
-          <span>Standard</span>
-        </span>
-      );
-    }
-
-    const activeKeys = Object.entries(perms)
-      .filter(([_, v]) => Boolean(v))
-      .map(([k]) => k);
-
-    if (activeKeys.length >= 6) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-2xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-          <span>All Modules</span>
-        </span>
-      );
-    }
-    if (activeKeys.length === 1 && activeKeys[0] === "pos") {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white shadow-2xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-          <span>POS Only</span>
-        </span>
-      );
-    }
-    if (
-      !activeKeys.includes("pos") &&
-      (activeKeys.includes("purchases") ||
-        activeKeys.includes("expenses") ||
-        activeKeys.includes("reports"))
-    ) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-600 text-white shadow-2xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-          <span>Accounts Only</span>
-        </span>
-      );
-    }
-
-    return (
-      <div className="flex flex-wrap gap-1">
-        {activeKeys.map((k) => (
-          <span
-            key={k}
-            className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-          >
-            {k}
-          </span>
-        ))}
-      </div>
-    );
-  };
+  const adminCount = users.filter(
+    (u) => u.role.toLowerCase() === "admin" || u.role.toLowerCase() === "super_admin"
+  ).length;
+  const managerCount = users.filter((u) => u.role.toLowerCase() === "manager").length;
+  const staffCount = users.filter((u) => u.role.toLowerCase() === "staff").length;
 
   return (
-    <div className="space-y-4 font-sans">
-      {/* 1. Page Header matching MARSS CORPORATION Layout */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-4">
+      {/* 1. Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-slate-800 shadow-xs shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800 flex items-center justify-center shrink-0">
             <Shield className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none m-0 p-0">
-              User Role & Permission Management
+            <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
+              ব্যবহারকারী ও রোল ব্যবস্থাপনা (Users &amp; Roles)
             </h1>
-            <p className="text-xs text-slate-500 mt-1 mb-0">
-              Configure module-based ON/OFF toggle permissions for system users
+            <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
+              সিস্টেম অ্যাকাউন্ট, রোল এবং সাইডবার মেনু পারমিশন নিয়ন্ত্রণ
             </p>
           </div>
         </div>
 
-        {/* Action Button */}
         <button
           onClick={handleOpenAdd}
-          className="h-[38px] px-4 rounded-xl bg-[#15803d] hover:bg-[#166534] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer self-start sm:self-auto"
+          className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Add New User</span>
+          <span>নতুন ব্যবহারকারী (Add User)</span>
         </button>
       </div>
 
-      {/* 2. Metrics Summary Cards matching MARSS CORPORATION Screenshot 1 */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* Total Users */}
-        <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 shadow-xs hover:-translate-y-0.5 transition-transform">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              TOTAL SYSTEM USERS
-            </span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
-              <UsersIcon className="w-4 h-4" />
-            </div>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-300 m-0">
-            {totalUsers}
-          </h2>
-        </div>
-
-        {/* Admin / Super Admin */}
+      {/* 2. Top Summary KPI Cards (Strictly 3 roles: Admin, Manager, Staff + Total) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        {/* Admin */}
         <div className="p-4 rounded-2xl bg-sky-50/50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900/40 shadow-xs hover:-translate-y-0.5 transition-transform">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-sky-800 dark:text-sky-400">
-              ADMIN / SUPER ADMIN
+              অ্যাডমিন (ADMIN)
             </span>
             <div className="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-300 flex items-center justify-center">
               <Crown className="w-4 h-4" />
@@ -508,45 +501,60 @@ export default function UsersPage() {
           </h2>
         </div>
 
-        {/* Cashier / POS Operator */}
-        <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 shadow-xs hover:-translate-y-0.5 transition-transform">
+        {/* Manager */}
+        <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/40 shadow-xs hover:-translate-y-0.5 transition-transform">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
-              CASHIER / POS OPERATOR
+            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-800 dark:text-indigo-400">
+              ম্যানেজার (MANAGER)
             </span>
-            <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-300 flex items-center justify-center">
-              <Receipt className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
+              <Briefcase className="w-4 h-4" />
             </div>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-300 m-0">
-            {cashierCount}
+          <h2 className="text-2xl sm:text-3xl font-black text-indigo-700 dark:text-indigo-300 m-0">
+            {managerCount}
           </h2>
         </div>
 
-        {/* Accountant / Manager */}
-        <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 shadow-xs hover:-translate-y-0.5 transition-transform">
+        {/* Staff */}
+        <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 shadow-xs hover:-translate-y-0.5 transition-transform">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-800 dark:text-purple-400">
-              ACCOUNTANT / MANAGER
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+              স্টাফ (STAFF)
             </span>
-            <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 flex items-center justify-center">
-              <Calculator className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
+              <UserCheck className="w-4 h-4" />
             </div>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-purple-700 dark:text-purple-300 m-0">
-            {managerCount}
+          <h2 className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-300 m-0">
+            {staffCount}
+          </h2>
+        </div>
+
+        {/* Total Users */}
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 shadow-xs hover:-translate-y-0.5 transition-transform">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              মোট ব্যবহারকারী (TOTAL)
+            </span>
+            <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+              <UsersIcon className="w-4 h-4" />
+            </div>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-200 m-0">
+            {users.length}
           </h2>
         </div>
       </div>
 
-      {/* 3. User Table Box Container matching MARSS Screenshot 1 */}
+      {/* 3. User Table Container */}
       <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs overflow-hidden">
         {/* Controls Bar */}
         <div className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <UsersIcon className="w-5 h-5 text-emerald-600" />
             <h3 className="text-sm font-bold text-slate-800 dark:text-white m-0">
-              System Users & Permissions List
+              সিস্টেম ব্যবহারকারী ও পারমিশন তালিকা
             </h3>
           </div>
 
@@ -559,7 +567,7 @@ export default function UsersPage() {
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search user..."
+              placeholder="নাম, মোবাইল বা রোল দিয়ে খুঁজুন..."
               className="w-full bg-transparent border-none outline-none text-xs text-slate-800 dark:text-white placeholder:text-slate-400"
             />
           </div>
@@ -574,7 +582,7 @@ export default function UsersPage() {
                 <th className="py-3 px-4">ব্যবহারকারী (User Info)</th>
                 <th className="py-3 px-3">মোবাইল নম্বর (Mobile)</th>
                 <th className="py-3 px-3 text-center">পদবী (Role)</th>
-                <th className="py-3 px-3">সক্রিয় পারমিশন (Permissions)</th>
+                <th className="py-3 px-3">সক্রিয় মেনু পারমিশন (Permissions)</th>
                 <th className="py-3 px-3 text-center">অবস্থা (Status)</th>
                 <th className="py-3 px-4 text-center w-28">অ্যাকশন (Actions)</th>
               </tr>
@@ -584,122 +592,124 @@ export default function UsersPage() {
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-                    <span>Loading user list...</span>
+                    <span>ব্যবহারকারী তালিকা লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400 font-bold">
-                    No system users found.
+                    কোনো ব্যবহারকারী পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
-                displayedUsers.map((user, idx) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
-                  >
-                    <td className="py-3 px-4 text-center font-bold text-slate-400">
-                      {startIndex + idx + 1}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2.5">
-                        {user.img_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={user.img_url}
-                            alt={user.name}
-                            className="w-9 h-9 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-2xs"
-                          />
-                        ) : (
-                          <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0 border border-slate-200 dark:border-slate-700">
-                            <User className="w-4 h-4 text-slate-500" />
-                          </div>
-                        )}
-                        <div>
-                          <div className="font-bold text-slate-900 dark:text-white text-xs">
-                            {user.name}
-                          </div>
-                          <div className="text-[11px] text-slate-400">
-                            {user.email || "N/A"}
+                displayedUsers.map((user, idx) => {
+                  const r = user.role.toLowerCase();
+                  const roleLabel =
+                    r === "admin" || r === "super_admin"
+                      ? "👑 Admin"
+                      : r === "manager"
+                      ? "💼 Manager"
+                      : "👤 Staff";
+
+                  const roleBadgeClass =
+                    r === "admin" || r === "super_admin"
+                      ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-300"
+                      : r === "manager"
+                      ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300"
+                      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300";
+
+                  const activePermCount = user.permissions
+                    ? Object.values(user.permissions).filter(Boolean).length
+                    : r === "admin" || r === "super_admin"
+                    ? Object.keys(DEFAULT_PERMISSIONS).length
+                    : 0;
+
+                  return (
+                    <tr
+                      key={user.id}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                    >
+                      <td className="py-3 px-4 text-center font-bold text-slate-400">
+                        {startIndex + idx + 1}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2.5">
+                          {user.img_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={user.img_url}
+                              alt={user.name}
+                              className="w-9 h-9 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-2xs"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0 border border-slate-200 dark:border-slate-700">
+                              <User className="w-4 h-4 text-slate-500" />
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-bold text-slate-900 dark:text-white text-xs">
+                              {user.name}
+                            </div>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                              <Mail className="w-3 h-3 text-slate-400" />
+                              <span>{user.email || "No email"}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 font-semibold font-mono text-slate-800 dark:text-slate-200">
-                      {user.mobile}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span
-                        className={`inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-semibold border ${getRoleBadge(
-                          user.role
-                        )}`}
-                      >
-                        {user.role.toLowerCase() === "admin" ||
-                        user.role.toLowerCase() === "super_admin" ? (
-                          <>
-                            <Crown className="w-3.5 h-3.5 text-rose-600" />
-                            <span>Super Admin</span>
-                          </>
-                        ) : (
-                          <>
-                            <User className="w-3.5 h-3.5 text-slate-500" />
-                            <span className="capitalize">{user.role}</span>
-                          </>
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      {renderPermissionBadge(user)}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span
-                        className={`inline-block px-3 py-0.5 rounded-full text-xs font-semibold ${
-                          user.status === "approved"
-                            ? "text-emerald-700 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-                            : "text-amber-700 bg-amber-50 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                        }`}
-                      >
-                        {user.status === "approved" ? "Approved" : "Pending"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(user)}
-                          className="w-7 h-7 rounded-lg border-[1.5px] border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Edit User & Permissions"
+                      </td>
+                      <td className="py-3 px-3 font-mono font-medium">{user.mobile}</td>
+                      <td className="py-3 px-3 text-center">
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${roleBadgeClass}`}
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-
-                        {user.id === 1 ||
-                        user.id === 7 ||
-                        user.role.toLowerCase() === "admin" ||
-                        user.role.toLowerCase() === "super_admin" ? (
-                          <button
-                            type="button"
-                            disabled
-                            className="w-7 h-7 rounded-lg border-[1.5px] border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 text-slate-300 dark:text-slate-600 flex items-center justify-center cursor-not-allowed"
-                            title="Super Admin cannot be deleted"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {roleLabel}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                            {activePermCount} টি মেনু সক্রিয়
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        {user.status === "approved" ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>সক্রিয়</span>
+                          </span>
                         ) : (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                            <XCircle className="w-3 h-3" />
+                            <span>অননুমোদিত</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleDeleteUser(user)}
-                            className="w-7 h-7 rounded-lg border-[1.5px] border-rose-200 dark:border-rose-900/60 bg-rose-50/60 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-colors cursor-pointer"
-                            title="Delete User"
+                            onClick={() => handleOpenEdit(user)}
+                            className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+                            title="সম্পাদনা করুন"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {user.id !== 1 && user.id !== 7 && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(user)}
+                              className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center transition-colors cursor-pointer"
+                              title="মুছে ফেলুন"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -708,64 +718,36 @@ export default function UsersPage() {
         {/* Mobile View */}
         <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
           {displayedUsers.map((user) => (
-            <div key={user.id} className="p-3.5 space-y-2.5">
+            <div key={user.id} className="p-3.5 space-y-2">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2.5">
-                  {user.img_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={user.img_url}
-                      alt={user.name}
-                      className="w-9 h-9 rounded-full object-cover shrink-0 border border-slate-200"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 flex items-center justify-center font-bold text-xs">
-                      <User className="w-4 h-4 text-slate-500" />
-                    </div>
-                  )}
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 dark:text-white">
-                      {user.name}
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">{user.mobile}</div>
-                  </div>
+                <div>
+                  <h4 className="font-bold text-xs text-slate-900 dark:text-white">{user.name}</h4>
+                  <p className="text-[11px] text-slate-400">{user.mobile}</p>
                 </div>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getRoleBadge(
-                    user.role
-                  )}`}
-                >
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase">
                   {user.role}
                 </span>
               </div>
-
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[11px] text-slate-400">Permissions:</span>
-                <div>{renderPermissionBadge(user)}</div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => handleOpenEdit(user)}
-                  className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold"
-                >
-                  Edit
-                </button>
-                {!(
-                  user.id === 1 ||
-                  user.id === 7 ||
-                  user.role.toLowerCase() === "admin" ||
-                  user.role.toLowerCase() === "super_admin"
-                ) && (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-slate-500">
+                  স্ট্যাটাস: {user.status === "approved" ? "সক্রিয়" : "অপেক্ষমাণ"}
+                </span>
+                <div className="flex items-center gap-1">
                   <button
-                    type="button"
-                    onClick={() => handleDeleteUser(user)}
-                    className="px-3 py-1 rounded-lg bg-rose-50 text-rose-700 text-xs font-bold"
+                    onClick={() => handleOpenEdit(user)}
+                    className="px-2.5 py-1 rounded-lg bg-slate-100 text-xs font-bold"
                   >
-                    Delete
+                    Edit
                   </button>
-                )}
+                  {user.id !== 1 && user.id !== 7 && (
+                    <button
+                      onClick={() => handleDeleteUser(user)}
+                      className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -782,63 +764,21 @@ export default function UsersPage() {
               setPageSize(newSize);
               setCurrentPage(1);
             }}
-            pageSizeOptions={[20, 50, 100, 200]}
+            pageSizeOptions={[20, 50, 100]}
           />
         </div>
       </div>
 
-      {/* 4. Role Permission Matrix Info Box */}
-      <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155] p-4 shadow-xs">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-1.5">
-          <Sliders className="w-4 h-4 text-emerald-600" />
-          <span>Module Permission Guidelines (Live Module Access)</span>
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800">
-            <span className="font-bold text-rose-700 dark:text-rose-400 block mb-1">
-              👑 Admin / Super Admin
-            </span>
-            <p className="text-[11px] text-slate-500 m-0 leading-relaxed">
-              Full access: POS, Inventory, Purchases, Customers, Expenses, Reports & Users.
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800">
-            <span className="font-bold text-sky-700 dark:text-sky-400 block mb-1">
-              💼 Store Manager
-            </span>
-            <p className="text-[11px] text-slate-500 m-0 leading-relaxed">
-              Operational control: POS, Products, Purchases, Customers & Reports ON.
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800">
-            <span className="font-bold text-emerald-700 dark:text-emerald-400 block mb-1">
-              🧾 Cashier / POS
-            </span>
-            <p className="text-[11px] text-slate-500 m-0 leading-relaxed">
-              Counter billing: POS Billing & Sales Returns ON. Backoffice disabled.
-            </p>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800">
-            <span className="font-bold text-purple-700 dark:text-purple-400 block mb-1">
-              📊 Accountant / Staff
-            </span>
-            <p className="text-[11px] text-slate-500 m-0 leading-relaxed">
-              Financial auditing: Customer/Supplier Due, Daily Ledger & Reports ON.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 5. CREATE / EDIT USER MODAL */}
+      {/* 4. CREATE / EDIT USER MODAL */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-2xl bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[90vh] flex flex-col">
-            {/* Sticky Header */}
-            <div className="bg-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  {selectedUser ? "Edit User Role & Permissions" : "Create New User & Permissions"}
+                  {selectedUser ? "ব্যবহারকারী সম্পাদনা ও পারমিশন" : "নতুন ব্যবহারকারী ও পারমিশন তৈরি"}
                 </h3>
               </div>
               <button
@@ -850,8 +790,8 @@ export default function UsersPage() {
               </button>
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
+            {/* Modal Form */}
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
               {error && (
                 <div className="p-3 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold">
                   {error}
@@ -862,21 +802,21 @@ export default function UsersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Full Name <span className="text-red-500">*</span>
+                    পূর্ণ নাম (Full Name) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Enter user full name"
+                    placeholder="যেমন: মোঃ রফিকুল ইসলাম"
                     className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Mobile Number <span className="text-red-500">*</span>
+                    মোবাইল নম্বর <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -890,7 +830,7 @@ export default function UsersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Email Address (Optional)
+                    ইমেইল এড্রেস (ঐচ্ছিক)
                   </label>
                   <input
                     type="email"
@@ -903,9 +843,9 @@ export default function UsersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Password{" "}
+                    পাসওয়ার্ড{" "}
                     {selectedUser ? (
-                      "(Leave blank to keep unchanged)"
+                      <span className="text-slate-400 font-normal">(অপরিবর্তিত রাখতে ফাঁকা রাখুন)</span>
                     ) : (
                       <span className="text-red-500">*</span>
                     )}
@@ -915,37 +855,35 @@ export default function UsersPage() {
                     required={!selectedUser}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="Minimum 4 characters"
+                    placeholder="কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড"
                     className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   />
                 </div>
 
+                {/* System Role: STRICTLY 3 OPTIONS (admin, manager, staff) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    System Role <span className="text-red-500">*</span>
+                    পদবী / রোল (System Role) <span className="text-red-500">*</span>
                   </label>
                   <CustomSelect
                     options={[
-                      { value: "admin", label: "👑 Admin / Super Admin" },
-                      { value: "manager", label: "💼 Store Manager" },
-                      { value: "cashier", label: "🧾 Cashier / POS Operator" },
-                      { value: "accountant", label: "📊 Accountant" },
-                      { value: "staff", label: "👤 Staff" },
-                      { value: "users", label: "👤 General User" },
+                      { value: "admin", label: "👑 Admin (অ্যাডমিন)" },
+                      { value: "manager", label: "💼 Manager (ম্যানেজার)" },
+                      { value: "staff", label: "👤 Staff (স্টাফ)" },
                     ]}
                     value={formData.role}
-                    onChange={(v) => handleRoleChange(String(v))}
+                    onChange={(v) => handleRoleChange(v as "admin" | "manager" | "staff")}
                   />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Account Status <span className="text-red-500">*</span>
+                    অ্যাকাউন্ট স্ট্যাটাস <span className="text-red-500">*</span>
                   </label>
                   <CustomSelect
                     options={[
-                      { value: "approved", label: "Approved / Active" },
-                      { value: "pending", label: "Pending Approval" },
+                      { value: "approved", label: "সক্রিয় (Approved / Active)" },
+                      { value: "pending", label: "অননুমোদিত (Pending Approval)" },
                     ]}
                     value={formData.status}
                     onChange={(v) => setFormData({ ...formData, status: String(v) })}
@@ -954,7 +892,7 @@ export default function UsersPage() {
 
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Profile Photo (Optional)
+                    প্রোফাইল ছবি (ঐচ্ছিক)
                   </label>
                   <div className="flex items-center gap-3">
                     {formData.img_url ? (
@@ -971,7 +909,7 @@ export default function UsersPage() {
                     )}
                     <label className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 cursor-pointer flex items-center gap-1.5">
                       <Camera className="w-3.5 h-3.5" />
-                      <span>{uploadingAvatar ? "Uploading..." : "Upload Photo"}</span>
+                      <span>{uploadingAvatar ? "আপলোড হচ্ছে..." : "ছবি আপলোড করুন"}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -986,60 +924,143 @@ export default function UsersPage() {
                         onClick={() => setFormData({ ...formData, img_url: "" })}
                         className="text-xs text-rose-600 hover:underline cursor-pointer"
                       >
-                        Remove
+                        ছবি সরান
                       </button>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Module Permission Switches */}
+              {/* Requirement 10: Module Access Permissions showing full sidebar menus & submenus */}
               <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
-                    Module Access Permissions
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    Toggle individual modules for this user
-                  </span>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 block">
+                      সাইডবার মেনু অ্যাক্সেস পারমিশন (Module Access Permissions)
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      প্রত্যেকটি মেনু ও সাবমেনুর পারমিশন চেকবক্স দিয়ে নিয়ন্ত্রণ করুন
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allOn: Record<string, boolean> = {};
+                        SIDEBAR_MODULES.forEach((m) => {
+                          allOn[m.key] = true;
+                          m.submenus?.forEach((s) => (allOn[s.key] = true));
+                        });
+                        setFormData((p) => ({ ...p, permissions: allOn }));
+                      }}
+                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-200"
+                    >
+                      সব নির্বাচন
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allOff: Record<string, boolean> = {};
+                        SIDEBAR_MODULES.forEach((m) => {
+                          allOff[m.key] = false;
+                          m.submenus?.forEach((s) => (allOff[s.key] = false));
+                        });
+                        setFormData((p) => ({ ...p, permissions: allOff }));
+                      }}
+                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200"
+                    >
+                      সব বাতিল
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  {[
-                    { key: "pos", label: "POS Billing & Sales", desc: "Sell tiles, cash receipts, sales returns" },
-                    { key: "products", label: "Product & Inventory", desc: "View & edit tiles, brands, categories" },
-                    { key: "purchases", label: "Purchase & Suppliers", desc: "Purchase inwards, supplier payables" },
-                    { key: "customers", label: "Customers & Due Register", desc: "Customer list, due collection" },
-                    { key: "expenses", label: "Expenses & Staff Payroll", desc: "Daily shop expenses, staff accounts" },
-                    { key: "reports", label: "Reports & Analytics", desc: "Sales, income statement, ledger" },
-                    { key: "users", label: "User & Role Management", desc: "Manage accounts and permissions" },
-                  ].map((mod) => {
-                    const isChecked = Boolean((formData.permissions as any)[mod.key]);
+                <div className="space-y-2 text-xs">
+                  {SIDEBAR_MODULES.map((mod) => {
+                    const isParentChecked = Boolean(formData.permissions[mod.key]);
+                    const hasSubmenus = Boolean(mod.submenus && mod.submenus.length > 0);
+
                     return (
                       <div
                         key={mod.key}
-                        onClick={() => togglePermission(mod.key as any)}
-                        className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                          isChecked
-                            ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-900/60"
-                            : "bg-slate-50 dark:bg-[#1e293b] border-slate-200 dark:border-slate-800"
-                        }`}
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-2xs"
                       >
-                        <div>
-                          <div className="font-bold text-slate-900 dark:text-white">
-                            {mod.label}
-                          </div>
-                          <div className="text-[10px] text-slate-500">{mod.desc}</div>
-                        </div>
+                        {/* Parent Menu Row */}
                         <div
-                          className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors shrink-0 ${
-                            isChecked
-                              ? "bg-emerald-600 text-white"
-                              : "border border-slate-300 dark:border-slate-600"
+                          className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
+                            isParentChecked
+                              ? "bg-emerald-50/70 dark:bg-emerald-950/30"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                           }`}
+                          onClick={() => togglePermission(mod.key)}
                         >
-                          {isChecked && <Check className="w-4 h-4" />}
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors shrink-0 ${
+                                isParentChecked
+                                  ? "bg-emerald-600 text-white"
+                                  : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                              }`}
+                            >
+                              {isParentChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                            </div>
+                            <div>
+                              <div className="font-bold text-slate-900 dark:text-white leading-tight">
+                                {mod.label}
+                              </div>
+                              <div className="text-[10px] text-slate-400 mt-0.5">{mod.desc}</div>
+                            </div>
+                          </div>
+
+                          {hasSubmenus && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                              {mod.submenus?.length} টি সাবমেনু
+                            </span>
+                          )}
                         </div>
+
+                        {/* Nested Submenus List if any */}
+                        {hasSubmenus && (
+                          <div className="bg-slate-50/80 dark:bg-slate-950/40 p-2 pl-6 sm:pl-8 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+                            {mod.submenus?.map((sub) => {
+                              const isSubChecked = Boolean(formData.permissions[sub.key]);
+
+                              return (
+                                <div
+                                  key={sub.key}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSubmenu(mod.key, sub.key);
+                                  }}
+                                  className={`p-2 rounded-lg border flex items-center justify-between cursor-pointer transition-all ${
+                                    isSubChecked
+                                      ? "bg-white dark:bg-slate-900 border-emerald-300 dark:border-emerald-800 shadow-2xs"
+                                      : "bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div
+                                      className={`w-4 h-4 rounded flex items-center justify-center transition-colors shrink-0 ${
+                                        isSubChecked
+                                          ? "bg-emerald-600 text-white"
+                                          : "border border-slate-300 dark:border-slate-600"
+                                      }`}
+                                    >
+                                      {isSubChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <div className="font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate">
+                                        {sub.label}
+                                      </div>
+                                      <div className="text-[9.5px] text-slate-400 truncate">
+                                        {sub.desc}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -1051,17 +1072,18 @@ export default function UsersPage() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="h-[40px] px-5 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-bold text-xs cursor-pointer transition-colors"
+                  disabled={submitting}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল (Cancel)
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="h-[40px] px-6 rounded-xl bg-[#15803d] hover:bg-[#166534] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{selectedUser ? "Update User" : "Create User"}</span>
+                  <span>{selectedUser ? "হালনাগাদ করুন (Update)" : "সংরক্ষণ করুন (Save)"}</span>
                 </button>
               </div>
             </form>
@@ -1069,20 +1091,22 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* 6. DELETE USER CONFIRMATION MODAL */}
-      <DeleteConfirmModal
-        isOpen={Boolean(userToDelete)}
-        title="Delete User Account"
-        itemName={userToDelete ? `${userToDelete.name} (${userToDelete.mobile})` : ""}
-        description="Are you sure you want to delete this user account? All assigned permissions and authentication access will be permanently revoked."
-        loading={isDeleting}
-        error={deleteError}
-        onConfirm={confirmDeleteUser}
-        onClose={() => {
-          setUserToDelete(null);
-          setDeleteError(null);
-        }}
-      />
+      {/* Delete Confirm Modal */}
+      {userToDelete && (
+        <DeleteConfirmModal
+          isOpen={Boolean(userToDelete)}
+          title="ব্যবহারকারী অ্যাকাউন্ট মুছে ফেলুন"
+          itemName={`${userToDelete.name} (${userToDelete.role})`}
+          warningMessage={`আপনি কি নিশ্চিতভাবে "${userToDelete.name}" (${userToDelete.role}) এর অ্যাকাউন্টটি মুছে ফেলতে চান?`}
+          errorMessage={deleteError}
+          isLoading={isDeleting}
+          onConfirm={confirmDeleteUser}
+          onClose={() => {
+            setUserToDelete(null);
+            setDeleteError(null);
+          }}
+        />
+      )}
     </div>
   );
 }

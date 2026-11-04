@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Fish,
+  X,
   Search,
   Layers,
   TrendingUp,
@@ -36,14 +37,71 @@ export default function StockFishPage() {
   const [loading, setLoading] = useState(true);
   const [batches, setBatches] = useState<PondStockItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [ponds, setPonds] = useState<any[]>([]);
+  const [speciesList, setSpeciesList] = useState<any[]>([]);
+  const [formData, setFormData] = useState({
+    pond_id: "",
+    species_id: "",
+    fingerling_count: "",
+    fingerling_unit_cost: "",
+    stocking_date: new Date().toISOString().split("T")[0],
+    note: "",
+  });
+
+  const handleCreateFishStock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.pond_id || !formData.species_id || !formData.fingerling_count) {
+      toast.error("পুকুর, মাছের প্রজাতি এবং পোনার সংখ্যা দিন", "ত্রুটি");
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch("/api/fish/batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pond_id: Number(formData.pond_id),
+          species_id: Number(formData.species_id),
+          fingerling_count: Number(formData.fingerling_count),
+          fingerling_unit_cost: Number(formData.fingerling_unit_cost || 0),
+          stocking_date: formData.stocking_date,
+          note: formData.note,
+        }),
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        toast.success("নতুন মাছের স্টক / পোনা সফলভাবে যুক্ত হয়েছে!", "সফল");
+        setIsModalOpen(false);
+        setFormData({
+          pond_id: "",
+          species_id: "",
+          fingerling_count: "",
+          fingerling_unit_cost: "",
+          stocking_date: new Date().toISOString().split("T")[0],
+          note: "",
+        });
+        loadData();
+      } else {
+        toast.error(json.message || "সংরক্ষণ করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const loadData = async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/fish");
       const json = await res.json();
-      if (json.status === "success" && json.data?.batches) {
-        setBatches(json.data.batches);
+      if (json.status === "success" && json.data) {
+        setBatches(json.data.batches || []);
+        if (json.data.ponds) setPonds(json.data.ponds);
+        if (json.data.species) setSpeciesList(json.data.species);
       }
     } catch (err: any) {
       console.error(err);
@@ -111,6 +169,13 @@ export default function StockFishPage() {
             </p>
           </div>
         </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>নতুন মাছের স্টক / পোনা যোগ</span>
+        </button>
       </div>
 
       {/* 2. Four KPI Cards */}
@@ -221,8 +286,8 @@ export default function StockFishPage() {
                     w >= 800
                       ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200"
                       : w >= 200
-                      ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-200"
-                      : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200";
+                        ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-200"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200";
 
                   const ageDays = Math.max(1, Math.floor((new Date().getTime() - new Date(item.stocking_date).getTime()) / 86400000));
 
@@ -278,6 +343,145 @@ export default function StockFishPage() {
           </table>
         </div>
       </div>
+
+      {/* Inward Fish Stock Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[90vh] flex flex-col">
+            <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Fish className="w-5 h-5 text-white" />
+                <h3 className="text-sm font-bold tracking-wide m-0 text-white">
+                  নতুন মাছের স্টক / পোনা যোগ (Add Fish Stock)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateFishStock} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    পুকুর নির্বাচন <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.pond_id}
+                    onChange={(e) => setFormData({ ...formData, pond_id: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  >
+                    <option value="">পুকুর বেছে নিন...</option>
+                    {ponds.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.pond_name} ({p.pond_code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    মাছের প্রজাতি <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.species_id}
+                    onChange={(e) => setFormData({ ...formData, species_id: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  >
+                    <option value="">প্রজাতি বেছে নিন...</option>
+                    {speciesList.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name_bn || s.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    পোনার সংখ্যা (পিস) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    placeholder="যেমন: 5000"
+                    value={formData.fingerling_count}
+                    onChange={(e) => setFormData({ ...formData, fingerling_count: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    মজুদকরণ তারিখ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.stocking_date}
+                    onChange={(e) => setFormData({ ...formData, stocking_date: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    প্রতি পোনা ক্রয়মূল্য / খরচ (৳)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    value={formData.fingerling_unit_cost}
+                    onChange={(e) => setFormData({ ...formData, fingerling_unit_cost: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    নোট / মন্তব্য
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="যেমন: হ্যাচারি থেকে পোনা সংগ্রহ"
+                    value={formData.note}
+                    onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={saving}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল (Cancel)
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>সংরক্ষণ ও স্টক ইন (Save)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

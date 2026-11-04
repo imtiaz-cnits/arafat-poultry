@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   Egg,
+  Plus,
+  X,
   Search,
   Home,
   Boxes,
@@ -34,6 +36,62 @@ export default function StockChickenPage() {
   const [loading, setLoading] = useState(true);
   const [flocks, setFlocks] = useState<ShedStockItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    shed_name: "",
+    breed: "লেয়ার (ব্রাউন)",
+    initial_chicks_count: "",
+    housing_date: new Date().toISOString().split("T")[0],
+    unit_price: "",
+    paid_amount: "",
+    note: "",
+  });
+
+  const handleCreateFlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.shed_name || !formData.breed || !formData.initial_chicks_count) {
+      toast.error("শেডের নাম, জাত এবং মুরগির সংখ্যা দিন", "ত্রুটি");
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch("/api/egg/flocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shed_name: formData.shed_name,
+          breed: formData.breed,
+          initial_chicks_count: Number(formData.initial_chicks_count),
+          housing_date: formData.housing_date,
+          unit_price: Number(formData.unit_price || 0),
+          paid_amount: Number(formData.paid_amount || 0),
+          note: formData.note,
+        }),
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        toast.success("নতুন মুরগির বাচ্চা/স্টক সফলভাবে যুক্ত হয়েছে!", "সফল");
+        setIsModalOpen(false);
+        setFormData({
+          shed_name: "",
+          breed: "লেয়ার (ব্রাউন)",
+          initial_chicks_count: "",
+          housing_date: new Date().toISOString().split("T")[0],
+          unit_price: "",
+          paid_amount: "",
+          note: "",
+        });
+        loadData();
+      } else {
+        toast.error(json.message || "সংরক্ষণ করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -112,6 +170,13 @@ export default function StockChickenPage() {
             </p>
           </div>
         </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>নতুন বাচ্চা/মুরগি স্টক যোগ</span>
+        </button>
       </div>
 
       {/* 2. Four KPI Cards */}
@@ -272,6 +337,149 @@ export default function StockChickenPage() {
           </table>
         </div>
       </div>
+
+      {/* Inward Stock Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[90vh] flex flex-col">
+            <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Home className="w-5 h-5 text-white" />
+                <h3 className="text-sm font-bold tracking-wide m-0 text-white">
+                  নতুন বাচ্চা / মুরগি স্টক ইন (Add Chicken Stock)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateFlock} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    শেডের নাম / নম্বর <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: শেড-১, শেড-২"
+                    value={formData.shed_name}
+                    onChange={(e) => setFormData({ ...formData, shed_name: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    মুরগির জাত / প্রজাতি <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: লেয়ার (ব্রাউন), ব্রয়লার"
+                    value={formData.breed}
+                    onChange={(e) => setFormData({ ...formData, breed: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    বাচ্চা / মুরগির সংখ্যা <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    placeholder="যেমন: 500"
+                    value={formData.initial_chicks_count}
+                    onChange={(e) => setFormData({ ...formData, initial_chicks_count: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    শেডে আগমনের তারিখ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.housing_date}
+                    onChange={(e) => setFormData({ ...formData, housing_date: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    প্রতি পিস ক্রয়মূল্য (৳)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    value={formData.unit_price}
+                    onChange={(e) => setFormData({ ...formData, unit_price: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    পরিশোধিত টাকা (৳)
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    value={formData.paid_amount}
+                    onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    মন্তব্য / বিবরণ
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="যেমন: আফতাব ফিড হ্যাচারি থেকে সংগৃহীত"
+                    value={formData.note}
+                    onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={saving}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল (Cancel)
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>সংরক্ষণ ও স্টক ইন (Save)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -334,7 +334,7 @@ export default function PurchasesPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Purchases & Inward Register
+              পণ্য ক্রয় ও ইনওয়ার্ড রেজিস্টার (Purchases & Inward)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
               Record incoming stock, supplier purchase invoices, and costs
@@ -346,7 +346,7 @@ export default function PurchasesPage() {
           {/* Total Inward Value */}
           <div className="h-[38px] px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-2">
             <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">
-              Total Inward:
+              মোট ক্রয় (Inward):
             </span>
             <span className="text-xs font-black text-emerald-800 dark:text-emerald-300">
               {formatBdCurrency(totalPurchasesCost)}
@@ -356,7 +356,7 @@ export default function PurchasesPage() {
           {/* Total Purchase Due */}
           <div className="h-[38px] px-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center gap-2">
             <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase">
-              Due:
+              বকেয়া দেনা:
             </span>
             <span className="text-xs font-black text-amber-800 dark:text-amber-300">
               {formatBdCurrency(totalPurchasesDue)}
@@ -371,7 +371,7 @@ export default function PurchasesPage() {
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>New Purchase</span>
+            <span>নতুন ক্রয় (New Purchase)</span>
           </button>
         </div>
       </div>
@@ -381,7 +381,7 @@ export default function PurchasesPage() {
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder="Search by Purchase ID, Ref / Memo No, Supplier..."
+            placeholder="ক্রয় আইডি, চালান/মেমো বা সরবরাহকারীর নাম দিয়ে খুঁজুন..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -392,7 +392,7 @@ export default function PurchasesPage() {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
         </div>
         <span className="text-xs font-bold text-slate-500">
-          Total: {filteredPurchases.length} Purchase(s)
+          মোট: {filteredPurchases.length} টি ক্রয় চালান
         </span>
       </div>
 
@@ -609,7 +609,7 @@ export default function PurchasesPage() {
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  New Purchase Inward (Stock In)
+                  নতুন পণ্য ক্রয় ও স্টক ইন (New Purchase Inward)
                 </h3>
               </div>
               <button
@@ -634,7 +634,7 @@ export default function PurchasesPage() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Supplier / Vendor <span className="text-red-500">*</span>
+                      সরবরাহকারী / ভেন্ডর (Supplier) <span className="text-red-500">*</span>
                     </label>
                     <button
                       type="button"
@@ -807,7 +807,7 @@ export default function PurchasesPage() {
 
               {/* Totals & Payments Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155]">
-                {/* Left: Payment Method & Trx */}
+                {/* Left: পেমেন্ট মাধ্যম (Payment Method) & Trx */}
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">

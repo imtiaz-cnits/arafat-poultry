@@ -81,7 +81,7 @@ export default function DashboardLayout({
         <main
           className={`flex-1 transition-all ${
             isSalesPortal
-              ? "p-2.5 sm:p-3.5 lg:p-4 overflow-y-auto lg:overflow-hidden flex flex-col min-h-0 lg:h-[calc(100vh-60px)] lg:max-h-[calc(100vh-60px)]"
+              ? "p-2.5 sm:p-3.5 lg:p-4"
               : "p-2.5 sm:p-4 md:p-6"
           }`}
         >

@@ -257,7 +257,7 @@ export default function SuppliersPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Suppliers & Vendors
+              সরবরাহকারী ও ভেন্ডর (Suppliers & Vendors)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
               Manage product suppliers, purchase orders, and payable balances
@@ -269,7 +269,7 @@ export default function SuppliersPage() {
           {/* Total Due Banner */}
           <div className="h-[38px] px-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 flex items-center gap-2">
             <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase">
-              Total Payable:
+              মোট প্রদেয় দেনা:
             </span>
             <span className="text-xs font-black text-rose-800 dark:text-rose-300">
               {formatBdCurrency(totalPayableDue)}
@@ -292,7 +292,7 @@ export default function SuppliersPage() {
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Supplier</span>
+            <span>নতুন সরবরাহকারী (Add Supplier)</span>
           </button>
         </div>
       </div>
@@ -302,7 +302,7 @@ export default function SuppliersPage() {
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder="Search by supplier name, company, mobile, or ID..."
+            placeholder="সরবরাহকারীর নাম, কোম্পানি, মোবাইল বা আইডি দিয়ে খুঁজুন..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -544,7 +544,7 @@ export default function SuppliersPage() {
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  {selectedSupplier ? "Edit Supplier" : "Add New Supplier"}
+                  {selectedSupplier ? "সরবরাহকারী সম্পাদনা (Edit Supplier)" : "নতুন সরবরাহকারী যোগ (Add New Supplier)"}
                 </h3>
               </div>
               <button
@@ -566,7 +566,7 @@ export default function SuppliersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Supplier Name <span className="text-red-500">*</span>
+                    সরবরাহকারীর নাম (Supplier Name) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -580,7 +580,7 @@ export default function SuppliersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Company / Firm <span className="text-red-500">*</span>
+                    কোম্পানি / প্রতিষ্ঠান (Company) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -594,7 +594,7 @@ export default function SuppliersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Mobile Phone <span className="text-red-500">*</span>
+                    মোবাইল নম্বর (Mobile Phone) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -608,7 +608,7 @@ export default function SuppliersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Payable Due Balance (৳)
+                    পূর্বের প্রদেয় বকেয়া (Payable Due ৳)
                   </label>
                   <input
                     type="number"
@@ -625,7 +625,7 @@ export default function SuppliersPage() {
 
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Address / Warehouse Location
+                    ঠিকানা / গুদাম অবস্থান (Address)
                   </label>
                   <input
                     type="text"
@@ -638,7 +638,7 @@ export default function SuppliersPage() {
 
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Email Address (Optional)
+                    ইমেইল এড্রেস (ঐচ্ছিক)
                   </label>
                   <input
                     type="email"

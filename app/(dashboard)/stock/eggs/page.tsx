@@ -216,7 +216,7 @@ export default function StockEggsPage() {
           className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>+ নতুন ডিম সংগ্রহ</span>
+          <span>নতুন ডিম সংগ্রহ</span>
         </button>
       </div>
 
@@ -325,7 +325,7 @@ export default function StockEggsPage() {
               ) : filteredCollections.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
-                    কোনো ডিম সংগ্রহের তথ্য পাওয়া যায়নি। "+ নতুন ডিম সংগ্রহ" বাটনে ক্লিক করুন।
+                    কোনো ডিম সংগ্রহের তথ্য পাওয়া যায়নি। "নতুন ডিম সংগ্রহ" বাটনে ক্লিক করুন।
                   </td>
                 </tr>
               ) : (

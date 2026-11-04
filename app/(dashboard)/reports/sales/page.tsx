@@ -76,6 +76,19 @@ export default function SalesReportPage() {
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [userRole, setUserRole] = useState("admin");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u.role) setUserRole(u.role);
+      }
+    } catch {}
+  }, []);
+
+  const canSeeProfit = userRole === "admin" || userRole === "super_admin";
 
   const loadData = async () => {
     try {
@@ -191,7 +204,7 @@ export default function SalesReportPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Sales & Gross Profit Report
+              বিক্রয় ও লাভ-ক্ষতি রিপোর্ট (Sales & Gross Profit Report)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
               Detailed breakdown of revenue, COGS, profit margin, cash collected, and dues
@@ -204,15 +217,15 @@ export default function SalesReportPage() {
           className="h-[38px] px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto border border-[#cbd5e1] dark:border-[#334155]"
         >
           <Printer className="w-4 h-4" />
-          <span>Print Statement</span>
+          <span>রিপোর্ট প্রিন্ট করুন</span>
         </button>
       </div>
 
-      {/* 2. Four Financial Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+      {/* 2. Financial Summary Cards */}
+      <div className={`grid grid-cols-2 ${canSeeProfit ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-2.5 sm:gap-3`}>
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Total Sales Revenue</span>
+            <span>মোট বিক্রয় আয় (Total Sales)</span>
             <DollarSign className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
@@ -225,7 +238,7 @@ export default function SalesReportPage() {
 
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Cash Collected</span>
+            <span>ক্যাশ আদায় (Cash Collected)</span>
             <CreditCard className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
@@ -238,7 +251,7 @@ export default function SalesReportPage() {
 
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Customer Due (Receivable)</span>
+            <span>কাস্টমার বকেয়া (Customer Due)</span>
             <AlertCircle className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
@@ -249,18 +262,20 @@ export default function SalesReportPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Estimated Gross Profit</span>
-            <TrendingUp className="w-4 h-4 text-emerald-600" />
+        {canSeeProfit && (
+          <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
+              <span>সম্ভাব্য মোট লাভ (Gross Profit)</span>
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1">
+              {formatBdCurrency(summary?.total_gross_profit || 0)}
+            </div>
+            <div className="text-[11px] text-slate-400 mt-0.5">
+              Sales less buying cost & returns
+            </div>
           </div>
-          <div className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1">
-            {formatBdCurrency(summary?.total_gross_profit || 0)}
-          </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            Sales less buying cost & returns
-          </div>
-        </div>
+        )}
       </div>
 
       {/* 3. Date Filters & Presets */}
@@ -348,28 +363,28 @@ export default function SalesReportPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Invoice / Date</th>
-                <th className="py-3 px-4">Customer</th>
-                <th className="py-3 px-3 text-center">Items</th>
-                <th className="py-3 px-3 text-right">Cost Price (৳)</th>
-                <th className="py-3 px-3 text-right">Selling Total (৳)</th>
-                <th className="py-3 px-3 text-right">Paid (৳)</th>
-                <th className="py-3 px-3 text-right">Due (৳)</th>
-                <th className="py-3 px-4 text-right">Profit (৳)</th>
+                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং</th>
+                <th className="py-3 px-4">ইনভয়েস ও তারিখ</th>
+                <th className="py-3 px-4">কাস্টমার (Customer)</th>
+                <th className="py-3 px-3 text-center">আইটেম</th>
+                <th className="py-3 px-3 text-right">ক্রয় খরচ (Cost ৳)</th>
+                <th className="py-3 px-3 text-right">বিক্রয় মূল্য (Total ৳)</th>
+                <th className="py-3 px-3 text-right">পরিশোধ (Paid ৳)</th>
+                <th className="py-3 px-3 text-right">বকেয়া (Due ৳)</th>
+                {canSeeProfit && <th className="py-3 px-4 text-right">নিট লাভ (Profit ৳)</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={canSeeProfit ? 9 : 8} className="py-10 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading sales report...</span>
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={canSeeProfit ? 9 : 8} className="py-10 text-center text-slate-400 font-bold">
                     No sales invoices found for the specified period.
                   </td>
                 </tr>
@@ -415,9 +430,11 @@ export default function SalesReportPage() {
                     <td className="py-3 px-3 text-right font-bold text-rose-600 dark:text-rose-400">
                       {formatBdCurrency(o.due_amount)}
                     </td>
-                    <td className="py-3 px-4 text-right font-black text-emerald-700 dark:text-emerald-300">
-                      {formatBdCurrency(o.profit_amount)}
-                    </td>
+                    {canSeeProfit && (
+                      <td className="py-3 px-4 text-right font-black text-emerald-700 dark:text-emerald-300">
+                        {formatBdCurrency(o.profit_amount)}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -458,7 +475,7 @@ export default function SalesReportPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center text-xs py-1.5 border-y border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 rounded-xl">
+            <div className={`grid ${canSeeProfit ? "grid-cols-3" : "grid-cols-2"} gap-2 text-center text-xs py-1.5 border-y border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 rounded-xl`}>
               <div>
                 <div className="text-[10px] text-slate-400">Paid</div>
                 <div className="font-bold text-emerald-600">{formatBdCurrency(o.paid_amount)}</div>
@@ -467,10 +484,12 @@ export default function SalesReportPage() {
                 <div className="text-[10px] text-slate-400">Due</div>
                 <div className="font-bold text-rose-600">{formatBdCurrency(o.due_amount)}</div>
               </div>
-              <div>
-                <div className="text-[10px] text-slate-400">Profit</div>
-                <div className="font-bold text-emerald-700">{formatBdCurrency(o.profit_amount)}</div>
-              </div>
+              {canSeeProfit && (
+                <div>
+                  <div className="text-[10px] text-slate-400">Profit</div>
+                  <div className="font-bold text-emerald-700">{formatBdCurrency(o.profit_amount)}</div>
+                </div>
+              )}
             </div>
 
             <div className="text-[10px] text-slate-400 text-right">
@@ -525,15 +544,15 @@ export default function SalesReportPage() {
         <table className="print-table mb-4">
           <thead>
             <tr className="bg-slate-100 font-bold text-left">
-              <th className="text-center w-8">SL</th>
-              <th>Date</th>
-              <th>Invoice No</th>
-              <th>Customer</th>
-              <th className="text-center">Items</th>
-              <th className="text-right">Total (৳)</th>
-              <th className="text-right">Paid (৳)</th>
-              <th className="text-right">Due (৳)</th>
-              <th className="text-right">Gross Profit (৳)</th>
+              <th className="text-center w-8">ক্র: নং</th>
+              <th>তারিখ</th>
+              <th>ইনভয়েস নং</th>
+              <th>কাস্টমার</th>
+              <th className="text-center">আইটেম</th>
+              <th className="text-right">বিক্রয় মোট (৳)</th>
+              <th className="text-right">পরিশোধিত (৳)</th>
+              <th className="text-right">বকেয়া দেনা (৳)</th>
+              {canSeeProfit && <th className="text-right">মোট লাভ (৳)</th>}
             </tr>
           </thead>
           <tbody>
@@ -547,7 +566,9 @@ export default function SalesReportPage() {
                 <td className="text-right font-black">{formatBdCurrency(o.net_amount)}</td>
                 <td className="text-right text-emerald-800 font-bold">{formatBdCurrency(o.paid_amount)}</td>
                 <td className="text-right text-red-700 font-bold">{formatBdCurrency(o.due_amount)}</td>
-                <td className="text-right font-black text-emerald-900">{formatBdCurrency(o.profit_amount)}</td>
+                {canSeeProfit && (
+                  <td className="text-right font-black text-emerald-900">{formatBdCurrency(o.profit_amount)}</td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -568,9 +589,11 @@ export default function SalesReportPage() {
               <td className="text-right font-bold text-red-700 py-1.5 px-2">
                 {formatBdCurrency(summary?.total_due_amount || 0)}
               </td>
-              <td className="text-right font-black text-emerald-900 py-1.5 px-2">
-                {formatBdCurrency(summary?.total_gross_profit || 0)}
-              </td>
+              {canSeeProfit && (
+                <td className="text-right font-black text-emerald-900 py-1.5 px-2">
+                  {formatBdCurrency(summary?.total_gross_profit || 0)}
+                </td>
+              )}
             </tr>
           </tfoot>
         </table>

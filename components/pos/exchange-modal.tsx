@@ -103,8 +103,12 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
           setSuppliers(
             sJson.data.map((s: any) => ({
               id: Number(s.id),
-              name: s.supplier_name || "Unknown",
-              phone: s.mobile || "",
+              name: s.name
+                ? s.company
+                  ? `${s.name} (${s.company})`
+                  : s.name
+                : s.company || s.supplier_name || "সরবরাহকারী",
+              phone: s.mobile || s.phone || "",
               dueAmount: parseFloat(s.purchase_payable_amount || "0"),
               type: "SUPPLIER",
             }))
@@ -350,6 +354,8 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                   ? "নাম বা মোবাইল দিয়ে কাস্টমার খুঁজুন..."
                   : "নাম বা মোবাইল দিয়ে সরবরাহকারী খুঁজুন..."
               }
+              searchThreshold={0}
+              minPopoverWidth={360}
             />
 
             {selectedParty && (

@@ -510,42 +510,42 @@ export default function FishFarmingPage() {
         <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
           <button
             onClick={() => setIsBatchModalOpen(true)}
-            className="h-[38px] px-3.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            className="h-[38px] px-3.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
             পোনা মজুদকরণ
           </button>
           <button
             onClick={() => setIsHarvestModalOpen(true)}
-            className="h-[38px] px-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            className="h-[38px] px-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <PackageCheck className="w-3.5 h-3.5" />
             মাছ আহরণ
           </button>
           <button
             onClick={() => setIsSamplingModalOpen(true)}
-            className="h-[38px] px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            className="h-[38px] px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <Scale className="w-3.5 h-3.5" />
             নমুনা ওজন
           </button>
           <button
             onClick={() => setIsMortalityModalOpen(true)}
-            className="h-[38px] px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            className="h-[38px] px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <ShieldAlert className="w-3.5 h-3.5" />
             মৃত মাছ
           </button>
           <button
             onClick={() => setIsExpenseModalOpen(true)}
-            className="h-[38px] px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            className="h-[38px] px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
           >
             <DollarSign className="w-3.5 h-3.5" />
             অন্যান্য খরচ
           </button>
           <button
             onClick={() => setIsPondModalOpen(true)}
-            className="h-[38px] px-3.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            className="h-[38px] px-3.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
           >
             <Droplets className="w-3.5 h-3.5 text-sky-500" />
             নতুন পুকুর

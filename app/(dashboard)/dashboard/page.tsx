@@ -101,6 +101,19 @@ export default function DashboardPage() {
   });
   const [hoveredTrendIndex, setHoveredTrendIndex] = useState<number | null>(null);
   const [activeDonutSegment, setActiveDonutSegment] = useState<"collection" | "dues" | "expenses" | null>(null);
+  const [userRole, setUserRole] = useState("admin");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u.role) setUserRole(u.role);
+      }
+    } catch {}
+  }, []);
+
+  const canSeeProfit = userRole === "admin" || userRole === "super_admin";
 
   const fetchStats = useCallback(
     async (selectedPeriod: string, fDate?: string, tDate?: string) => {
@@ -227,8 +240,8 @@ export default function DashboardPage() {
 
       {/* 2. Stat Cards Section (Uniform Row & Column Gaps Everywhere) */}
       <div className="space-y-3.5 sm:space-y-4">
-        {/* 1st Line: 4 Prominent KPI Cards (INCOME, CASH COLLECTION, EXPENSE, PROFIT) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        {/* 1st Line: Prominent KPI Cards (INCOME, CASH COLLECTION, EXPENSE, PROFIT) */}
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${canSeeProfit ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-3.5 sm:gap-4`}>
           {/* INCOME */}
           <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between text-slate-400 mb-2">
@@ -286,24 +299,26 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* PROFIT */}
-          <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                PROFIT
-              </span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4" />
+          {/* PROFIT (Strictly Visible Only to Admin & Super Admin) */}
+          {canSeeProfit && (
+            <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
+              <div className="flex items-center justify-between text-slate-400 mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  PROFIT
+                </span>
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
+                {formatBdCurrency(summary.profit)}
+              </div>
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>Net Business Profit</span>
               </div>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
-              {formatBdCurrency(summary.profit)}
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>Net Business Profit</span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* 2nd Line: 4 Compact Cards (Identical Grid Columns & Gaps) */}
@@ -809,10 +824,12 @@ export default function DashboardPage() {
                           <span className="text-emerald-400 dark:text-emerald-600 font-semibold">Sales:</span>
                           <span className="font-mono font-bold">{formatBdCurrency(activePoint.data.sales)}</span>
                         </div>
-                        <div className="flex items-center justify-between gap-3 text-[11px]">
-                          <span className="text-sky-400 dark:text-sky-600 font-semibold">Net Profit:</span>
-                          <span className="font-mono font-bold">{formatBdCurrency(activePoint.data.profit)}</span>
-                        </div>
+                        {canSeeProfit && (
+                          <div className="flex items-center justify-between gap-3 text-[11px]">
+                            <span className="text-sky-400 dark:text-sky-600 font-semibold">Net Profit:</span>
+                            <span className="font-mono font-bold">{formatBdCurrency(activePoint.data.profit)}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

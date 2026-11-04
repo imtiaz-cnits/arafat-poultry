@@ -17,54 +17,13 @@ import {
   ChevronDown,
   Calendar,
   Clock,
-  Building,
-  Check,
-} from "lucide-react";
+  } from "lucide-react";
 import { getInitialTheme, applyTheme } from "@/lib/theme";
 import { NotificationDropdown } from "@/components/notification-dropdown";
 
 interface TopbarProps {
   onToggleSidebar: () => void;
 }
-
-interface Warehouse {
-  id: string;
-  name: string;
-  shortName: string;
-  code: string;
-  desc: string;
-}
-
-const WAREHOUSES: Warehouse[] = [
-  {
-    id: "main",
-    name: "মূল গুদাম (Main Warehouse)",
-    shortName: "মূল গুদাম",
-    code: "WH-01",
-    desc: "কেন্দ্রীয় খাদ্য, ডিম ও মাছ বিতরণ কেন্দ্র",
-  },
-  {
-    id: "shed1",
-    name: "শেড-১ খাদ্য ও ডিম গোডাউন",
-    shortName: "শেড-১ গোডাউন",
-    code: "SHED-01",
-    desc: "পোল্ট্রি শেড ফিড মজুদ ও ডিম কালেকশন পয়েন্ট",
-  },
-  {
-    id: "shed2",
-    name: "শেড-২ পোল্ট্রি ফিড ডিপো",
-    shortName: "শেড-২ ডিপো",
-    code: "SHED-02",
-    desc: "বাচ্চা ও লেয়ার মুরগির বিশেষ খাদ্য ডিপো",
-  },
-  {
-    id: "pond",
-    name: "পুকুর পাড় খাদ্য ও মাছ স্টোর",
-    shortName: "পুকুর পাড় স্টোর",
-    code: "POND-01",
-    desc: "মাছের ভাসমান খাদ্য ও লাইভ ফিশ ট্যাংক স্টোর",
-  },
-];
 
 export function Topbar({ onToggleSidebar }: TopbarProps) {
   const router = useRouter();
@@ -74,10 +33,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
   const [userName, setUserName] = useState("Admin");
   const [userRole, setUserRole] = useState("admin");
 
-  // Dynamic Warehouse Selector State
-  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse>(WAREHOUSES[0]);
-  const [warehouseDropdown, setWarehouseDropdown] = useState(false);
-  const warehouseRef = useRef<HTMLDivElement>(null);
+  
 
   // Live Date and Time State across all pages
   const [currentDateTime, setCurrentDateTime] = useState("");
@@ -103,11 +59,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         if (parsed.role) setUserRole(parsed.role);
       }
 
-      const savedWhId = localStorage.getItem("active_warehouse_id");
-      if (savedWhId) {
-        const found = WAREHOUSES.find((w) => w.id === savedWhId);
-        if (found) setSelectedWarehouse(found);
-      }
+      
     } catch {
       // ignore
     }
@@ -143,31 +95,14 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
     updateClock();
     const interval = setInterval(updateClock, 10000);
 
-    const handleClickOutside = (e: MouseEvent) => {
-      if (warehouseRef.current && !warehouseRef.current.contains(e.target as Node)) {
-        setWarehouseDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
+    
 
     return () => {
       window.removeEventListener("theme-change", handleThemeChange);
-      document.removeEventListener("mousedown", handleClickOutside);
+      
       clearInterval(interval);
     };
   }, []);
-
-  const handleSelectWarehouse = (wh: Warehouse) => {
-    setSelectedWarehouse(wh);
-    setWarehouseDropdown(false);
-    try {
-      localStorage.setItem("active_warehouse_id", wh.id);
-      localStorage.setItem("active_warehouse_name", wh.name);
-      window.dispatchEvent(new CustomEvent("warehouse-changed", { detail: wh }));
-    } catch {
-      // ignore
-    }
-  };
 
   function toggleDarkMode() {
     const next = !isDark;
@@ -236,58 +171,6 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-semibold shadow-2xs">
           <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           <span>{currentDateTime || "০৪ নভেম্বর, ২০২৬"}</span>
-        </div>
-
-        {/* Dynamic Warehouse Dropdown */}
-        <div className="relative" ref={warehouseRef}>
-          <button
-            type="button"
-            onClick={() => setWarehouseDropdown(!warehouseDropdown)}
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-slate-800/80 hover:bg-emerald-50/50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer hover:border-emerald-600 transition-all shadow-2xs"
-            title="খাদ্য ও পণ্য গুদাম নির্বাচন"
-          >
-            <Building className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>{selectedWarehouse.shortName}</span>
-            <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${warehouseDropdown ? "rotate-180" : ""}`} />
-          </button>
-
-          {warehouseDropdown && (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 border-[1.5px] border-[#cbd5e1] dark:border-[#334155] shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-1">
-              <div className="px-3.5 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 dark:text-white">
-                  খাদ্য ও পণ্য গুদাম নির্বাচন
-                </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
-                  {selectedWarehouse.code}
-                </span>
-              </div>
-              <div className="p-1 space-y-1">
-                {WAREHOUSES.map((wh) => (
-                  <button
-                    key={wh.id}
-                    onClick={() => handleSelectWarehouse(wh)}
-                    className={`w-full text-left px-3 py-2 rounded-xl flex items-start justify-between gap-2 transition-all cursor-pointer ${selectedWarehouse.id === wh.id
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800"
-                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70"
-                      }`}
-                  >
-                    <div>
-                      <div className="text-xs font-bold flex items-center gap-1.5">
-                        <Building className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{wh.name}</span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-normal mt-0.5 pl-5">
-                        {wh.desc}
-                      </div>
-                    </div>
-                    {selectedWarehouse.id === wh.id && (
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Quick Launch Sales Portal Button (Theme Green #166534) */}

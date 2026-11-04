@@ -334,7 +334,7 @@ export default function ExpensesPage() {
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ খরচ যুক্ত করুন</span>
+            <span>খরচ যুক্ত করুন</span>
           </button>
         </div>
       </div>

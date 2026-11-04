@@ -202,26 +202,46 @@ export function Sidebar({
   }, []);
 
   const hasAccess = (item: NavItem) => {
-    if (userRole === "admin") return true;
+    if (userRole === "admin" || userRole === "super_admin") return true;
     if (!userPermissions) return true;
     const permKeyMap: Record<string, string> = {
       dashboard: "dashboard",
-      "sales-portal": "pos",
-      pos: "pos",
-      poultry: "products",
-      fish: "products",
-      stock: "products",
-      memo: "pos",
-      suppliers: "purchases",
+      "sales-portal": "sales-portal",
+      pos: "sales-portal",
+      poultry: "poultry",
+      fish: "fish",
+      stock: "stock",
+      memo: "memo",
+      suppliers: "suppliers",
       purchases: "purchases",
       customers: "customers",
+      medications: "medications",
       expenses: "expenses",
       reports: "reports",
-      settings: "users",
+      settings: "settings",
     };
-    const key = permKeyMap[item.id];
-    if (!key) return true;
-    return userPermissions[key] !== false;
+    const key = permKeyMap[item.id] || item.id;
+    if (userPermissions[key] === false) return false;
+    return true;
+  };
+
+  const hasSubAccess = (childHref: string) => {
+    if (userRole === "admin" || userRole === "super_admin") return true;
+    if (!userPermissions) return true;
+    const hrefMap: Record<string, string> = {
+      "/stock/eggs": "stock_eggs",
+      "/stock/fish": "stock_fish",
+      "/feed": "stock_feed",
+      "/stock/chicken": "stock_chicken",
+      "/reports/income-expense": "reports_income_expense",
+      "/reports/sales": "reports_sales",
+      "/reports/daily-ledger": "reports_ledger",
+      "/users": "settings_users",
+      "/profile": "settings_profile",
+    };
+    const key = hrefMap[childHref];
+    if (key && userPermissions[key] === false) return false;
+    return true;
   };
 
   // Close flyouts on outside click or Escape
@@ -449,7 +469,7 @@ export function Sidebar({
 
                 {/* Submenu Item List */}
                 <div className="space-y-1 pt-0.5">
-                  {parent.children?.map((child) => {
+                  {parent.children?.filter((child) => hasSubAccess(child.href)).map((child) => {
                     const ChildIcon = child.icon;
                     const isChildActive = isActive(child.href);
                     return (
@@ -620,7 +640,7 @@ export function Sidebar({
 
               {/* Flyout Submenu List */}
               <ul className="space-y-0.5">
-                {activeFlyoutItem.children.map((child) => {
+                {activeFlyoutItem.children.filter((child) => hasSubAccess(child.href)).map((child) => {
                   const ChildIcon = child.icon;
                   const isChildActive = isActive(child.href);
                   return (
