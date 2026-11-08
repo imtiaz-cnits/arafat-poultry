@@ -157,7 +157,7 @@ export default function CategoriesPage() {
           className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer self-start md:self-auto"
         >
           <Plus className="w-4 h-4" />
-          <span>নতুন ক্যাটাগরি (Add Category)</span>
+          <span>নতুন ক্যাটাগরি<span className="hidden sm:inline"> (Add Category)</span></span>
         </button>
       </div>
 

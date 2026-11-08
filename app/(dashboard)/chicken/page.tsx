@@ -318,7 +318,8 @@ export default function ChickenManagementPage() {
 
       {/* 4. Desktop Flock Table */}
       <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop View: Full Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold">
@@ -442,6 +443,111 @@ export default function ChickenManagementPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Compact Box Cards */}
+        <div className="md:hidden space-y-2.5 p-3">
+          {loading ? (
+            <div className="p-8 text-center text-slate-400">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
+              <span>মুরগির শেড ডাটা লোড হচ্ছে...</span>
+            </div>
+          ) : filteredFlocks.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 font-bold">
+              কোনো মুরগির শেড পাওয়া যায়নি।
+            </div>
+          ) : (
+            filteredFlocks
+              .slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize)
+              .map((flock) => {
+                const flockDailyFeedKg = Math.round(((flock.current_birds || 0) * 120) / 1000);
+                const isAdult = (flock.age_days || 0) >= 120;
+
+                return (
+                  <div
+                    key={flock.id}
+                    className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2 shadow-2xs"
+                  >
+                    {/* Header: Shed Name & Code + Breed & Action Icon Only */}
+                    <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
+                          <Home className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                          <span className="truncate">{flock.shed_name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5 text-[10px] text-slate-400 font-mono">
+                          <span>{flock.flock_code}</span>
+                          <span>•</span>
+                          <span>আগমন: {flock.housing_date || "—"}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold">
+                          {flock.breed}
+                        </span>
+                        {/* Action button: Icon only! */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedFlock(flock);
+                            setMortalityCount("1");
+                            setIsMortalityModalOpen(true);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center justify-center transition-colors cursor-pointer"
+                          title="মুরগির মৃত্যু এন্ট্রি করুন"
+                        >
+                          <HeartCrack className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Compact Key-Value Rows (Left & Right) */}
+                    <div className="space-y-1.5 text-xs pt-1">
+                      {/* Row 1: বর্তমান মুরগি (Left) & বয়স ও ধরণ (Right) */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">বর্তমান মুরগি:</span>
+                          <span className="font-black text-emerald-700 dark:text-emerald-400 whitespace-nowrap text-xs">
+                            {Number(flock.current_birds ?? flock.current_birds_count ?? 0).toLocaleString("en-US")} টি
+                          </span>
+                          <span className="text-[10px] text-slate-400 truncate">
+                            (এন্ট্রি: {Number(flock.initial_chicks_count || flock.current_birds || 0).toLocaleString("en-US")})
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 text-right">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">বয়স:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap text-xs">
+                            {flock.age_display || `${flock.age_days || 0} দিন`}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            ({isAdult ? "প্রাপ্তবয়স্ক" : "বাচ্চা"})
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Row 2: দৈনিক খাবার (Left) & মৃত্যু (Right) */}
+                      <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">দৈনিক খাবার:</span>
+                          <span className="font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap text-xs">
+                            {flockDailyFeedKg} কেজি
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-right">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">মৃত্যু:</span>
+                          <span className="font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap text-xs">
+                            {(flock.mortality_count || 0).toLocaleString("en-US")} টি
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+          )}
         </div>
 
         {/* Pagination Controls Desktop & Mobile */}

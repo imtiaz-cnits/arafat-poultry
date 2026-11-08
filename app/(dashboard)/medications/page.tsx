@@ -369,7 +369,8 @@ export default function MedicationsPage() {
 
       {/* 4. Desktop Medications Table */}
       <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop View: Full Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
@@ -462,6 +463,99 @@ export default function MedicationsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Compact Box Cards */}
+        <div className="md:hidden space-y-2.5 p-3">
+          {loading ? (
+            <div className="p-8 text-center text-slate-400">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
+              <span>ওষুধ ও ভ্যাকসিন শিডিউল লোড হচ্ছে...</span>
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 font-bold">
+              কোনো ওষুধ বা ভ্যাকসিন শিডিউল পাওয়া যায়নি।
+            </div>
+          ) : (
+            displayedItems.map((item, idx) => (
+              <div
+                key={item.id}
+                className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2 shadow-2xs"
+              >
+                {/* Card Header: Medicine Name & Disease + Delete Action Icon Only */}
+                <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
+                      <HeartPulse className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                      <span className="truncate">{item.medicine_name}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      {item.disease}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item.id)}
+                    className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                    title="শিডিউল মুছে ফেলুন"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Stats Grid: Target, Dosage, Frequency, Next Due Date */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                    <span className="text-[10px] text-slate-400 block">প্রয়োগের স্থান</span>
+                    <div className="flex items-center gap-1 mt-0.5 font-bold text-slate-800 dark:text-slate-200 text-xs truncate">
+                      {item.target_type === "POULTRY" ? (
+                        <Egg className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                      ) : (
+                        <Fish className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                      )}
+                      <span className="truncate">{item.target_name}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/70">
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block font-bold">ডোজ</span>
+                    <span className="font-black text-emerald-800 dark:text-emerald-300 text-xs truncate block mt-0.5">
+                      {item.dosage}
+                    </span>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                    <span className="text-[10px] text-slate-400 block">শিডিউল ও বেলা</span>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px] whitespace-nowrap">
+                        {getFrequencyLabel(item.frequency)}
+                      </span>
+                      <span className="scale-90 origin-left">{getTimeOfDayBadge(item.time_of_day)}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                    <span className="text-[10px] text-slate-400 block">পরবর্তী প্রয়োগ</span>
+                    <div className="flex items-center gap-1 mt-0.5 font-bold text-slate-900 dark:text-slate-100 text-xs whitespace-nowrap">
+                      <Calendar className="w-3 h-3 text-slate-400" />
+                      <span>{item.next_due_date}</span>
+                    </div>
+                    {item.next_due_date === todayStr && (
+                      <span className="inline-block px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-500 text-white mt-0.5">
+                        আজকের কাজ
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {item.note && (
+                  <div className="text-[10px] text-slate-400 italic px-1">
+                    নোট: {item.note}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
 
         {/* Pagination Controls */}

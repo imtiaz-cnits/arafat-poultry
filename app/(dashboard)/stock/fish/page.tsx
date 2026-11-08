@@ -260,7 +260,8 @@ export default function StockFishPage() {
 
       {/* 4. Desktop Stock Table */}
       <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop View: Full Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
@@ -352,6 +353,98 @@ export default function StockFishPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Compact Box Cards */}
+        <div className="md:hidden space-y-2.5 p-3">
+          {loading ? (
+            <div className="p-8 text-center text-slate-400">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
+              <span>মাছের স্টক ডাটা লোড হচ্ছে...</span>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 font-bold">
+              কোনো পুকুরের মাছের স্টক পাওয়া যায়নি।
+            </div>
+          ) : (
+            displayedItems.map((item, idx) => {
+              const w = item.latest_avg_weight_g || 0;
+              const sizeCategory = w >= 800 ? "বড় মাছ" : w >= 200 ? "মাঝারি মাছ" : "পোনা মাছ";
+              const sizeColor =
+                w >= 800
+                  ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200"
+                  : w >= 200
+                    ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-200"
+                    : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200";
+
+              const ageDays = Math.max(1, Math.floor((new Date().getTime() - new Date(item.stocking_date).getTime()) / 86400000));
+
+              return (
+                <div
+                  key={item.id}
+                  className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2 shadow-2xs"
+                >
+                  {/* Card Header: Pond & Batch + Species & Size */}
+                  <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
+                        <Droplets className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                        <span>{item.pond_name}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        {item.batch_no} • ছাড়া হয়েছে: {item.stocking_date}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="font-bold text-xs text-emerald-800 dark:text-emerald-400">
+                        {item.species_name}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${sizeColor}`}>
+                        {sizeCategory}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stats Grid: Compact, with ample space for numbers so they never wrap */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/70">
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block font-bold">বর্তমান জীবন্ত সংখ্যা</span>
+                      <span className="font-black text-emerald-700 dark:text-emerald-400 text-sm whitespace-nowrap">
+                        {item.current_fish_count.toLocaleString()} টি
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        পোনা: {item.fingerling_count.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/70">
+                      <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-bold">মোট ওজন (বায়োমাস)</span>
+                      <span className="font-black text-amber-700 dark:text-amber-400 text-sm whitespace-nowrap">
+                        {Math.round(item.estimated_biomass_kg).toLocaleString()} কেজি
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        গড় ওজন: {w >= 1000 ? `${(w / 1000).toFixed(2)} কেজি` : `${w} গ্রাম`}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                      <span className="text-[10px] text-slate-400 block">চাষকাল</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
+                        {ageDays} দিন
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                      <span className="text-[10px] text-slate-400 block">স্ট্যাটাস</span>
+                      <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                        {item.status || "ACTIVE"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination Controls */}

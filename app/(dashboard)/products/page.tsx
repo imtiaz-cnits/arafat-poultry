@@ -610,7 +610,7 @@ export default function ProductsPage() {
             className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Product</span>
+            <span>নতুন পণ্য<span className="hidden sm:inline"> (Add Product)</span></span>
           </button>
         </div>
       </div>

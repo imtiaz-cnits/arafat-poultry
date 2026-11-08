@@ -289,10 +289,10 @@ export default function SuppliersPage() {
               });
               setIsAddModalOpen(true);
             }}
-            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto shrink-0"
           >
             <Plus className="w-4 h-4" />
-            <span>নতুন সরবরাহকারী (Add Supplier)</span>
+            <span>নতুন সরবরাহকারী<span className="hidden sm:inline"> (Add Supplier)</span></span>
           </button>
         </div>
       </div>

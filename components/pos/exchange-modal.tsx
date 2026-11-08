@@ -282,7 +282,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-black leading-tight text-white">
-                পণ্য বিনিময় ও সমন্বয় (Feed &amp; Egg Multi-Settlement)
+                পণ্য বিনিময় ও সমন্বয় <span className="hidden sm:inline">(Feed &amp; Egg Multi-Settlement)</span>
               </h2>
               <p className="text-[11px] text-emerald-100 font-medium">
                 ফিড ক্রয়ের বিপরীতে ডিম (খাঁচা/হালি/পিস) ও নগদ টাকা সমন্বয়
@@ -306,7 +306,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5 text-emerald-700" />
-                <span>পার্টি নির্বাচন করুন (Party Selection):</span>
+                <span>পার্টি নির্বাচন করুন:</span>
               </label>
 
               {/* Party Type Radio Switcher */}
@@ -324,7 +324,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                   }`}
                 >
                   <User className="w-3 h-3" />
-                  <span>কাস্টমার (Customer)</span>
+                  <span>কাস্টমার</span>
                 </button>
                 <button
                   type="button"
@@ -339,7 +339,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                   }`}
                 >
                   <Truck className="w-3 h-3" />
-                  <span>সরবরাহকারী (Supplier)</span>
+                  <span>সরবরাহকারী</span>
                 </button>
               </div>
             </div>
@@ -378,7 +378,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                 <Package className="w-4 h-4 text-amber-600" />
-                <span>ফিড গ্রহণ / ক্রয়ের বিবরণ (Feed Purchased / Received)</span>
+                <span>ফিড গ্রহণ / ক্রয়ের বিবরণ</span>
               </span>
 
               {/* Unit Toggle */}
@@ -390,7 +390,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                     feedUnit === "bags" ? "bg-amber-600 text-white" : "text-slate-600 dark:text-slate-300"
                   }`}
                 >
-                  বস্তা (Bags)
+                  বস্তা
                 </button>
                 <button
                   type="button"
@@ -399,7 +399,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                     feedUnit === "kg" ? "bg-amber-600 text-white" : "text-slate-600 dark:text-slate-300"
                   }`}
                 >
-                  কেজি (Kg)
+                  কেজি
                 </button>
               </div>
             </div>
@@ -471,7 +471,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                   />
                   <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
                     <Egg className="w-3.5 h-3.5 text-emerald-600" />
-                    ১. ডিম বিনিময় (Egg Exchange)
+                    ১. ডিম বিনিময়
                   </span>
                 </label>
 
@@ -561,7 +561,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                   />
                   <span className="text-xs font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
                     <Banknote className="w-3.5 h-3.5 text-blue-600" />
-                    ২. নগদ / ব্যাংক টাকা প্রদান (Cash / Bank Portion)
+                    ২. নগদ / ব্যাংক টাকা প্রদান
                   </span>
                 </label>
 
@@ -634,7 +634,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                   />
                   <span className="text-xs font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
                     <Package className="w-3.5 h-3.5 text-sky-600" />
-                    ৩. খালি বস্তা ফেরত সমন্বয় (Empty Bags Adjustment)
+                    ৩. খালি বস্তা ফেরত সমন্বয়
                   </span>
                 </label>
               </div>
@@ -685,7 +685,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
             {/* Note input */}
             <div>
               <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                বিশেষ নোট / রেফারেন্স (Optional Note):
+                বিশেষ নোট / রেফারেন্স:
               </label>
               <input
                 type="text"
@@ -697,23 +697,54 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
             </div>
           </div>
 
-          {/* 4. FINAL CALCULATION SUMMARY */}
-          <div className="p-3.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
-            <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
-              <span>মোট ফিড / পণ্যের মূল্য (Total Feed Bill):</span>
-              <span className="font-bold">৳ {formatBdCurrency(baseBill)}</span>
-            </div>
-            <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400 font-bold">
-              <span>
-                মোট সমন্বয় কর্তন (ডিম ৳{formatBdCurrency(eggTotalValue)} + নগদ ৳{formatBdCurrency(cashTotalValue)} + বস্তা ৳{formatBdCurrency(emptyBagsTotalValue)}):
+          {/* 4. FINAL CALCULATION SUMMARY (Clean Box Cards for Mobile & Desktop) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            {/* Box 1: Total Feed Bill */}
+            <div className="p-3 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex flex-col justify-between">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                মোট ফিড / পণ্যের মূল্য
               </span>
-              <span className="text-sm font-black">- ৳ {formatBdCurrency(totalSettlementValue)}</span>
-            </div>
-            <div className="flex items-center justify-between pt-1.5 border-t border-slate-200 dark:border-slate-700 font-black text-sm text-slate-900 dark:text-white">
-              <span>অবশিষ্ট দেনা / পাওনা (Remaining Balance):</span>
-              <span className={netRemaining > 0 ? "text-amber-600 font-black" : "text-emerald-700 dark:text-emerald-400 font-black"}>
-                ৳ {formatBdCurrency(Math.abs(netRemaining))} {netRemaining > 0 ? "(বকেয়া প্রদেয়)" : "(পরিশোধিত)"}
+              <span className="font-black text-slate-900 dark:text-white text-sm sm:text-base mt-1">
+                ৳ {formatBdCurrency(baseBill)}
               </span>
+            </div>
+
+            {/* Box 2: Total Deductions */}
+            <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col justify-between">
+              <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                মোট সমন্বয় কর্তন
+              </span>
+              <span className="font-black text-emerald-700 dark:text-emerald-400 text-sm sm:text-base mt-1">
+                - ৳ {formatBdCurrency(totalSettlementValue)}
+              </span>
+              <div className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5 truncate">
+                ডিম ৳{formatBdCurrency(eggTotalValue)} + নগদ ৳{formatBdCurrency(cashTotalValue)}
+              </div>
+            </div>
+
+            {/* Box 3: Remaining Balance */}
+            <div
+              className={`p-3 rounded-xl border flex flex-col justify-between ${
+                netRemaining > 0
+                  ? "bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800"
+                  : "bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"
+              }`}
+            >
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                অবশিষ্ট দেনা / পাওনা
+              </span>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span
+                  className={`font-black text-sm sm:text-base ${
+                    netRemaining > 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"
+                  }`}
+                >
+                  ৳ {formatBdCurrency(Math.abs(netRemaining))}
+                </span>
+                <span className="text-[10px] font-bold text-slate-500">
+                  {netRemaining > 0 ? "(বকেয়া প্রদেয়)" : "(পরিশোধিত)"}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -751,7 +782,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
               ) : (
                 <>
                   <Check className="w-4 h-4 stroke-[2.5]" />
-                  <span>লেজারে সংরক্ষণ ও সমন্বয় প্রয়োগ</span>
+                  <span>সংরক্ষণ ও সমন্বয় প্রয়োগ</span>
                 </>
               )}
             </button>

@@ -77,10 +77,10 @@ export function Pagination({
     <div
       className={`px-4 py-3 bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3 text-xs ${className}`}
     >
-      {/* Left side: Showing X to Y of Z & Page Size dropdown */}
-      <div className="flex flex-wrap items-center gap-3 text-slate-600 dark:text-slate-300 w-full md:w-auto justify-between md:justify-start">
+      {/* Left side: Showing X to Y of Z & Page Size dropdown (Centered on mobile) */}
+      <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-slate-600 dark:text-slate-300 w-full md:w-auto justify-center md:justify-start text-center">
         {showPageSizeSelector && onPageSizeChange && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-center gap-1.5">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
               Show
             </span>
@@ -108,7 +108,7 @@ export function Pagination({
           </div>
         )}
 
-        <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 text-center">
           Showing <span className="font-bold text-slate-800 dark:text-slate-200">{startItem}</span> to{" "}
           <span className="font-bold text-slate-800 dark:text-slate-200">{endItem}</span> of{" "}
           <span className="font-bold text-slate-900 dark:text-white">{totalItems}</span> entries

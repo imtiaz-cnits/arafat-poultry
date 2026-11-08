@@ -568,57 +568,61 @@ export default function SalesPortalPage() {
           </div>
         </div>
 
-        {/* Right: Customer Selector Bar (Wrapped on mobile so buttons never get clipped) */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 w-full md:w-auto">
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">
-            কাস্টমার:
-          </span>
-
-          {/* Searchable Customer CustomSelect */}
-          <div className="flex-1 sm:w-72 md:w-80 lg:w-[340px] min-w-[170px]">
-            <CustomSelect
-              options={customerOptions}
-              value={selectedCustomer?.id}
-              onChange={handleCustomerChange}
-              placeholder="কাস্টমার নির্বাচন বা মোবাইল নম্বর..."
-              searchThreshold={0}
-              minPopoverWidth={340}
-              triggerClassName="h-[38px] px-3 rounded-xl text-xs font-medium"
-            />
+        {/* Right: Customer Selector Bar (Row 1: Customer selector, Row 2 on mobile: Add Customer + Exchange together) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+          {/* Row 1 on mobile: Customer label & CustomSelect */}
+          <div className="flex items-center gap-1.5 w-full sm:w-auto flex-1">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">
+              কাস্টমার:
+            </span>
+            <div className="flex-1 sm:w-72 md:w-80 lg:w-[340px] min-w-[170px]">
+              <CustomSelect
+                options={customerOptions}
+                value={selectedCustomer?.id}
+                onChange={handleCustomerChange}
+                placeholder="কাস্টমার নির্বাচন বা মোবাইল নম্বর..."
+                searchThreshold={0}
+                minPopoverWidth={340}
+                triggerClassName="h-[38px] px-3 rounded-xl text-xs font-medium"
+              />
+            </div>
           </div>
 
-          {/* Add New Customer Button */}
-          <button
-            onClick={() => setIsCustomerModalOpen(true)}
-            className="h-[38px] px-3 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0 active:scale-95"
-            title="নতুন কাস্টমার যোগ করুন"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span className="hidden sm:inline">নতুন কাস্টমার</span>
-          </button>
+          {/* Row 2 on mobile (side-by-side on desktop): Add Customer + Exchange Buttons */}
+          <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0">
+            {/* Add New Customer Button */}
+            <button
+              onClick={() => setIsCustomerModalOpen(true)}
+              className="flex-1 sm:flex-initial h-[38px] px-3 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0 active:scale-95"
+              title="নতুন কাস্টমার যোগ করুন"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>নতুন কাস্টমার</span>
+            </button>
 
-          {/* Top Exchange Button (Wraps cleanly on mobile) */}
-          <button
-            type="button"
-            onClick={() => setIsExchangeModalOpen(true)}
-            className={`h-[38px] px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0 ${returnAdjustment > 0
-                ? "bg-amber-600 text-white border-amber-600 hover:bg-amber-700 animate-pulse"
-                : "bg-white dark:bg-slate-900 border-amber-500 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-              }`}
-            title="ফিড বা ডিম বিনিময় ও মূল্য সমন্বয় (Exchange)"
-          >
-            <ArrowRightLeft className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-            <span>ডিম/ফিড বিনিময়</span>
-            {returnAdjustment > 0 ? (
-              <span className="px-1.5 py-0.5 bg-white/20 text-white rounded text-[10px] font-black">
-                -৳{returnAdjustment}
-              </span>
-            ) : (
-              <span className="px-1 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded text-[9px] font-bold">
-                বিনিময়
-              </span>
-            )}
-          </button>
+            {/* Top Exchange Button */}
+            <button
+              type="button"
+              onClick={() => setIsExchangeModalOpen(true)}
+              className={`flex-1 sm:flex-initial h-[38px] px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0 ${returnAdjustment > 0
+                  ? "bg-amber-600 text-white border-amber-600 hover:bg-amber-700 animate-pulse"
+                  : "bg-white dark:bg-slate-900 border-amber-500 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                }`}
+              title="ফিড বা ডিম বিনিময় ও মূল্য সমন্বয় (Exchange)"
+            >
+              <ArrowRightLeft className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="whitespace-nowrap">ডিম/ফিড বিনিময়</span>
+              {returnAdjustment > 0 ? (
+                <span className="px-1.5 py-0.5 bg-white/20 text-white rounded text-[10px] font-black">
+                  -৳{returnAdjustment}
+                </span>
+              ) : (
+                <span className="px-1 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded text-[9px] font-bold">
+                  বিনিময়
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -985,7 +989,7 @@ export default function SalesPortalPage() {
           </div>
 
           {/* Cart Table Viewport */}
-          <div className="flex-1 overflow-y-auto overflow-x-auto min-h-[160px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+          <div className="flex-1 overflow-y-auto min-h-[160px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-400 p-6">
                 <ShoppingBag className="w-10 h-10 text-slate-300 dark:text-slate-700 mb-2 stroke-[1.5]" />
@@ -993,56 +997,181 @@ export default function SalesPortalPage() {
                   কোনো পণ্য কার্টে যুক্ত করা হয়নি
                 </p>
                 <p className="text-[11px] text-slate-400 text-center mt-0.5">
-                  ওপরের পণ্যের কার্ড থেকে সরাসরি পণ্য নির্বাচন করুন (F2)
+                  ওপরের পণ্যের কার্ড থেকে সরাসরি পণ্য নির্বাচন করুন <span className="hidden sm:inline">(F2)</span>
                 </p>
               </div>
             ) : (
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-bold border-b border-slate-200 dark:border-slate-700 z-10">
-                  <tr>
-                    <th className="py-2 px-2 text-center w-8">#</th>
-                    <th className="py-2 px-2.5 min-w-[130px]">পণ্য</th>
-                    <th className="py-2 px-2 text-center w-[110px]">পরিমাণ</th>
-                    <th className="py-2 px-2 text-center w-[92px]">একক</th>
-                    <th className="py-2 px-2 text-center w-[85px]">দর (৳)</th>
-                    <th className="py-2 px-2 text-right w-[85px]">মোট (৳)</th>
-                    <th className="py-2 px-2 text-center w-[75px]">ছাড় (৳)</th>
-                    <th className="py-2 px-2 text-right w-[85px]">নেট মোট (৳)</th>
-                    <th className="py-2 px-1 text-center w-9">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-medium">
+              <>
+                {/* Desktop View: Full Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[11px] font-bold border-b border-slate-200 dark:border-slate-700 z-10">
+                      <tr>
+                        <th className="py-2 px-2 text-center w-8">#</th>
+                        <th className="py-2 px-2.5 min-w-[130px]">পণ্য</th>
+                        <th className="py-2 px-2 text-center w-[110px]">পরিমাণ</th>
+                        <th className="py-2 px-2 text-center w-[92px]">একক</th>
+                        <th className="py-2 px-2 text-center w-[85px]">দর (৳)</th>
+                        <th className="py-2 px-2 text-right w-[85px]">মোট (৳)</th>
+                        <th className="py-2 px-2 text-center w-[75px]">ছাড় (৳)</th>
+                        <th className="py-2 px-2 text-right w-[85px]">নেট মোট (৳)</th>
+                        <th className="py-2 px-1 text-center w-9">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-medium">
+                      {cart.map((item, idx) => {
+                        const rowTotal = item.selling_price * item.quantity;
+                        const rowNet = rowTotal - (item.line_discount || 0);
+
+                        return (
+                          <tr
+                            key={item.product_id}
+                            className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors"
+                          >
+                            <td className="py-1.5 px-2 text-center font-bold text-slate-500">
+                              {idx + 1}
+                            </td>
+
+                            <td className="py-1.5 px-2.5">
+                              <div className="font-bold text-slate-800 dark:text-slate-100 leading-tight">
+                                {getProductDisplayName(item)}
+                              </div>
+                              <div className="text-[10px] text-slate-400 leading-none mt-0.5">
+                                {item.barcode || `PRD-${item.product_id}`}
+                              </div>
+                            </td>
+
+                            <td className="py-1.5 px-2">
+                              <div className="flex items-center justify-center border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/60 overflow-hidden h-7 mx-auto w-[96px]">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQty(item.product_id, item.quantity - 1)}
+                                  className="w-7 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <input
+                                  type="number"
+                                  min={0.1}
+                                  step="any"
+                                  value={item.quantity}
+                                  onChange={(e) => updateQty(item.product_id, parseFloat(e.target.value) || 0)}
+                                  className="w-12 h-full text-center font-bold text-xs bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => updateQty(item.product_id, item.quantity + 1)}
+                                  className="w-7 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </td>
+
+                            <td className="py-1.5 px-2 text-center">
+                              <div className="w-[84px] mx-auto">
+                                <CustomSelect
+                                  options={getUnitOptions(item)}
+                                  value={item.unit || "Piece"}
+                                  onChange={(val) => updateUnit(item.product_id, String(val))}
+                                  matchTriggerWidth={true}
+                                  searchThreshold={99}
+                                  triggerClassName="h-8 min-h-8 px-2 py-0 text-xs font-semibold rounded-lg"
+                                />
+                              </div>
+                            </td>
+
+                            <td className="py-1.5 px-2 text-center">
+                              <input
+                                type="number"
+                                min={0}
+                                step="any"
+                                value={item.selling_price}
+                                onChange={(e) => updatePrice(item.product_id, parseFloat(e.target.value) || 0)}
+                                className="w-18 h-7 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                              />
+                            </td>
+
+                            <td className="py-1.5 px-2 text-right font-bold text-slate-700 dark:text-slate-200">
+                              {rowTotal.toFixed(2)}
+                            </td>
+
+                            <td className="py-1.5 px-2 text-center">
+                              <input
+                                type="number"
+                                min={0}
+                                step="any"
+                                value={item.line_discount || 0}
+                                onChange={(e) => updateLineDiscount(item.product_id, parseFloat(e.target.value) || 0)}
+                                className="w-16 h-7 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                              />
+                            </td>
+
+                            <td className="py-1.5 px-2 text-right font-black text-emerald-700 dark:text-emerald-400">
+                              {rowNet.toFixed(2)}
+                            </td>
+
+                            <td className="py-1.5 px-1 text-center">
+                              <button
+                                type="button"
+                                onClick={() => removeItem(item.product_id)}
+                                className="w-7 h-7 rounded-lg text-rose-500 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer mx-auto"
+                                title="মুছে ফেলুন"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile View: Compact Box/Cards with Vertical Scroll */}
+                <div className="md:hidden space-y-2 max-h-[360px] overflow-y-auto pr-0.5 scrollbar-thin">
                   {cart.map((item, idx) => {
                     const rowTotal = item.selling_price * item.quantity;
                     const rowNet = rowTotal - (item.line_discount || 0);
 
                     return (
-                      <tr
+                      <div
                         key={item.product_id}
-                        className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors"
+                        className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-2 shadow-2xs"
                       >
-                        {/* Serial Number */}
-                        <td className="py-1.5 px-2 text-center font-bold text-slate-500">
-                          {idx + 1}
-                        </td>
-
-                        {/* Product Name */}
-                        <td className="py-1.5 px-2.5">
-                          <div className="font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                            {getProductDisplayName(item)}
+                        {/* Header: Serial + Name + Trash */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-black flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                {getProductDisplayName(item)}
+                              </h4>
+                              <p className="text-[10px] text-slate-400 font-mono">
+                                {item.barcode || `PRD-${item.product_id}`}
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-[10px] text-slate-400 leading-none mt-0.5">
-                            {item.barcode || `PRD-${item.product_id}`}
-                          </div>
-                        </td>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item.product_id)}
+                            className="w-7 h-7 rounded-lg text-rose-500 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                            title="মুছে ফেলুন"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
 
-                        {/* Quantity Stepper (Exact 32px height, strictly centered number) */}
-                        <td className="py-1.5 px-2">
-                          <div className="flex items-center justify-center border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/60 overflow-hidden h-7 mx-auto w-[96px]">
+                        {/* Controls: Stepper + Unit */}
+                        <div className="grid grid-cols-2 gap-2 items-center">
+                          {/* Quantity Stepper */}
+                          <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 overflow-hidden h-7">
                             <button
                               type="button"
                               onClick={() => updateQty(item.product_id, item.quantity - 1)}
-                              className="w-7 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+                              className="w-7 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
@@ -1052,82 +1181,66 @@ export default function SalesPortalPage() {
                               step="any"
                               value={item.quantity}
                               onChange={(e) => updateQty(item.product_id, parseFloat(e.target.value) || 0)}
-                              className="w-12 h-full text-center font-bold text-xs bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="flex-1 h-full text-center font-bold text-xs bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                             <button
                               type="button"
                               onClick={() => updateQty(item.product_id, item.quantity + 1)}
-                              className="w-7 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+                              className="w-7 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
-                        </td>
 
-                        {/* Unit CustomSelect (Exact 32px height, instant active selection & price update) */}
-                        <td className="py-1.5 px-2 text-center">
-                          <div className="w-[84px] mx-auto">
-                            <CustomSelect
-                              options={getUnitOptions(item)}
-                              value={item.unit || "Piece"}
-                              onChange={(val) => updateUnit(item.product_id, String(val))}
-                              matchTriggerWidth={true}
-                              searchThreshold={99}
-                              triggerClassName="h-8 min-h-8 px-2 py-0 text-xs font-semibold rounded-lg"
+                          {/* Unit Select */}
+                          <CustomSelect
+                            options={getUnitOptions(item)}
+                            value={item.unit || "Piece"}
+                            onChange={(val) => updateUnit(item.product_id, String(val))}
+                            matchTriggerWidth={true}
+                            searchThreshold={99}
+                            triggerClassName="h-7 min-h-7 px-2 py-0 text-xs font-semibold rounded-lg"
+                          />
+                        </div>
+
+                        {/* Bottom: Rate, Discount, Net */}
+                        <div className="flex items-center justify-between gap-1 text-[11px] pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                          <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                            <span>দর:</span>
+                            <input
+                              type="number"
+                              min={0}
+                              step="any"
+                              value={item.selling_price}
+                              onChange={(e) => updatePrice(item.product_id, parseFloat(e.target.value) || 0)}
+                              className="w-16 h-6 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                             />
                           </div>
-                        </td>
 
-                        {/* Unit Price (Editable) */}
-                        <td className="py-1.5 px-2 text-center">
-                          <input
-                            type="number"
-                            min={0}
-                            step="any"
-                            value={item.selling_price}
-                            onChange={(e) => updatePrice(item.product_id, parseFloat(e.target.value) || 0)}
-                            className="w-18 h-7 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                          />
-                        </td>
+                          <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                            <span>ছাড়:</span>
+                            <input
+                              type="number"
+                              min={0}
+                              step="any"
+                              value={item.line_discount || 0}
+                              onChange={(e) => updateLineDiscount(item.product_id, parseFloat(e.target.value) || 0)}
+                              className="w-14 h-6 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            />
+                          </div>
 
-                        {/* Line Total */}
-                        <td className="py-1.5 px-2 text-right font-bold text-slate-700 dark:text-slate-200">
-                          {rowTotal.toFixed(2)}
-                        </td>
-
-                        {/* Line Discount (Editable) */}
-                        <td className="py-1.5 px-2 text-center">
-                          <input
-                            type="number"
-                            min={0}
-                            step="any"
-                            value={item.line_discount || 0}
-                            onChange={(e) => updateLineDiscount(item.product_id, parseFloat(e.target.value) || 0)}
-                            className="w-16 h-7 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                          />
-                        </td>
-
-                        {/* Line Net Total */}
-                        <td className="py-1.5 px-2 text-right font-black text-emerald-700 dark:text-emerald-400">
-                          {rowNet.toFixed(2)}
-                        </td>
-
-                        {/* Delete Action */}
-                        <td className="py-1.5 px-1 text-center">
-                          <button
-                            type="button"
-                            onClick={() => removeItem(item.product_id)}
-                            className="w-7 h-7 rounded-lg text-rose-500 hover:text-white hover:bg-rose-600 flex items-center justify-center transition-colors cursor-pointer mx-auto"
-                            title="মুছে ফেলুন"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
+                          <div className="text-right shrink-0">
+                            <span className="text-[10px] text-slate-400">নেট: </span>
+                            <span className="font-black text-xs text-emerald-700 dark:text-emerald-400">
+                              ৳{rowNet.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              </>
             )}
           </div>
 
@@ -1151,7 +1264,7 @@ export default function SalesPortalPage() {
                 className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>রিসেট (Esc)</span>
+                <span>রিসেট <span className="hidden sm:inline">(Esc)</span></span>
               </button>
             </div>
           </div>
@@ -1356,7 +1469,7 @@ export default function SalesPortalPage() {
 
           {/* Pinned Bottom Buttons (Print + Complete Sale) */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2 shrink-0">
-            {/* Print (F6) Button */}
+            {/* Print Button */}
             <button
               type="button"
               onClick={() => {
@@ -1370,10 +1483,10 @@ export default function SalesPortalPage() {
               title="চালান প্রিন্ট করুন (F6)"
             >
               <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-              <span>প্রিন্ট (F6)</span>
+              <span>প্রিন্ট <span className="hidden sm:inline">(F6)</span></span>
             </button>
 
-            {/* Submit Order (F4) Button */}
+            {/* Submit Order Button */}
             <button
               type="button"
               onClick={handleSubmitOrder}
@@ -1388,7 +1501,7 @@ export default function SalesPortalPage() {
               ) : (
                 <>
                   <Check className="w-4 h-4 stroke-[3]" />
-                  <span>বিক্রয় সম্পন্ন (F4)</span>
+                  <span>বিক্রয় সম্পন্ন <span className="hidden sm:inline">(F4)</span></span>
                 </>
               )}
             </button>

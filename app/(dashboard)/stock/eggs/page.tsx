@@ -310,7 +310,8 @@ export default function StockEggsPage() {
 
       {/* 4. Desktop Collections Table */}
       <div className="bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop View: Full Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
@@ -387,6 +388,92 @@ export default function StockEggsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Compact Box Cards */}
+        <div className="md:hidden space-y-2.5 p-3">
+          {loading ? (
+            <div className="p-8 text-center text-slate-400">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
+              <span>ডিম সংগ্রহের ডাটা লোড হচ্ছে...</span>
+            </div>
+          ) : filteredCollections.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 font-bold">
+              কোনো ডিম সংগ্রহের তথ্য পাওয়া যায়নি।
+            </div>
+          ) : (
+            displayedCollections.map((col, idx) => {
+              const grpA = col.grades?.find((g) => g.grade_name.toLowerCase().includes("grade a"));
+              const grpB = col.grades?.find((g) => g.grade_name.toLowerCase().includes("grade b"));
+
+              return (
+                <div
+                  key={col.id}
+                  className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2 shadow-2xs"
+                >
+                  {/* Card Header: Date & Voucher + Shed Name */}
+                  <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
+                    <div>
+                      <div className="font-bold text-slate-800 dark:text-slate-100 text-xs">
+                        {col.date}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        {col.collection_no}
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
+                      {col.flock_name}
+                    </span>
+                  </div>
+
+                  {/* Card Grid Stats: Compact, with ample space for numbers so they never wrap */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                      <span className="text-[10px] text-slate-400 block">মোট সংগ্রহ</span>
+                      <span className="font-black text-slate-900 dark:text-white text-xs whitespace-nowrap">
+                        {col.total_collected.toLocaleString()} টি
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {Math.floor(col.total_collected / 30)} খাঁচি + {col.total_collected % 30}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/70">
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block font-bold">গৃহীত ভালো ডিম</span>
+                      <span className="font-black text-emerald-700 dark:text-emerald-400 text-xs whitespace-nowrap">
+                        {col.accepted_quantity.toLocaleString()} পিস
+                      </span>
+                      {col.cost_per_accepted_egg > 0 && (
+                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                          খরচ: ৳{col.cost_per_accepted_egg.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
+                      <span className="text-[10px] text-slate-400 block">বড় ও ছোট ডিম</span>
+                      <div className="text-[11px] mt-0.5 whitespace-nowrap">
+                        <span className="font-bold text-sky-700 dark:text-sky-400">
+                          বড়: {grpA ? `${grpA.pieces.toLocaleString()}` : "০"}
+                        </span>
+                        <span className="text-slate-300 mx-1">|</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400">
+                          ছোট: {grpB ? `${grpB.pieces.toLocaleString()}` : "০"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-800/70">
+                      <span className="text-[10px] text-rose-600 dark:text-rose-400 block font-bold">নষ্ট ও ভাঙা ডিম</span>
+                      <span className="font-black text-rose-600 dark:text-rose-400 text-xs whitespace-nowrap">
+                        {col.rejected_breakage > 0 ? `${col.rejected_breakage} টি` : "০ টি"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination Controls */}

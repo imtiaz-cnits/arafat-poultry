@@ -357,7 +357,7 @@ export function Sidebar({
           >
             <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
               <Image
-                src="/logo1.png"
+                src="/fav.jpg"
                 alt="Arafat Poultry & Fisheries"
                 width={28}
                 height={28}
@@ -366,11 +366,11 @@ export function Sidebar({
               />
             </div>
             {!isCollapsed && (
-              <div className="min-w-0">
-                <h1 className="text-[11.5px] font-black tracking-wider text-white leading-none truncate">
+              <div className="min-w-0 pr-1">
+                <h1 className="text-[10px] sm:text-[11.5px] font-black tracking-wider text-white leading-none truncate">
                   ARAFAT POULTRY
                 </h1>
-                <p className="text-[9.5px] text-emerald-200/90 tracking-tight mt-1 font-medium truncate">
+                <p className="text-[8.5px] sm:text-[9.5px] text-emerald-200/90 tracking-tight mt-1 font-medium truncate">
                   Poultry &amp; Fisheries
                 </p>
               </div>
@@ -379,9 +379,10 @@ export function Sidebar({
           {!isCollapsed && (
             <button
               onClick={onClose}
-              className="lg:hidden p-1 text-emerald-200 hover:text-white rounded-lg cursor-pointer"
+              className="lg:hidden w-7 h-7 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center justify-center cursor-pointer shrink-0 transition-colors shadow-xs ml-1"
+              title="মেনু বন্ধ করুন"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 text-white stroke-[2.5]" />
             </button>
           )}
         </div>

@@ -327,7 +327,7 @@ export default function PurchasesPage() {
   return (
     <div className="space-y-4">
       {/* 1. Header & Summary Cards */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-3 sm:p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs overflow-hidden">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-100 dark:border-slate-800 flex items-center justify-center shrink-0">
             <Truck className="w-5 h-5" />
@@ -342,23 +342,23 @@ export default function PurchasesPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
           {/* Total Inward Value */}
-          <div className="h-[38px] px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex items-center gap-2">
-            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">
-              মোট ক্রয় (Inward):
+          <div className="flex-1 sm:flex-initial py-1 sm:py-0 px-2 sm:px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0 sm:h-[38px] justify-center">
+            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase truncate">
+              মোট ক্রয় (INWARD):
             </span>
-            <span className="text-xs font-black text-emerald-800 dark:text-emerald-300">
+            <span className="text-[11px] sm:text-xs font-black text-emerald-800 dark:text-emerald-300 whitespace-nowrap">
               {formatBdCurrency(totalPurchasesCost)}
             </span>
           </div>
 
           {/* Total Purchase Due */}
-          <div className="h-[38px] px-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex items-center gap-2">
-            <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase">
+          <div className="flex-1 sm:flex-initial py-1 sm:py-0 px-2 sm:px-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0 sm:h-[38px] justify-center">
+            <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase truncate">
               বকেয়া দেনা:
             </span>
-            <span className="text-xs font-black text-amber-800 dark:text-amber-300">
+            <span className="text-[11px] sm:text-xs font-black text-amber-800 dark:text-amber-300 whitespace-nowrap">
               {formatBdCurrency(totalPurchasesDue)}
             </span>
           </div>
@@ -368,10 +368,11 @@ export default function PurchasesPage() {
               setNewItems([]);
               setIsNewPurchaseOpen(true);
             }}
-            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+            className="h-[38px] px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer shrink-0"
+            title="নতুন ক্রয় এন্ট্রি করুন"
           >
             <Plus className="w-4 h-4" />
-            <span>নতুন ক্রয়</span>
+            <span className="hidden sm:inline">নতুন ক্রয়</span>
           </button>
         </div>
       </div>
