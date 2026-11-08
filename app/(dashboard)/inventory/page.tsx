@@ -485,27 +485,27 @@ export default function InventoryPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">ক্রমিক</th>
-                <th className="py-3 px-4">পণ্যের বিবরণ ও কোড</th>
-                <th className="py-3 px-3">ক্যাটাগরি ও ব্র্যান্ড</th>
-                <th className="py-3 px-3 text-center">বর্তমান লাইভ স্টক</th>
-                <th className="py-3 px-3 text-right">ক্রয় দর (৳)</th>
-                <th className="py-3 px-3 text-right">বিক্রয় দর (৳)</th>
-                <th className="py-3 px-3 text-right">মোট মজুত মূল্য</th>
-                <th className="py-3 px-4 text-center w-24">অ্যাকশন</th>
+                <th className="text-center w-[50px] p-[10px]">ক্রমিক</th>
+                <th className="p-[10px]">পণ্যের বিবরণ ও কোড</th>
+                <th className="p-[10px]">ক্যাটাগরি ও ব্র্যান্ড</th>
+                <th className="text-center p-[10px]">বর্তমান লাইভ স্টক</th>
+                <th className="text-right p-[10px]">ক্রয় দর (৳)</th>
+                <th className="text-right p-[10px]">বিক্রয় দর (৳)</th>
+                <th className="text-right p-[10px]">মোট মজুত মূল্য</th>
+                <th className="text-center w-24 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400">
+                  <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>স্টক তথ্য লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={8} className="text-center text-slate-400 font-bold p-[10px]">
                     কোন পণ্য পাওয়া যায়নি।
                   </td>
                 </tr>
@@ -515,10 +515,10 @@ export default function InventoryPage() {
                     key={item.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="text-center font-bold text-slate-500 p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 text-xs flex items-center gap-2">
                         {item.category.includes("Egg") || item.category.includes("ডিম") ? (
                           <Egg className="w-4 h-4 text-amber-600 shrink-0" />
@@ -537,13 +537,13 @@ export default function InventoryPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="p-[10px]">
                       <div className="font-semibold text-slate-700 dark:text-slate-200">
                         {getCategoryDisplayName(item.category)}
                       </div>
                       <div className="text-[10px] text-slate-400">{item.brand}</div>
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="text-center p-[10px]">
                       <span
                         className={`inline-block px-2.5 py-1 rounded-full text-xs font-black ${
                           item.available_quantity <= 0
@@ -556,16 +556,16 @@ export default function InventoryPage() {
                         {item.unit_breakdown ? item.unit_breakdown.formatted : `${item.available_quantity} ${item.unit}`}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-medium text-slate-600 dark:text-slate-300">
+                    <td className="text-right font-medium text-slate-600 dark:text-slate-300 p-[10px]">
                       {item.cost_price.toFixed(2)}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-slate-900 dark:text-white">
+                    <td className="text-right font-bold text-slate-900 dark:text-white p-[10px]">
                       {item.sell_price.toFixed(2)}
                     </td>
-                    <td className="py-3 px-3 text-right font-black text-sky-700 dark:text-sky-400">
+                    <td className="text-right font-black text-sky-700 dark:text-sky-400 p-[10px]">
                       {formatBdCurrency(item.total_cost_value)}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <button
                         type="button"
                         onClick={() => handleOpenAdjust(item)}
@@ -702,7 +702,8 @@ export default function InventoryPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveAdjustment} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSaveAdjustment} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {adjustError && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
                   {adjustError}
@@ -771,7 +772,10 @@ export default function InventoryPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsAdjustModalOpen(false)}

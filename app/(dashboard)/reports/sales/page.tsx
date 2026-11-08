@@ -363,28 +363,28 @@ export default function SalesReportPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং</th>
-                <th className="py-3 px-4">ইনভয়েস ও তারিখ</th>
-                <th className="py-3 px-4">কাস্টমার (Customer)</th>
-                <th className="py-3 px-3 text-center">আইটেম</th>
-                <th className="py-3 px-3 text-right">ক্রয় খরচ (Cost ৳)</th>
-                <th className="py-3 px-3 text-right">বিক্রয় মূল্য (Total ৳)</th>
-                <th className="py-3 px-3 text-right">পরিশোধ (Paid ৳)</th>
-                <th className="py-3 px-3 text-right">বকেয়া (Due ৳)</th>
-                {canSeeProfit && <th className="py-3 px-4 text-right">নিট লাভ (Profit ৳)</th>}
+                <th className="text-center w-[50px] p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">ইনভয়েস ও তারিখ</th>
+                <th className="p-[10px]">কাস্টমার</th>
+                <th className="text-center p-[10px]">আইটেম</th>
+                <th className="text-right p-[10px]">ক্রয় খরচ</th>
+                <th className="text-right p-[10px]">বিক্রয় মূল্য (Total ৳)</th>
+                <th className="text-right p-[10px]">পরিশোধ (Paid ৳)</th>
+                <th className="text-right p-[10px]">বকেয়া (Due ৳)</th>
+                {canSeeProfit && <th className="text-right p-[10px]">নিট লাভ</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={canSeeProfit ? 9 : 8} className="py-10 text-center text-slate-400">
+                  <td colSpan={canSeeProfit ? 9 : 8} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading sales report...</span>
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={canSeeProfit ? 9 : 8} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={canSeeProfit ? 9 : 8} className="text-center text-slate-400 font-bold p-[10px]">
                     No sales invoices found for the specified period.
                   </td>
                 </tr>
@@ -394,10 +394,10 @@ export default function SalesReportPage() {
                     key={o.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="text-center font-bold text-slate-500 p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100">
                         {o.order_no}
                       </div>
@@ -405,7 +405,7 @@ export default function SalesReportPage() {
                         {o.date}
                       </div>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100">
                         {o.customer_name}
                       </div>
@@ -415,23 +415,23 @@ export default function SalesReportPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                    <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                       {o.items_count}
                     </td>
-                    <td className="py-3 px-3 text-right font-medium text-slate-600 dark:text-slate-400">
+                    <td className="text-right font-medium text-slate-600 dark:text-slate-400 p-[10px]">
                       {formatBdCurrency(o.cost_amount)}
                     </td>
-                    <td className="py-3 px-3 text-right font-black text-slate-900 dark:text-white">
+                    <td className="text-right font-black text-slate-900 dark:text-white p-[10px]">
                       {formatBdCurrency(o.net_amount)}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                    <td className="text-right font-bold text-emerald-600 dark:text-emerald-400 p-[10px]">
                       {formatBdCurrency(o.paid_amount)}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-rose-600 dark:text-rose-400">
+                    <td className="text-right font-bold text-rose-600 dark:text-rose-400 p-[10px]">
                       {formatBdCurrency(o.due_amount)}
                     </td>
                     {canSeeProfit && (
-                      <td className="py-3 px-4 text-right font-black text-emerald-700 dark:text-emerald-300">
+                      <td className="text-right font-black text-emerald-700 dark:text-emerald-300 p-[10px]">
                         {formatBdCurrency(o.profit_amount)}
                       </td>
                     )}
@@ -574,23 +574,23 @@ export default function SalesReportPage() {
           </tbody>
           <tfoot>
             <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
-              <td colSpan={4} className="text-right font-bold py-1.5 px-2">
+              <td colSpan={4} className="text-right font-bold p-[10px]">
                 Total Statement Summary:
               </td>
-              <td className="text-center py-1.5 px-2">
+              <td className="text-center p-[10px]">
                 {orders.reduce((a, b) => a + b.items_count, 0)} Items
               </td>
-              <td className="text-right font-black py-1.5 px-2">
+              <td className="text-right font-black p-[10px]">
                 {formatBdCurrency(summary?.total_sales_amount || 0)}
               </td>
-              <td className="text-right font-bold text-emerald-800 py-1.5 px-2">
+              <td className="text-right font-bold text-emerald-800 p-[10px]">
                 {formatBdCurrency(summary?.total_paid_amount || 0)}
               </td>
-              <td className="text-right font-bold text-red-700 py-1.5 px-2">
+              <td className="text-right font-bold text-red-700 p-[10px]">
                 {formatBdCurrency(summary?.total_due_amount || 0)}
               </td>
               {canSeeProfit && (
-                <td className="text-right font-black text-emerald-900 py-1.5 px-2">
+                <td className="text-right font-black text-emerald-900 p-[10px]">
                   {formatBdCurrency(summary?.total_gross_profit || 0)}
                 </td>
               )}

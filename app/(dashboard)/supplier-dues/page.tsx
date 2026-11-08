@@ -177,26 +177,26 @@ export default function SupplierDuesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">SL</th>
-                <th className="py-3 px-4">Supplier / ID</th>
-                <th className="py-3 px-3">Company</th>
-                <th className="py-3 px-3">Phone</th>
-                <th className="py-3 px-3">Address</th>
-                <th className="py-3 px-3 text-right">Outstanding Payable</th>
-                <th className="py-3 px-4 text-center w-28">Action</th>
+                <th className="text-center w-[50px] p-[10px]">SL</th>
+                <th className="p-[10px]">Supplier / ID</th>
+                <th className="p-[10px]">কোম্পানি</th>
+                <th className="p-[10px]">মোবাইল</th>
+                <th className="p-[10px]">ঠিকানা</th>
+                <th className="text-right p-[10px]">বকেয়া দেনা</th>
+                <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400">
+                  <td colSpan={7} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading due records...</span>
                   </td>
                 </tr>
               ) : filteredSuppliers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 font-bold">
+                  <td colSpan={7} className="text-center text-slate-400 font-bold p-[10px]">
                     <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
                     <span>All supplier dues are currently cleared!</span>
                   </td>
@@ -207,10 +207,10 @@ export default function SupplierDuesPage() {
                     key={s.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="text-center font-bold text-slate-500 p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 text-xs">
                         <Link
                           href={`/suppliers/${s.id}`}
@@ -228,21 +228,21 @@ export default function SupplierDuesPage() {
                         </Link>
                       </div>
                     </td>
-                    <td className="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
+                    <td className="font-semibold text-slate-700 dark:text-slate-200 p-[10px]">
                       {s.company}
                     </td>
-                    <td className="py-3 px-3 font-bold text-slate-800 dark:text-slate-200">
+                    <td className="font-bold text-slate-800 dark:text-slate-200 p-[10px]">
                       {s.mobile}
                     </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-300">
+                    <td className="text-slate-600 dark:text-slate-300 p-[10px]">
                       {s.address || "N/A"}
                     </td>
-                    <td className="py-3 px-3 text-right">
+                    <td className="text-right p-[10px]">
                       <span className="font-black text-rose-600 dark:text-rose-400 text-xs">
                         {formatBdCurrency(s.purchase_payable_amount)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <button
                         type="button"
                         onClick={() => handleOpenPay(s)}
@@ -381,7 +381,8 @@ export default function SupplierDuesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitPayment} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmitPayment} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               <div className="bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-1 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Supplier:</span>
@@ -464,7 +465,10 @@ export default function SupplierDuesPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsPayModalOpen(false)}

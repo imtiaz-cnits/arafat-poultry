@@ -240,25 +240,25 @@ export default function CustomersPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
-                <th className="py-3 px-4">কাস্টমার নাম / আইডি (Customer)</th>
-                <th className="py-3 px-3">মোবাইল নম্বর (Mobile)</th>
-                <th className="py-3 px-3">ঠিকানা (Address)</th>
-                <th className="py-3 px-3 text-right">মোট বকেয়া (Due ৳)</th>
-                <th className="py-3 px-4 text-center w-24">অ্যাকশন (Actions)</th>
+                <th className="text-center w-[50px] p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">কাস্টমার ও আইডি</th>
+                <th className="p-[10px]">মোবাইল নম্বর</th>
+                <th className="p-[10px]">ঠিকানা</th>
+                <th className="text-right p-[10px]">মোট বকেয়া</th>
+                <th className="text-center w-24 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400">
+                  <td colSpan={6} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading customers...</span>
                   </td>
                 </tr>
               ) : customers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={6} className="text-center text-slate-400 font-bold p-[10px]">
                     No customers found. Click "+ Add Customer" to create one.
                   </td>
                 </tr>
@@ -268,10 +268,10 @@ export default function CustomersPage() {
                     key={c.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="text-center font-bold text-slate-500 p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 text-xs">
                         <Link
                           href={`/customers/${c.id}`}
@@ -289,13 +289,13 @@ export default function CustomersPage() {
                         </Link>
                       </div>
                     </td>
-                    <td className="py-3 px-3 font-bold text-slate-800 dark:text-slate-200">
+                    <td className="font-bold text-slate-800 dark:text-slate-200 p-[10px]">
                       {c.mobile}
                     </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-300">
+                    <td className="text-slate-600 dark:text-slate-300 p-[10px]">
                       {c.address_details || "N/A"}
                     </td>
-                    <td className="py-3 px-3 text-right">
+                    <td className="text-right p-[10px]">
                       <span
                         className={`font-black text-xs ${
                           c.previous_due_amount > 0 ? "text-rose-600" : "text-emerald-600"
@@ -304,7 +304,7 @@ export default function CustomersPage() {
                         {formatBdCurrency(c.previous_due_amount)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
@@ -449,7 +449,8 @@ export default function CustomersPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {errorMsg && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
                   {errorMsg}
@@ -536,7 +537,10 @@ export default function CustomersPage() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

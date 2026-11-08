@@ -429,9 +429,9 @@ export default function IncomeExpensePage() {
         <table className="print-table mb-4">
           <thead>
             <tr className="bg-slate-100 font-bold text-left">
-              <th>Particulars (খাত)</th>
-              <th className="text-right">Amount (৳)</th>
-              <th>Remarks</th>
+              <th>খাত</th>
+              <th className="text-right">পরিমাণ (৳)</th>
+              <th>মন্তব্য</th>
             </tr>
           </thead>
           <tbody>

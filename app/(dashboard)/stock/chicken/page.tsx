@@ -14,7 +14,7 @@ import {
   Calendar,
   Layers,
 } from "lucide-react";
-import { useToast } from "@/components/ui";
+import { useToast, Pagination } from "@/components/ui";
 
 interface ShedStockItem {
   id: number;
@@ -36,6 +36,12 @@ export default function StockChickenPage() {
   const [loading, setLoading] = useState(true);
   const [flocks, setFlocks] = useState<ShedStockItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -130,10 +136,15 @@ export default function StockChickenPage() {
     );
   }, [flocks, searchTerm]);
 
+  const displayedItems = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
   // Aggregate stats:
   // বড় মুরগি (Adult Layers): age >= 120 days (~4+ months)
   // মাঝারি মুরগি (Growers): 45 <= age < 120 days
-  // বাচ্চা মুরগি (Chicks): age < 45 days
+  // বাচ্চা মুরগি: age < 45 days
   let totalLive = 0;
   let adultCount = 0;
   let growerCount = 0;
@@ -220,7 +231,7 @@ export default function StockChickenPage() {
         {/* Chicks */}
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>ছোট ও বাচ্চা মুরগি (Chicks)</span>
+            <span>ছোট ও বাচ্চা মুরগি</span>
             <Home className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
@@ -254,33 +265,33 @@ export default function StockChickenPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-12">ক্র: নং</th>
-                <th className="py-3 px-4">শেডের নাম ও কোড</th>
-                <th className="py-3 px-3">মুরগির জাত (Breed)</th>
-                <th className="py-3 px-3 text-center">বড় মুরগি (Adult)</th>
-                <th className="py-3 px-3 text-center">মাঝারি মুরগি (Grower)</th>
-                <th className="py-3 px-3 text-center">বাচ্চা মুরগি (Chicks)</th>
-                <th className="py-3 px-3 text-center">শেডে বর্তমান মোট</th>
-                <th className="py-3 px-3 text-center">বয়স (দিন / মাস)</th>
-                <th className="py-3 px-3 text-center">স্ট্যাটাস</th>
+                <th className="text-center w-12 p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">শেডের নাম ও কোড</th>
+                <th className="p-[10px]">মুরগির জাত</th>
+                <th className="text-center p-[10px]">বড় মুরগি</th>
+                <th className="text-center p-[10px]">মাঝারি মুরগি</th>
+                <th className="text-center p-[10px]">বাচ্চা মুরগি</th>
+                <th className="text-center p-[10px]">শেডে বর্তমান মোট</th>
+                <th className="text-center p-[10px]">বয়স</th>
+                <th className="text-center p-[10px]">স্ট্যাটাস</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={9} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>শেডের স্টক ডাটা লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={9} className="text-center text-slate-400 font-bold p-[10px]">
                     কোনো শেডের স্টক তথ্য পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
-                filtered.map((item, idx) => {
+                displayedItems.map((item, idx) => {
                   const age = item.age_days || 0;
                   const isAdult = age >= 120;
                   const isGrower = age >= 45 && age < 120;
@@ -292,10 +303,10 @@ export default function StockChickenPage() {
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-3 text-center font-bold text-slate-400">
-                        {idx + 1}
+                      <td className="text-center font-bold text-slate-400 p-[10px]">
+                        {(currentPage - 1) * pageSize + idx + 1}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <div className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
                           <Home className="w-3.5 h-3.5 text-emerald-700" />
                           <span>{item.shed_name}</span>
@@ -304,28 +315,28 @@ export default function StockChickenPage() {
                           {item.flock_code} &bull; আগমন: {item.housing_date || "—"}
                         </div>
                       </td>
-                      <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
+                      <td className="font-semibold text-slate-800 dark:text-slate-200 p-[10px]">
+                        <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
                           {item.breed}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-orange-600 dark:text-orange-400">
+                      <td className="text-center font-bold text-orange-600 dark:text-orange-400 p-[10px]">
                         {adultBirds > 0 ? `${adultBirds.toLocaleString()} টি` : "—"}
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-sky-700 dark:text-sky-400">
+                      <td className="text-center font-bold text-sky-700 dark:text-sky-400 p-[10px]">
                         {growerBirds > 0 ? `${growerBirds.toLocaleString()} টি` : "—"}
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-amber-600 dark:text-amber-400">
+                      <td className="text-center font-bold text-amber-600 dark:text-amber-400 p-[10px]">
                         {chickBirds > 0 ? `${chickBirds.toLocaleString()} টি` : "—"}
                       </td>
-                      <td className="py-3 px-3 text-center font-black text-emerald-700 dark:text-emerald-400 text-sm">
+                      <td className="text-center font-black text-emerald-700 dark:text-emerald-400 text-sm p-[10px]">
                         {Number(item.current_birds ?? item.current_birds_count ?? 0).toLocaleString()} টি
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                      <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                         {item.age_display || `${age} দিন`}
                       </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      <td className="text-center p-[10px]">
+                        <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                           {item.status || "ACTIVE"}
                         </span>
                       </td>
@@ -336,6 +347,19 @@ export default function StockChickenPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[20, 50, 100, 200, 500]}
+        />
       </div>
 
       {/* Inward Stock Modal */}
@@ -358,7 +382,8 @@ export default function StockChickenPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateFlock} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleCreateFlock} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -458,7 +483,10 @@ export default function StockChickenPage() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

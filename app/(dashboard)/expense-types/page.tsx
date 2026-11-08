@@ -281,25 +281,25 @@ export default function ExpenseTypesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-4 w-12 text-center">SL</th>
-                <th className="py-3 px-4">Expense Category Name</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Total Vouchers</th>
-                <th className="py-3 px-4 text-right">Total Spent (৳)</th>
-                <th className="py-3 px-4 text-center w-28">Actions</th>
+                <th className="w-12 text-center p-[10px]">SL</th>
+                <th className="p-[10px]">খরচের ক্যাটাগরি</th>
+                <th className="text-center p-[10px]">স্ট্যাটাস</th>
+                <th className="text-center p-[10px]">মোট ভাউচার</th>
+                <th className="text-right p-[10px]">মোট খরচ (৳)</th>
+                <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400">
+                  <td colSpan={6} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading expense categories...</span>
                   </td>
                 </tr>
               ) : types.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={6} className="text-center text-slate-400 font-bold p-[10px]">
                     No expense categories found.
                   </td>
                 </tr>
@@ -309,16 +309,16 @@ export default function ExpenseTypesPage() {
                     key={item.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-4 text-center text-slate-400 font-mono">
+                    <td className="text-center text-slate-400 font-mono p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">
+                    <td className="font-bold text-slate-800 dark:text-slate-100 p-[10px]">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-600" />
                         <span>{item.type_name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                           item.status === "Active"
@@ -334,13 +334,13 @@ export default function ExpenseTypesPage() {
                         <span>{item.status}</span>
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-slate-700 dark:text-slate-300">
+                    <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                       {item.total_records}
                     </td>
-                    <td className="py-3 px-4 text-right font-black text-rose-600 dark:text-rose-400 text-xs">
+                    <td className="text-right font-black text-rose-600 dark:text-rose-400 text-xs p-[10px]">
                       {formatBdCurrency(item.total_amount)}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
@@ -483,7 +483,8 @@ export default function ExpenseTypesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5 space-y-4 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-4 flex-1 min-h-0 overflow-y-auto">
               {errorMsg && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
                   {errorMsg}
@@ -522,7 +523,10 @@ export default function ExpenseTypesPage() {
               </div>
 
               {/* Sticky Footer: Cancel Red #dc2626, Save Emerald #15803d */}
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

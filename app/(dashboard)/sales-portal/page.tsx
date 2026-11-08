@@ -784,7 +784,7 @@ export default function SalesPortalPage() {
               onMouseLeave={handleMouseLeave}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
-              className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-emerald-500/30 hover:scrollbar-thumb-emerald-600/60 dark:scrollbar-thumb-emerald-900 scroll-smooth cursor-grab active:cursor-grabbing select-none"
+              className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-emerald-500/30 hover:scrollbar-thumb-emerald-600/60 dark:scrollbar-thumb-emerald-900 scroll-smooth select-none"
             >
               {filteredProducts.map((p) => {
                 const qty = getCardQuantity(p.id);
@@ -795,7 +795,8 @@ export default function SalesPortalPage() {
                 return (
                   <div
                     key={p.id}
-                    className="w-[136px] min-w-[136px] sm:w-[146px] sm:min-w-[146px] h-[178px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-emerald-500/60 transition-all shrink-0 snap-start group"
+                    onClick={() => handleAddProduct(p)}
+                    className="w-[136px] min-w-[136px] sm:w-[146px] sm:min-w-[146px] h-[178px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-emerald-500/60 transition-all shrink-0 snap-start group cursor-pointer active:scale-[0.98]"
                   >
                     {/* Top: Product Image */}
                     <div className="h-13 w-full flex items-center justify-center bg-slate-50/60 dark:bg-slate-800/40 rounded-xl p-0.5 relative overflow-hidden">
@@ -823,12 +824,18 @@ export default function SalesPortalPage() {
                     </div>
 
                     {/* Bottom: Stepper + Add to Cart Button */}
-                    <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                    <div
+                      className="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {/* Stepper */}
                       <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/60 overflow-hidden h-7">
                         <button
                           type="button"
-                          onClick={() => handleCardQuantityChange(p.id, -1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardQuantityChange(p.id, -1);
+                          }}
                           className="w-5 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                           title="কমান"
                         >
@@ -839,7 +846,10 @@ export default function SalesPortalPage() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => handleCardQuantityChange(p.id, 1)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardQuantityChange(p.id, 1);
+                          }}
                           className="w-5 h-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                           title="বাড়ান"
                         >
@@ -850,7 +860,10 @@ export default function SalesPortalPage() {
                       {/* Circular Add to Cart Button */}
                       <button
                         type="button"
-                        onClick={() => handleAddProduct(p)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddProduct(p);
+                        }}
                         className="w-7 h-7 rounded-full bg-[#166534] hover:bg-[#14532d] text-white flex items-center justify-center shadow-xs cursor-pointer transition-all active:scale-90"
                         title="কার্টে যোগ করুন"
                       >
@@ -875,7 +888,8 @@ export default function SalesPortalPage() {
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-500/50 transition-all gap-2"
+                    onClick={() => handleAddProduct(p)}
+                    className="flex items-center justify-between p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-500/50 transition-all gap-2 cursor-pointer active:scale-[0.99]"
                   >
                     {/* Left: Thumbnail & Name */}
                     <div className="flex items-center gap-2 min-w-0">
@@ -904,12 +918,15 @@ export default function SalesPortalPage() {
                     </div>
 
                     {/* Right: Stepper + Add Button */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 overflow-hidden h-6.5">
                         <button
                           type="button"
-                          onClick={() => handleCardQuantityChange(p.id, -1)}
-                          className="w-4.5 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardQuantityChange(p.id, -1);
+                          }}
+                          className="w-4.5 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                         >
                           <Minus className="w-2.5 h-2.5" />
                         </button>
@@ -918,8 +935,11 @@ export default function SalesPortalPage() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => handleCardQuantityChange(p.id, 1)}
-                          className="w-4.5 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardQuantityChange(p.id, 1);
+                          }}
+                          className="w-4.5 h-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                         >
                           <Plus className="w-2.5 h-2.5" />
                         </button>
@@ -927,7 +947,10 @@ export default function SalesPortalPage() {
 
                       <button
                         type="button"
-                        onClick={() => handleAddProduct(p)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddProduct(p);
+                        }}
                         className="w-7 h-7 rounded-lg bg-[#166534] hover:bg-[#14532d] text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
                         title="কার্টে যোগ করুন"
                       >
@@ -942,10 +965,10 @@ export default function SalesPortalPage() {
         )}
       </section>
 
-      {/* 4. MAIN SPLIT: CART TABLE (LEFT ~68%) & PAYMENT SUMMARY (RIGHT ~32%) */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-        {/* Left Side: Cart Table (lg:col-span-8) */}
-        <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col h-auto">
+      {/* 4. MAIN SPLIT: CART TABLE (LEFT 60%) & PAYMENT SUMMARY (RIGHT 40%) */}
+      <section className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-start">
+        {/* Left Side: Cart Table (60% width) */}
+        <div className="w-full lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col h-auto">
           {/* Cart Header */}
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
             <div className="flex items-center gap-2">
@@ -1134,8 +1157,8 @@ export default function SalesPortalPage() {
           </div>
         </div>
 
-        {/* Right Side: Payment Summary Panel (lg:col-span-4) */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col justify-between h-auto">
+        {/* Right Side: Payment Summary Panel (40% width) */}
+        <div className="w-full lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col justify-between h-auto">
           <div className="space-y-2 pr-0.5">
             {/* 1. Subtotal */}
             <div className="flex items-center justify-between text-xs">

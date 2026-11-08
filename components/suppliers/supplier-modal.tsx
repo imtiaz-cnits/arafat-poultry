@@ -89,7 +89,7 @@ export function SupplierModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-lg bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[90vh] flex flex-col">
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
@@ -109,12 +109,13 @@ export function SupplierModal({
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto flex-1 space-y-3.5">
-          {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-3.5">
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
+                {error}
+              </div>
+            )}
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -203,8 +204,10 @@ export function SupplierModal({
             />
           </div>
 
-          {/* Modal Footer */}
-          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+          </div>
+
+          {/* Modal Footer (Sticky & Flush) */}
+          <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-[#cbd5e1] dark:border-[#334155] flex justify-end gap-2.5 z-10">
             <button
               type="button"
               onClick={onClose}

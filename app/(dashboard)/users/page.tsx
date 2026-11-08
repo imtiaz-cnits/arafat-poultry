@@ -45,47 +45,47 @@ export const SIDEBAR_MODULES: {
   desc: string;
   submenus?: { key: string; label: string; desc: string }[];
 }[] = [
-  { key: "dashboard", label: "ড্যাশবোর্ড (Dashboard)", desc: "মূল সার্বিক ড্যাশবোর্ড ওভারভিউ ও তথ্য" },
-  { key: "sales-portal", label: "বিক্রয় পোর্টাল (Sales Portal)", desc: "পণ্য নির্বাচন, নগদ বিক্রয় ও দ্রুত ক্যাশ বিলিং" },
-  { key: "purchases", label: "পণ্য ক্রয় (Purchases)", desc: "মাছ, ফিড ও অন্যান্য ক্রয় ও ইনওয়ার্ড স্টক" },
-  { key: "poultry", label: "মুরগির হিসাব (Poultry Management)", desc: "শেডভিত্তিক ব্যাচ, বয়স, খাবার ও মৃত্যুর হিসাব" },
-  { key: "fish", label: "মাছের হিসাব (Fisheries Management)", desc: "পুকুর ব্যবস্থাপনা, পোনা মজুদ, নমুনা ওজন ও আহরণ" },
-  { key: "suppliers", label: "সরবরাহকারী (Suppliers & Vendors)", desc: "সরবরাহকারীর প্রোফাইল ও ক্রয় বকেয়া দেনা" },
-  { key: "customers", label: "কাস্টমার (Customer Directory)", desc: "গ্রাহক তথ্য ও বাকির খাতা" },
-  { key: "memo", label: "মেমো (Memo & Invoices)", desc: "বিক্রয় ইনভয়েস, চালান ও প্রিন্ট ভাউচার" },
-  {
-    key: "stock",
-    label: "স্টক মডিউল (Stock Management)",
-    desc: "সকল পণ্যের লাইভ গুদাম ও মজুদ নিয়ন্ত্রণ",
-    submenus: [
-      { key: "stock_eggs", label: "ডিমের স্টক (Egg Stock)", desc: "দৈনিক সংগ্রহ, ভালো ও ফাটা ডিমের হিসাব" },
-      { key: "stock_fish", label: "মাছের স্টক (Fish Stock)", desc: "পুকুরভিত্তিক মাছের জীবন্ত মজুদ ও সাইজ" },
-      { key: "stock_feed", label: "ফিডের স্টক (Feed Stock)", desc: "খাদ্যের বস্তা ও কেজিভিত্তিক মজুদ" },
-      { key: "stock_chicken", label: "মুরগির স্টক (Chicken Stock)", desc: "শেডভিত্তিক বড়, মাঝারি ও বাচ্চার স্টক" },
-    ],
-  },
-  { key: "medications", label: "ওষুধ ও ভ্যাকসিন (Medications & Vaccines)", desc: "টিকা সূচি, ডোজ ও ভ্যাকসিনের স্টক" },
-  { key: "expenses", label: "খরচসমূহ (Expenses)", desc: "দৈনিক পরিচালন ও বিবিধ খামারের খরচ" },
-  {
-    key: "reports",
-    label: "রিপোর্ট ও অ্যানালিটিক্স (Reports)",
-    desc: "ব্যবসায়িক বিশ্লেষণ ও আর্থিক বিবরণী",
-    submenus: [
-      { key: "reports_income_expense", label: "আয় ও ব্যয় (Income & Expenses)", desc: "সার্বিক লাভ-ক্ষতি ও আয়-ব্যয়ের হিসাব" },
-      { key: "reports_sales", label: "বিক্রয় রিপোর্ট (Sales Report)", desc: "দৈনিক ও তারিখভিত্তিক বিক্রয় বিবরণী" },
-      { key: "reports_ledger", label: "দৈনিক লেজার (Daily Ledger)", desc: "গ্রাহক ও ভেন্ডর লেজার হিসাব" },
-    ],
-  },
-  {
-    key: "settings",
-    label: "সেটিংস মডিউল (Settings)",
-    desc: "সিস্টেম ও অ্যাকাউন্ট কনফিগারেশন",
-    submenus: [
-      { key: "settings_users", label: "ইউজার ও রোল (Users & Roles)", desc: "ব্যবহারকারী তৈরি ও পারমিশন নিয়ন্ত্রণ" },
-      { key: "settings_profile", label: "প্রোফাইল (Profile)", desc: "ব্যবহারকারীর নিজস্ব প্রোফাইল ও পাসওয়ার্ড" },
-    ],
-  },
-];
+    { key: "dashboard", label: "ড্যাশবোর্ড (Dashboard)", desc: "মূল সার্বিক ড্যাশবোর্ড ওভারভিউ ও তথ্য" },
+    { key: "sales-portal", label: "বিক্রয় পোর্টাল (Sales Portal)", desc: "পণ্য নির্বাচন, নগদ বিক্রয় ও দ্রুত ক্যাশ বিলিং" },
+    { key: "purchases", label: "পণ্য ক্রয়", desc: "মাছ, ফিড ও অন্যান্য ক্রয় ও ইনওয়ার্ড স্টক" },
+    { key: "poultry", label: "মুরগির হিসাব (Poultry Management)", desc: "শেডভিত্তিক ব্যাচ, বয়স, খাবার ও মৃত্যুর হিসাব" },
+    { key: "fish", label: "মাছের হিসাব (Fisheries Management)", desc: "পুকুর ব্যবস্থাপনা, পোনা মজুদ, নমুনা ওজন ও আহরণ" },
+    { key: "suppliers", label: "সরবরাহকারী (Suppliers & Vendors)", desc: "সরবরাহকারীর প্রোফাইল ও ক্রয় বকেয়া দেনা" },
+    { key: "customers", label: "কাস্টমার (Customer Directory)", desc: "গ্রাহক তথ্য ও বাকির খাতা" },
+    { key: "memo", label: "মেমো (Memo & Invoices)", desc: "বিক্রয় ইনভয়েস, চালান ও প্রিন্ট ভাউচার" },
+    {
+      key: "stock",
+      label: "স্টক মডিউল (Stock Management)",
+      desc: "সকল পণ্যের লাইভ গুদাম ও মজুদ নিয়ন্ত্রণ",
+      submenus: [
+        { key: "stock_eggs", label: "ডিমের স্টক (Egg Stock)", desc: "দৈনিক সংগ্রহ, ভালো ও ফাটা ডিমের হিসাব" },
+        { key: "stock_fish", label: "মাছের স্টক (Fish Stock)", desc: "পুকুরভিত্তিক মাছের জীবন্ত মজুদ ও সাইজ" },
+        { key: "stock_feed", label: "ফিডের স্টক (Feed Stock)", desc: "খাদ্যের বস্তা ও কেজিভিত্তিক মজুদ" },
+        { key: "stock_chicken", label: "মুরগির স্টক (Chicken Stock)", desc: "শেডভিত্তিক বড়, মাঝারি ও বাচ্চার স্টক" },
+      ],
+    },
+    { key: "medications", label: "ওষুধ ও ভ্যাকসিন (Medications & Vaccines)", desc: "টিকা সূচি, ডোজ ও ভ্যাকসিনের স্টক" },
+    { key: "expenses", label: "খরচসমূহ (Expenses)", desc: "দৈনিক পরিচালন ও বিবিধ খামারের খরচ" },
+    {
+      key: "reports",
+      label: "রিপোর্ট ও অ্যানালিটিক্স (Reports)",
+      desc: "ব্যবসায়িক বিশ্লেষণ ও আর্থিক বিবরণী",
+      submenus: [
+        { key: "reports_income_expense", label: "আয় ও ব্যয় (Income & Expenses)", desc: "সার্বিক লাভ-ক্ষতি ও আয়-ব্যয়ের হিসাব" },
+        { key: "reports_sales", label: "বিক্রয় রিপোর্ট (Sales Report)", desc: "দৈনিক ও তারিখভিত্তিক বিক্রয় বিবরণী" },
+        { key: "reports_ledger", label: "দৈনিক লেজার (Daily Ledger)", desc: "গ্রাহক ও ভেন্ডর লেজার হিসাব" },
+      ],
+    },
+    {
+      key: "settings",
+      label: "সেটিংস মডিউল (Settings)",
+      desc: "সিস্টেম ও অ্যাকাউন্ট কনফিগারেশন",
+      submenus: [
+        { key: "settings_users", label: "ইউজার ও রোল (Users & Roles)", desc: "ব্যবহারকারী তৈরি ও পারমিশন নিয়ন্ত্রণ" },
+        { key: "settings_profile", label: "প্রোফাইল (Profile)", desc: "ব্যবহারকারীর নিজস্ব প্রোফাইল ও পাসওয়ার্ড" },
+      ],
+    },
+  ];
 
 export const DEFAULT_PERMISSIONS: Record<string, boolean> = {
   dashboard: true,
@@ -270,8 +270,8 @@ export default function UsersPage() {
       rawRole === "admin" || rawRole === "super_admin"
         ? "admin"
         : rawRole === "manager"
-        ? "manager"
-        : "staff";
+          ? "manager"
+          : "staff";
 
     const basePermissions = ROLE_PRESETS[cleanRole] || DEFAULT_PERMISSIONS;
     const merged = { ...basePermissions, ...(user.permissions || {}) };
@@ -578,26 +578,26 @@ export default function UsersPage() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-bold whitespace-nowrap uppercase tracking-wider text-[11px]">
-                <th className="py-3 px-4 text-center w-12">ক্র: নং (SL)</th>
-                <th className="py-3 px-4">ব্যবহারকারী (User Info)</th>
-                <th className="py-3 px-3">মোবাইল নম্বর (Mobile)</th>
-                <th className="py-3 px-3 text-center">পদবী (Role)</th>
-                <th className="py-3 px-3">সক্রিয় মেনু পারমিশন (Permissions)</th>
-                <th className="py-3 px-3 text-center">অবস্থা (Status)</th>
-                <th className="py-3 px-4 text-center w-28">অ্যাকশন (Actions)</th>
+                <th className="text-center w-12 p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">ব্যবহারকারী</th>
+                <th className="p-[10px]">মোবাইল নম্বর</th>
+                <th className="text-center p-[10px]">পদবী</th>
+                <th className="p-[10px]">পারমিশন</th>
+                <th className="text-center p-[10px]">স্ট্যাটাস</th>
+                <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400">
+                  <td colSpan={7} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>ব্যবহারকারী তালিকা লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400 font-bold">
+                  <td colSpan={7} className="text-center text-slate-400 font-bold p-[10px]">
                     কোনো ব্যবহারকারী পাওয়া যায়নি।
                   </td>
                 </tr>
@@ -608,31 +608,31 @@ export default function UsersPage() {
                     r === "admin" || r === "super_admin"
                       ? "👑 Admin"
                       : r === "manager"
-                      ? "💼 Manager"
-                      : "👤 Staff";
+                        ? "💼 Manager"
+                        : "👤 Staff";
 
                   const roleBadgeClass =
                     r === "admin" || r === "super_admin"
                       ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-300"
                       : r === "manager"
-                      ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300"
-                      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300";
+                        ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300"
+                        : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300";
 
                   const activePermCount = user.permissions
                     ? Object.values(user.permissions).filter(Boolean).length
                     : r === "admin" || r === "super_admin"
-                    ? Object.keys(DEFAULT_PERMISSIONS).length
-                    : 0;
+                      ? Object.keys(DEFAULT_PERMISSIONS).length
+                      : 0;
 
                   return (
                     <tr
                       key={user.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
-                      <td className="py-3 px-4 text-center font-bold text-slate-400">
+                      <td className="text-center font-bold text-slate-400 p-[10px]">
                         {startIndex + idx + 1}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <div className="flex items-center gap-2.5">
                           {user.img_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -657,35 +657,35 @@ export default function UsersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-3 font-mono font-medium">{user.mobile}</td>
-                      <td className="py-3 px-3 text-center">
+                      <td className="font-mono font-medium p-[10px]">{user.mobile}</td>
+                      <td className="text-center p-[10px]">
                         <span
                           className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${roleBadgeClass}`}
                         >
                           {roleLabel}
                         </span>
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="p-[10px]">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                             {activePermCount} টি মেনু সক্রিয়
                           </span>
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-center">
+                      <td className="text-center p-[10px]">
                         {user.status === "approved" ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                          <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                             <CheckCircle2 className="w-3 h-3" />
                             <span>সক্রিয়</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                          <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
                             <XCircle className="w-3 h-3" />
                             <span>অননুমোদিত</span>
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="text-center p-[10px]">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
@@ -724,7 +724,7 @@ export default function UsersPage() {
                   <h4 className="font-bold text-xs text-slate-900 dark:text-white">{user.name}</h4>
                   <p className="text-[11px] text-slate-400">{user.mobile}</p>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase">
+                <span className="whitespace-nowrap inline-flex items-center shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 uppercase">
                   {user.role}
                 </span>
               </div>
@@ -791,7 +791,8 @@ export default function UsersPage() {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4">
               {error && (
                 <div className="p-3 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold">
                   {error}
@@ -953,7 +954,7 @@ export default function UsersPage() {
                         });
                         setFormData((p) => ({ ...p, permissions: allOn }));
                       }}
-                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-200"
+                      className="px-2 py-0.5 cursor-pointer rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-200"
                     >
                       সব নির্বাচন
                     </button>
@@ -967,7 +968,7 @@ export default function UsersPage() {
                         });
                         setFormData((p) => ({ ...p, permissions: allOff }));
                       }}
-                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200"
+                      className="px-2 py-0.5 cursor-pointer rounded text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200"
                     >
                       সব বাতিল
                     </button>
@@ -986,20 +987,18 @@ export default function UsersPage() {
                       >
                         {/* Parent Menu Row */}
                         <div
-                          className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
-                            isParentChecked
-                              ? "bg-emerald-50/70 dark:bg-emerald-950/30"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                          }`}
+                          className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${isParentChecked
+                            ? "bg-emerald-50/70 dark:bg-emerald-950/30"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                            }`}
                           onClick={() => togglePermission(mod.key)}
                         >
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors shrink-0 ${
-                                isParentChecked
-                                  ? "bg-emerald-600 text-white"
-                                  : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
-                              }`}
+                              className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors shrink-0 ${isParentChecked
+                                ? "bg-emerald-600 text-white"
+                                : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                                }`}
                             >
                               {isParentChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                             </div>
@@ -1031,19 +1030,17 @@ export default function UsersPage() {
                                     e.stopPropagation();
                                     toggleSubmenu(mod.key, sub.key);
                                   }}
-                                  className={`p-2 rounded-lg border flex items-center justify-between cursor-pointer transition-all ${
-                                    isSubChecked
-                                      ? "bg-white dark:bg-slate-900 border-emerald-300 dark:border-emerald-800 shadow-2xs"
-                                      : "bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
-                                  }`}
+                                  className={`p-2 rounded-lg border flex items-center justify-between cursor-pointer transition-all ${isSubChecked
+                                    ? "bg-white dark:bg-slate-900 border-emerald-300 dark:border-emerald-800 shadow-2xs"
+                                    : "bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+                                    }`}
                                 >
                                   <div className="flex items-center gap-2 min-w-0">
                                     <div
-                                      className={`w-4 h-4 rounded flex items-center justify-center transition-colors shrink-0 ${
-                                        isSubChecked
-                                          ? "bg-emerald-600 text-white"
-                                          : "border border-slate-300 dark:border-slate-600"
-                                      }`}
+                                      className={`w-4 h-4 rounded flex items-center justify-center transition-colors shrink-0 ${isSubChecked
+                                        ? "bg-emerald-600 text-white"
+                                        : "border border-slate-300 dark:border-slate-600"
+                                        }`}
                                     >
                                       {isSubChecked && <Check className="w-3 h-3 stroke-[3]" />}
                                     </div>
@@ -1068,7 +1065,10 @@ export default function UsersPage() {
               </div>
 
               {/* Sticky Footer */}
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2 shrink-0">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}

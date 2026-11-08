@@ -90,12 +90,13 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs rounded-xl font-medium">
+                {error}
+              </div>
+            )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {/* Customer Name */}
@@ -187,8 +188,10 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
             </div>
           </div>
 
-          {/* Sticky Footer (Strict Rule: Cancel button red #dc2626, Save button emerald #15803d) */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+          </div>
+
+          {/* Sticky Footer (Flush with bottom edges) */}
+          <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-[#cbd5e1] dark:border-[#334155] flex items-center justify-end gap-2.5 z-10">
             <button
               type="button"
               onClick={onClose}

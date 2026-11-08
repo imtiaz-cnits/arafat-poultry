@@ -249,7 +249,7 @@ export default function StockOutReportPage() {
                 className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs space-y-1"
               >
                 <div className="flex items-center justify-between">
-                  <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 flex items-center justify-center font-black text-[10px]">
+                  <span className="whitespace-nowrap inline-flex items-center shrink-0 w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 flex items-center justify-center font-black text-[10px]">
                     #{idx + 1}
                   </span>
                   <span
@@ -338,26 +338,26 @@ export default function StockOutReportPage() {
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-              <th className="py-3 px-4 w-12 text-center">SL</th>
-              <th className="py-3 px-4">Product Name</th>
-              <th className="py-3 px-3">Category & Brand</th>
-              <th className="py-3 px-3 text-right">Cost Price (৳)</th>
-              <th className="py-3 px-3 text-right">Selling Price (৳)</th>
-              <th className="py-3 px-4 text-center">Current Stock</th>
-              <th className="py-3 px-4 text-center w-28">Status</th>
+              <th className="w-12 text-center p-[10px]">SL</th>
+              <th className="p-[10px]">পণ্যের নাম</th>
+              <th className="p-[10px]">ক্যাটাগরি ও ব্র্যান্ড</th>
+              <th className="text-right p-[10px]">ক্রয় মূল্য (৳)</th>
+              <th className="text-right p-[10px]">বিক্রয় মূল্য (৳)</th>
+              <th className="text-center p-[10px]">বর্তমান স্টক</th>
+              <th className="text-center w-28 p-[10px]">স্ট্যাটাস</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               <tr>
-                <td colSpan={7} className="py-10 text-center text-slate-400">
+                <td colSpan={7} className="text-center text-slate-400 p-[10px]">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-rose-600" />
                   <span>Loading inventory items...</span>
                 </td>
               </tr>
             ) : products.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-10 text-center text-slate-400 font-bold">
+                <td colSpan={7} className="text-center text-slate-400 font-bold p-[10px]">
                   No products found under this filter criteria.
                 </td>
               </tr>
@@ -367,10 +367,10 @@ export default function StockOutReportPage() {
                   key={p.id}
                   className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
-                  <td className="py-3 px-4 text-center text-slate-400 font-mono">
+                  <td className="text-center text-slate-400 font-mono p-[10px]">
                     {startIndex + idx + 1}
                   </td>
-                  <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">
+                  <td className="font-bold text-slate-800 dark:text-slate-100 p-[10px]">
                     <div>{p.product_name}</div>
                     {p.product_code && (
                       <div className="text-[10px] text-slate-400 font-mono">
@@ -378,19 +378,19 @@ export default function StockOutReportPage() {
                       </div>
                     )}
                   </td>
-                  <td className="py-3 px-3">
+                  <td className="p-[10px]">
                     <span className="font-semibold text-slate-700 dark:text-slate-300">
                       {p.category}
                     </span>
                     <span className="text-[11px] text-slate-400 block">{p.brand}</span>
                   </td>
-                  <td className="py-3 px-3 text-right font-medium text-slate-600 dark:text-slate-400">
+                  <td className="text-right font-medium text-slate-600 dark:text-slate-400 p-[10px]">
                     {formatBdCurrency(p.product_cost)}
                   </td>
-                  <td className="py-3 px-3 text-right font-black text-slate-900 dark:text-white">
+                  <td className="text-right font-black text-slate-900 dark:text-white p-[10px]">
                     {formatBdCurrency(p.price)}
                   </td>
-                  <td className="py-3 px-4 text-center font-black text-sm">
+                  <td className="text-center font-black text-sm p-[10px]">
                     <span
                       className={
                         p.stock <= 0
@@ -403,7 +403,7 @@ export default function StockOutReportPage() {
                       {p.stock} {p.unit}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="text-center p-[10px]">
                     <span
                       className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                         p.status === "out_of_stock"
@@ -536,12 +536,12 @@ export default function StockOutReportPage() {
           <thead>
             <tr className="bg-slate-100 font-bold text-left">
               <th className="text-center w-8">SL</th>
-              <th>Product Name</th>
+              <th>পণ্যের নাম</th>
               <th>Category</th>
               <th>Brand</th>
-              <th className="text-center">Current Stock</th>
-              <th className="text-center">Status</th>
-              <th className="text-right">Cost Price (৳)</th>
+              <th className="text-center">বর্তমান স্টক</th>
+              <th className="text-center">স্ট্যাটাস</th>
+              <th className="text-right">ক্রয় মূল্য (৳)</th>
               <th className="text-right">Sell Price (৳)</th>
             </tr>
           </thead>
@@ -565,10 +565,10 @@ export default function StockOutReportPage() {
           </tbody>
           <tfoot>
             <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
-              <td colSpan={4} className="text-right font-bold py-1.5 px-2">
+              <td colSpan={4} className="text-right font-bold p-[10px]">
                 Total Listed Depleted Items:
               </td>
-              <td colSpan={4} className="text-left font-black py-1.5 px-2">
+              <td colSpan={4} className="text-left font-black p-[10px]">
                 {products.length} SKUs requiring restocking
               </td>
             </tr>

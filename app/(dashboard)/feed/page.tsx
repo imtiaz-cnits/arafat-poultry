@@ -25,6 +25,7 @@ import {
   Printer,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
+import { Pagination } from "@/components/ui";
 import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
 
 interface FeedProduct {
@@ -71,6 +72,15 @@ export default function FeedTradingPage() {
   const [data, setData] = useState<FeedReport | null>(null);
   const [activeTab, setActiveTab] = useState<"issues" | "stocks" | "schedule">("stocks");
   const [searchTerm, setSearchTerm] = useState("");
+  const [issuesPage, setIssuesPage] = useState(1);
+  const [issuesPageSize, setIssuesPageSize] = useState(20);
+  const [stocksPage, setStocksPage] = useState(1);
+  const [stocksPageSize, setStocksPageSize] = useState(20);
+
+  useEffect(() => {
+    setIssuesPage(1);
+    setStocksPage(1);
+  }, [searchTerm]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -241,6 +251,17 @@ export default function FeedTradingPage() {
     );
   }, [data, searchTerm]);
 
+  const displayedIssues = useMemo(() => {
+    const start = (issuesPage - 1) * issuesPageSize;
+    return filteredIssues.slice(start, start + issuesPageSize);
+  }, [filteredIssues, issuesPage, issuesPageSize]);
+
+  const displayedStocks = useMemo(() => {
+    const prods = data?.feed_products || [];
+    const start = (stocksPage - 1) * stocksPageSize;
+    return prods.slice(start, start + stocksPageSize);
+  }, [data?.feed_products, stocksPage, stocksPageSize]);
+
   return (
     <div className="no-print space-y-6">
       {/* Top Header */}
@@ -382,45 +403,46 @@ export default function FeedTradingPage() {
 
         {/* Tab 1: Internal Issues Table */}
         {activeTab === "issues" && (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-emerald-800 text-white font-medium">
-                  <th className="py-3 px-4">ইস্যু নম্বর</th>
-                  <th className="py-3 px-4">খাদ্যের নাম</th>
-                  <th className="py-3 px-4">গন্তব্য / ব্যাচ</th>
-                  <th className="py-3 px-4 text-center">বস্তা</th>
-                  <th className="py-3 px-4 text-center">মোট কেজি</th>
-                  <th className="py-3 px-4 text-right">কেজি প্রতি দর</th>
-                  <th className="py-3 px-4 text-right">স্থানান্তরিত ব্যয়</th>
-                  <th className="py-3 px-4 text-center">তারিখ</th>
-                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
+                  <th className="p-[10px]">ইস্যু নম্বর</th>
+                  <th className="p-[10px]">খাদ্যের নাম</th>
+                  <th className="p-[10px]">গন্তব্য / ব্যাচ</th>
+                  <th className="text-center p-[10px]">বস্তা</th>
+                  <th className="text-center p-[10px]">মোট কেজি</th>
+                  <th className="text-right p-[10px]">কেজি প্রতি দর</th>
+                  <th className="text-right p-[10px]">স্থানান্তরিত ব্যয়</th>
+                  <th className="text-center p-[10px]">তারিখ</th>
+                  <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <td colSpan={9} className="text-center text-slate-400 p-[10px]">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                       ডাটা লোড হচ্ছে...
                     </td>
                   </tr>
                 ) : filteredIssues.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <td colSpan={9} className="text-center text-slate-400 p-[10px]">
                       কোনো অভ্যন্তরীণ হস্তান্তরের তথ্য পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  filteredIssues.map((iss) => (
+                  displayedIssues.map((iss) => (
                     <tr key={iss.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-4 font-mono font-medium text-emerald-700 dark:text-emerald-400">
+                      <td className="font-mono font-medium text-emerald-700 dark:text-emerald-400 p-[10px]">
                         {iss.issue_no}
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">
+                      <td className="font-medium text-gray-900 dark:text-white p-[10px]">
                         {iss.product_name || "ফিড পণ্য"}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${iss.destination_type === "FISH_POND"
                               ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800"
@@ -435,14 +457,14 @@ export default function FeedTradingPage() {
                           {iss.destination}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center font-bold text-gray-900 dark:text-white">{iss.bags}</td>
-                      <td className="py-3 px-4 text-center">{iss.total_kg} kg</td>
-                      <td className="py-3 px-4 text-right">৳{iss.unit_cost_per_kg.toFixed(2)}</td>
-                      <td className="py-3 px-4 text-right font-bold text-emerald-700 dark:text-emerald-400">
+                      <td className="text-center font-bold text-gray-900 dark:text-white p-[10px]">{iss.bags}</td>
+                      <td className="text-center p-[10px]">{iss.total_kg} kg</td>
+                      <td className="text-right p-[10px]">৳{iss.unit_cost_per_kg.toFixed(2)}</td>
+                      <td className="text-right font-bold text-emerald-700 dark:text-emerald-400 p-[10px]">
                         {formatBdCurrency(iss.total_cost)}
                       </td>
-                      <td className="py-3 px-4 text-center text-slate-500">{iss.date}</td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="text-center text-slate-500 p-[10px]">{iss.date}</td>
+                      <td className="text-center p-[10px]">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
@@ -468,69 +490,79 @@ export default function FeedTradingPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={issuesPage}
+            totalItems={filteredIssues.length}
+            pageSize={issuesPageSize}
+            onPageChange={setIssuesPage}
+            onPageSizeChange={setIssuesPageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
+          </>
         )}
 
         {/* Tab 2: Feed Products Stocks Table */}
         {activeTab === "stocks" && (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-emerald-800 text-white font-medium">
-                  <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
-                  <th className="py-3 px-4">খাদ্যের নাম (Feed Name)</th>
-                  <th className="py-3 px-4 text-center">টার্গেট (Target)</th>
-                  <th className="py-3 px-4 text-center">বস্তার ওজন (Bag Weight)</th>
-                  <th className="py-3 px-4 text-center">বর্তমান মজুত (Current Stock)</th>
-                  <th className="py-3 px-4 text-center">স্টক অবস্থা (Status)</th>
-                  <th className="py-3 px-4 text-right">ক্রয় দর (Cost/Bag ৳)</th>
-                  <th className="py-3 px-4 text-right">কেজি প্রতি দর (Cost/Kg ৳)</th>
-                  <th className="py-3 px-4 text-center w-28">অ্যাকশন (Action)</th>
+                  <th className="text-center w-[50px] p-[10px]">ক্র: নং</th>
+                  <th className="p-[10px]">খাদ্যের নাম</th>
+                  <th className="text-center p-[10px]">টার্গেট</th>
+                  <th className="text-center p-[10px]">বস্তার ওজন</th>
+                  <th className="text-center p-[10px]">বর্তমান মজুত</th>
+                  <th className="text-center p-[10px]">স্টক স্ট্যাটাস</th>
+                  <th className="text-right p-[10px]">ক্রয় দর (বস্তা)</th>
+                  <th className="text-right p-[10px]">দর (কেজি)</th>
+                  <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                       ডাটা লোড হচ্ছে...
                     </td>
                   </tr>
                 ) : !data?.feed_products || data.feed_products.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <td colSpan={9} className="text-center text-slate-400 p-[10px]">
                       কোনো ফিড পণ্য পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  data.feed_products.map((p, idx) => {
+                  displayedStocks.map((p, idx) => {
                     const costPerKg = p.bag_weight_kg > 0 ? p.cost_price / p.bag_weight_kg : p.cost_price;
                     return (
                       <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 px-3 text-center font-bold text-slate-400">{idx + 1}</td>
-                        <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{p.product_name}</td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="text-center font-bold text-slate-400 p-[10px]">{idx + 1}</td>
+                        <td className="font-medium text-gray-900 dark:text-white p-[10px]">{p.product_name}</td>
+                        <td className="text-center p-[10px]">
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
                             {p.target_type || "POULTRY"}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center font-bold text-slate-700 dark:text-slate-300">{p.bag_weight_kg} কেজি / বস্তা</td>
-                        <td className="py-3 px-4 text-center font-bold text-emerald-700 dark:text-emerald-400">
+                        <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">{p.bag_weight_kg} কেজি / বস্তা</td>
+                        <td className="text-center font-bold text-emerald-700 dark:text-emerald-400 p-[10px]">
                           {p.quantity} বস্তা ({(p.quantity * p.bag_weight_kg).toLocaleString()} কেজি)
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="text-center p-[10px]">
                           {p.quantity <= 25 ? (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
+                            <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300">
                               কম স্টক (Low Stock)
                             </span>
                           ) : (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                            <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
                               পর্যাপ্ত (In Stock)
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-right font-medium">{formatBdCurrency(p.cost_price)}</td>
-                        <td className="py-3 px-4 text-right">৳{costPerKg.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="text-right font-medium p-[10px]">{formatBdCurrency(p.cost_price)}</td>
+                        <td className="text-right p-[10px]">৳{costPerKg.toFixed(2)}</td>
+                        <td className="text-center p-[10px]">
                           <button
                             type="button"
                             onClick={() => handleOpenModalWithProduct(p)}
@@ -548,6 +580,15 @@ export default function FeedTradingPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={stocksPage}
+            totalItems={data?.feed_products?.length || 0}
+            pageSize={stocksPageSize}
+            onPageChange={setStocksPage}
+            onPageSizeChange={setStocksPageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
+          </>
         )}
       </div>
 
@@ -570,7 +611,8 @@ export default function FeedTradingPage() {
             </div>
 
             {/* Modal Form Body */}
-            <form onSubmit={handleIssueSubmit} className="p-6 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleIssueSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               {/* Product Select */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
@@ -710,21 +752,23 @@ export default function FeedTradingPage() {
                 </div>
               </div>
 
-              {/* Sticky Footer Actions */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium text-xs transition-colors"
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-semibold text-xs transition-colors cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
                 >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                   <span>হস্তান্তর নিশ্চিত করুন</span>
                 </button>
               </div>
@@ -763,7 +807,7 @@ export default function FeedTradingPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500">গন্তব্য / প্রাপক:</span>
-                  <span className="font-bold px-2 py-0.5 rounded-full text-[11px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span className="whitespace-nowrap inline-flex items-center shrink-0 font-bold px-2 py-0.5 rounded-full text-[11px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                     {viewIssue.destination}
                   </span>
                 </div>
@@ -884,22 +928,22 @@ export default function FeedTradingPage() {
           <table className="w-full text-left border-collapse text-xs mb-4">
             <thead>
               <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold">
-                <th className="p-2 border border-slate-300">ফিডের বিবরণ ও সাইজ</th>
-                <th className="p-2 border border-slate-300">গন্তব্য / ব্যাচ</th>
-                <th className="p-2 border border-slate-300 text-center">বস্তা</th>
-                <th className="p-2 border border-slate-300 text-center">মোট কেজি</th>
-                <th className="p-2 border border-slate-300 text-right">কেজি প্রতি দর</th>
-                <th className="p-2 border border-slate-300 text-right">স্থানান্তরিত ব্যয়</th>
+                <th className="border border-slate-300 p-[10px]">ফিডের বিবরণ ও সাইজ</th>
+                <th className="border border-slate-300 p-[10px]">গন্তব্য / ব্যাচ</th>
+                <th className="border border-slate-300 text-center p-[10px]">বস্তা</th>
+                <th className="border border-slate-300 text-center p-[10px]">মোট কেজি</th>
+                <th className="border border-slate-300 text-right p-[10px]">কেজি প্রতি দর</th>
+                <th className="border border-slate-300 text-right p-[10px]">স্থানান্তরিত ব্যয়</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="p-2 border border-slate-300 font-bold">{viewIssue.product_name}</td>
-                <td className="p-2 border border-slate-300">{viewIssue.destination}</td>
-                <td className="p-2 border border-slate-300 text-center font-bold">{viewIssue.bags} বস্তা</td>
-                <td className="p-2 border border-slate-300 text-center">{viewIssue.total_kg} কেজি</td>
-                <td className="p-2 border border-slate-300 text-right">৳{viewIssue.unit_cost_per_kg.toFixed(2)}</td>
-                <td className="p-2 border border-slate-300 text-right font-bold">{formatBdCurrency(viewIssue.total_cost)}</td>
+                <td className="border border-slate-300 font-bold p-[10px]">{viewIssue.product_name}</td>
+                <td className="border border-slate-300 p-[10px]">{viewIssue.destination}</td>
+                <td className="border border-slate-300 text-center font-bold p-[10px]">{viewIssue.bags} বস্তা</td>
+                <td className="border border-slate-300 text-center p-[10px]">{viewIssue.total_kg} কেজি</td>
+                <td className="border border-slate-300 text-right p-[10px]">৳{viewIssue.unit_cost_per_kg.toFixed(2)}</td>
+                <td className="border border-slate-300 text-right font-bold p-[10px]">{formatBdCurrency(viewIssue.total_cost)}</td>
               </tr>
             </tbody>
           </table>

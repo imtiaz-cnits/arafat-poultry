@@ -28,6 +28,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
+import { Pagination } from "@/components/ui";
 import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
 
 interface Flock {
@@ -98,6 +99,18 @@ export default function EggProductionPage() {
   const [data, setData] = useState<EggReport | null>(null);
   const [activeTab, setActiveTab] = useState<"collections" | "grades" | "flocks">("collections");
   const [searchTerm, setSearchTerm] = useState("");
+  const [colPage, setColPage] = useState(1);
+  const [colPageSize, setColPageSize] = useState(20);
+  const [gradePage, setGradePage] = useState(1);
+  const [gradePageSize, setGradePageSize] = useState(20);
+  const [flockPage, setFlockPage] = useState(1);
+  const [flockPageSize, setFlockPageSize] = useState(20);
+
+  useEffect(() => {
+    setColPage(1);
+    setGradePage(1);
+    setFlockPage(1);
+  }, [searchTerm]);
 
   // Collection Modal State
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
@@ -536,6 +549,23 @@ export default function EggProductionPage() {
     );
   }, [data, searchTerm]);
 
+  const displayedCollections = useMemo(() => {
+    const start = (colPage - 1) * colPageSize;
+    return filteredCollections.slice(start, start + colPageSize);
+  }, [filteredCollections, colPage, colPageSize]);
+
+  const displayedGrades = useMemo(() => {
+    const grades = data?.grade_products || [];
+    const start = (gradePage - 1) * gradePageSize;
+    return grades.slice(start, start + gradePageSize);
+  }, [data?.grade_products, gradePage, gradePageSize]);
+
+  const displayedFlocks = useMemo(() => {
+    const flocks = data?.flocks || [];
+    const start = (flockPage - 1) * flockPageSize;
+    return flocks.slice(start, start + flockPageSize);
+  }, [data?.flocks, flockPage, flockPageSize]);
+
   return (
     <div className="no-print space-y-6">
       {/* Top Header */}
@@ -696,50 +726,51 @@ export default function EggProductionPage() {
 
         {/* Tab 1: Daily Collections */}
         {activeTab === "collections" && (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-emerald-800 text-white font-medium">
-                  <th className="py-3 px-4">সংগ্রহ নম্বর</th>
-                  <th className="py-3 px-4">ফ্লক / শেড</th>
-                  <th className="py-3 px-4 text-center">মোট ডিম</th>
-                  <th className="py-3 px-4 text-center">ভাঙা/নষ্ট</th>
-                  <th className="py-3 px-4 text-center">গ্রহণযোগ্য</th>
-                  <th className="py-3 px-4">গ্রেড বণ্টন</th>
-                  <th className="py-3 px-4 text-right">উৎপাদন খরচ/ডিম</th>
-                  <th className="py-3 px-4 text-center">তারিখ</th>
-                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
+                  <th className="p-[10px]">সংগ্রহ নম্বর</th>
+                  <th className="p-[10px]">ফ্লক / শেড</th>
+                  <th className="text-center p-[10px]">মোট ডিম</th>
+                  <th className="text-center p-[10px]">ভাঙা/নষ্ট</th>
+                  <th className="text-center p-[10px]">গ্রহণযোগ্য</th>
+                  <th className="p-[10px]">গ্রেড বণ্টন</th>
+                  <th className="text-right p-[10px]">উৎপাদন খরচ/ডিম</th>
+                  <th className="text-center p-[10px]">তারিখ</th>
+                  <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                       ডাটা লোড হচ্ছে...
                     </td>
                   </tr>
                 ) : filteredCollections.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                       কোনো ডিম সংগ্রহের তথ্য পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  filteredCollections.map((c) => (
+                  displayedCollections.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-4 font-mono font-medium text-emerald-700 dark:text-emerald-400">
+                      <td className="font-mono font-medium text-emerald-700 dark:text-emerald-400 p-[10px]">
                         {c.collection_no}
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{c.flock_name}</td>
-                      <td className="py-3 px-4 text-center font-bold text-gray-900 dark:text-white">
+                      <td className="font-medium text-gray-900 dark:text-white p-[10px]">{c.flock_name}</td>
+                      <td className="text-center font-bold text-gray-900 dark:text-white p-[10px]">
                         {c.total_collected}
                       </td>
-                      <td className="py-3 px-4 text-center font-bold text-rose-600">{c.rejected_breakage}</td>
-                      <td className="py-3 px-4 text-center font-bold text-emerald-700 dark:text-emerald-400">
+                      <td className="text-center font-bold text-rose-600 p-[10px]">{c.rejected_breakage}</td>
+                      <td className="text-center font-bold text-emerald-700 dark:text-emerald-400 p-[10px]">
                         {c.accepted_quantity}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <div className="flex flex-wrap gap-1">
                           {c.grades.map((g, idx) => (
                             <span
@@ -751,11 +782,11 @@ export default function EggProductionPage() {
                           ))}
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right font-mono font-medium">
+                      <td className="text-right font-mono font-medium p-[10px]">
                         ৳{c.cost_per_accepted_egg.toFixed(2)}
                       </td>
-                      <td className="py-3 px-4 text-center text-slate-500">{c.date}</td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="text-center text-slate-500 p-[10px]">{c.date}</td>
+                      <td className="text-center p-[10px]">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
@@ -781,47 +812,57 @@ export default function EggProductionPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={colPage}
+            totalItems={filteredCollections.length}
+            pageSize={colPageSize}
+            onPageChange={setColPage}
+            onPageSizeChange={setColPageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
+          </>
         )}
 
         {/* Tab 2: Grade Stocks */}
         {activeTab === "grades" && (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-emerald-800 text-white font-medium">
-                  <th className="py-3 px-4">গ্রেড পণ্য</th>
-                  <th className="py-3 px-4 text-center">মজুত (পিস)</th>
-                  <th className="py-3 px-4 text-center">মজুত (ডজন)</th>
-                  <th className="py-3 px-4 text-center">মজুত (খাঁচি - ৩০ পিস)</th>
-                  <th className="py-3 px-4 text-right">উৎপাদন খরচ</th>
-                  <th className="py-3 px-4 text-right">বিক্রয় দর</th>
-                  <th className="py-3 px-4 text-center w-28">অ্যাকশন</th>
+                  <th className="p-[10px]">গ্রেড পণ্য</th>
+                  <th className="text-center p-[10px]">মজুত (পিস)</th>
+                  <th className="text-center p-[10px]">মজুত (ডজন)</th>
+                  <th className="text-center p-[10px]">মজুত (খাঁচি - ৩০ পিস)</th>
+                  <th className="text-right p-[10px]">উৎপাদন খরচ</th>
+                  <th className="text-right p-[10px]">বিক্রয় দর</th>
+                  <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {!data?.grade_products || data.grade_products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <td colSpan={6} className="text-center text-slate-400 p-[10px]">
                       কোনো গ্রেড পণ্য পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  data.grade_products.map((p) => (
+                  displayedGrades.map((p) => (
                     <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                      <td className="font-medium text-gray-900 dark:text-white flex items-center gap-2 p-[10px]">
                         <Egg className="w-4 h-4 text-emerald-600" />
                         <span>{p.product_name}</span>
                       </td>
-                      <td className="py-3 px-4 text-center font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                      <td className="text-center font-bold text-emerald-700 dark:text-emerald-400 font-mono p-[10px]">
                         {p.pieces} টি
                       </td>
-                      <td className="py-3 px-4 text-center font-mono">{p.dozens} ডজন</td>
-                      <td className="py-3 px-4 text-center font-mono font-bold text-sky-600">{p.trays} খাঁচি</td>
-                      <td className="py-3 px-4 text-right font-mono">৳{p.cost_price.toFixed(2)}</td>
-                      <td className="py-3 px-4 text-right font-mono font-bold text-gray-900 dark:text-white">
+                      <td className="text-center font-mono p-[10px]">{p.dozens} ডজন</td>
+                      <td className="text-center font-mono font-bold text-sky-600 p-[10px]">{p.trays} খাঁচি</td>
+                      <td className="text-right font-mono p-[10px]">৳{p.cost_price.toFixed(2)}</td>
+                      <td className="text-right font-mono font-bold text-gray-900 dark:text-white p-[10px]">
                         ৳{p.sell_price.toFixed(2)}
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="text-center p-[10px]">
                         <button
                           type="button"
                           onClick={() => handleOpenRegradeForProduct(p)}
@@ -838,50 +879,60 @@ export default function EggProductionPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={gradePage}
+            totalItems={data?.grade_products?.length || 0}
+            pageSize={gradePageSize}
+            onPageChange={setGradePage}
+            onPageSizeChange={setGradePageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
+          </>
         )}
 
         {/* Tab 3: Flocks */}
         {activeTab === "flocks" && (
+          <>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-emerald-800 text-white font-medium">
-                  <th className="py-3 px-4">ফ্লক ও শেড</th>
-                  <th className="py-3 px-4">মুরগির জাত (Breed)</th>
-                  <th className="py-3 px-4 text-center">বয়স (৩০ দিন/মাস)</th>
-                  <th className="py-3 px-4 text-center">লাইভ মুরগি / মোট</th>
-                  <th className="py-3 px-4 text-center">দৈনিক ফিড (১২০g/দিন)</th>
-                  <th className="py-3 px-4 text-right">মোট উৎপাদন ব্যয়</th>
-                  <th className="py-3 px-4 text-center">স্ট্যাটাস</th>
-                  <th className="py-3 px-4 text-center w-52">অ্যাকশন</th>
+                  <th className="p-[10px]">ফ্লক ও শেড</th>
+                  <th className="p-[10px]">মুরগির জাত</th>
+                  <th className="text-center p-[10px]">বয়স</th>
+                  <th className="text-center p-[10px]">লাইভ মুরগি / মোট</th>
+                  <th className="text-center p-[10px]">দৈনিক ফিড</th>
+                  <th className="text-right p-[10px]">মোট উৎপাদন ব্যয়</th>
+                  <th className="text-center p-[10px]">স্ট্যাটাস</th>
+                  <th className="text-center w-52 p-[10px]">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-gray-700 dark:text-gray-300">
                 {!data?.flocks || data.flocks.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                       কোনো পোল্ট্রি ফ্লক নেই।
                     </td>
                   </tr>
                 ) : (
-                  data.flocks.map((f) => (
+                  displayedFlocks.map((f) => (
                     <tr key={f.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <div className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                           {f.flock_code}
                         </div>
                         <div className="text-[11px] text-gray-900 dark:text-white font-medium">{f.shed_name}</div>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <span className="font-medium text-gray-800 dark:text-gray-200">{f.breed}</span>
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                      <td className="text-center p-[10px]">
+                        <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                           <Calendar className="w-3 h-3 text-sky-600" />
                           <span>{f.age_display || "০ দিন"}</span>
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center font-mono">
+                      <td className="text-center font-mono p-[10px]">
                         <div className="font-bold text-gray-900 dark:text-white text-sm">
                           {f.current_birds} টি
                         </div>
@@ -889,7 +940,7 @@ export default function EggProductionPage() {
                           শুরু: {f.initial_chicks_count ?? f.current_birds} | মৃত: {f.mortality_count ?? 0}
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-center font-mono">
+                      <td className="text-center font-mono p-[10px]">
                         <div className="font-bold text-orange-600 dark:text-orange-400">
                           {f.expected_daily_feed_kg ?? ((f.current_birds * 0.12).toFixed(1))} কেজি
                         </div>
@@ -897,15 +948,15 @@ export default function EggProductionPage() {
                           খাওয়া শেষ: {f.actual_feed_consumed_kg ?? 0} kg
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                      <td className="text-right font-mono font-bold text-emerald-700 dark:text-emerald-400 p-[10px]">
                         {formatBdCurrency(f.total_expenses ?? 0)}
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      <td className="text-center p-[10px]">
+                        <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                           {f.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="text-center p-[10px]">
                         <div className="flex items-center justify-center gap-1.5 flex-wrap">
                           <button
                             type="button"
@@ -942,6 +993,15 @@ export default function EggProductionPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={flockPage}
+            totalItems={data?.flocks?.length || 0}
+            pageSize={flockPageSize}
+            onPageChange={setFlockPage}
+            onPageSizeChange={setFlockPageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
+          </>
         )}
       </div>
 
@@ -964,7 +1024,8 @@ export default function EggProductionPage() {
             </div>
 
             {/* Body */}
-            <form onSubmit={handleCollectionSubmit} className="p-6 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleCollectionSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               {/* Flock Select */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
@@ -1131,7 +1192,10 @@ export default function EggProductionPage() {
               </div>
 
               {/* Footer */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsCollectionModalOpen(false)}
@@ -1174,7 +1238,8 @@ export default function EggProductionPage() {
               </button>
             </div>
 
-            <form onSubmit={handleRegradeSubmit} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleRegradeSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1 min-h-0">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                   উৎস গ্রেড (Source Grade) <span className="text-red-500">*</span>
@@ -1225,7 +1290,10 @@ export default function EggProductionPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsRegradeModalOpen(false)}
@@ -1264,7 +1332,8 @@ export default function EggProductionPage() {
               </button>
             </div>
 
-            <form onSubmit={handleFlockSubmit} className="p-6 space-y-4 text-xs overflow-y-auto">
+            <form onSubmit={handleFlockSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1 min-h-0">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
@@ -1282,7 +1351,7 @@ export default function EggProductionPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                    মুরগির জাত (Breed) <span className="text-red-500">*</span>
+                    মুরগির জাত <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1449,7 +1518,10 @@ export default function EggProductionPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsFlockModalOpen(false)}
@@ -1488,7 +1560,8 @@ export default function EggProductionPage() {
               </button>
             </div>
 
-            <form onSubmit={handleMortalitySubmit} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleMortalitySubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1 min-h-0">
               <div className="p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900">
                 <div className="text-gray-900 dark:text-white font-bold text-xs">{selectedFlockForMortality.shed_name}</div>
                 <div className="text-[11px] font-mono text-rose-700 dark:text-rose-400">
@@ -1543,7 +1616,10 @@ export default function EggProductionPage() {
                 </strong>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsMortalityModalOpen(false)}
@@ -1582,7 +1658,8 @@ export default function EggProductionPage() {
               </button>
             </div>
 
-            <form onSubmit={handleFlockExpenseSubmit} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleFlockExpenseSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto flex-1 min-h-0">
               <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900">
                 <div className="text-gray-900 dark:text-white font-bold text-xs">{selectedFlockForExpense.shed_name}</div>
                 <div className="text-[11px] font-mono text-amber-700 dark:text-amber-400">
@@ -1667,7 +1744,10 @@ export default function EggProductionPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsExpenseModalOpen(false)}
@@ -1868,19 +1948,19 @@ export default function EggProductionPage() {
           <table className="w-full text-left border-collapse text-xs mb-4">
             <thead>
               <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold">
-                <th className="p-2 border border-slate-300 text-center w-10">ক্র নং</th>
-                <th className="p-2 border border-slate-300">গ্রেডের নাম</th>
-                <th className="p-2 border border-slate-300 text-center">ডিমের সংখ্যা (টি)</th>
-                <th className="p-2 border border-slate-300 text-center">খাঁচি সংখ্যা (ট্রে)</th>
+                <th className="border border-slate-300 text-center w-10 p-[10px]">ক্র নং</th>
+                <th className="border border-slate-300 p-[10px]">গ্রেডের নাম</th>
+                <th className="border border-slate-300 text-center p-[10px]">ডিমের সংখ্যা (টি)</th>
+                <th className="border border-slate-300 text-center p-[10px]">খাঁচি সংখ্যা (ট্রে)</th>
               </tr>
             </thead>
             <tbody>
               {viewCollection.grades.map((g, idx) => (
                 <tr key={idx}>
-                  <td className="p-2 border border-slate-300 text-center font-bold">{idx + 1}</td>
-                  <td className="p-2 border border-slate-300 font-bold">{g.grade_name}</td>
-                  <td className="p-2 border border-slate-300 text-center font-mono">{g.pieces} টি</td>
-                  <td className="p-2 border border-slate-300 text-center font-mono">{g.trays} খাঁচি</td>
+                  <td className="border border-slate-300 text-center font-bold p-[10px]">{idx + 1}</td>
+                  <td className="border border-slate-300 font-bold p-[10px]">{g.grade_name}</td>
+                  <td className="border border-slate-300 text-center font-mono p-[10px]">{g.pieces} টি</td>
+                  <td className="border border-slate-300 text-center font-mono p-[10px]">{g.trays} খাঁচি</td>
                 </tr>
               ))}
             </tbody>

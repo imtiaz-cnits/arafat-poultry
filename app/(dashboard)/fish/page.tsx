@@ -23,7 +23,7 @@ import {
   Printer,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
 
 interface Pond {
   id: number;
@@ -120,6 +120,18 @@ export default function FishFarmingPage() {
   const [data, setData] = useState<FishDashboardData | null>(null);
   const [activeTab, setActiveTab] = useState<"batches" | "harvests" | "ponds" | "products">("batches");
   const [searchTerm, setSearchTerm] = useState("");
+  const [batchPage, setBatchPage] = useState(1);
+  const [batchPageSize, setBatchPageSize] = useState(20);
+  const [harvestPage, setHarvestPage] = useState(1);
+  const [harvestPageSize, setHarvestPageSize] = useState(20);
+  const [productPage, setProductPage] = useState(1);
+  const [productPageSize, setProductPageSize] = useState(20);
+
+  useEffect(() => {
+    setBatchPage(1);
+    setHarvestPage(1);
+    setProductPage(1);
+  }, [searchTerm]);
 
   // Modals state
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
@@ -277,6 +289,22 @@ export default function FishFarmingPage() {
         h.product_name.toLowerCase().includes(term)
     );
   }, [data?.recent_harvests, searchTerm]);
+
+  const displayedBatches = useMemo(() => {
+    const start = (batchPage - 1) * batchPageSize;
+    return filteredBatches.slice(start, start + batchPageSize);
+  }, [filteredBatches, batchPage, batchPageSize]);
+
+  const displayedHarvests = useMemo(() => {
+    const start = (harvestPage - 1) * harvestPageSize;
+    return filteredHarvests.slice(start, start + harvestPageSize);
+  }, [filteredHarvests, harvestPage, harvestPageSize]);
+
+  const displayedProducts = useMemo(() => {
+    const prods = data?.saleable_fish_products || [];
+    const start = (productPage - 1) * productPageSize;
+    return prods.slice(start, start + productPageSize);
+  }, [data?.saleable_fish_products, productPage, productPageSize]);
 
   // Handlers for Form Submissions
   const handleCreateBatch = async (e: React.FormEvent) => {
@@ -711,18 +739,18 @@ export default function FishFarmingPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                  <th className="p-3.5">ব্যাচ নং ও তারিখ</th>
-                  <th className="p-3.5">পুকুর ও মাছের জাত</th>
-                  <th className="p-3.5 text-center">বয়স (দিন)</th>
-                  <th className="p-3.5 text-center">মাছের সাইজ</th>
-                  <th className="p-3.5 text-right">মজুদ পোনা</th>
-                  <th className="p-3.5 text-right">বর্তমান জীবন্ত মাছ</th>
-                  <th className="p-3.5 text-right">গড় ওজন</th>
-                  <th className="p-3.5 text-right">সম্ভাব্য বায়োমাস</th>
-                  <th className="p-3.5 text-right">মোট আহরণ (কেজি)</th>
-                  <th className="p-3.5 text-right">মোট উৎপাদন ব্যয়</th>
-                  <th className="p-3.5 text-center">স্ট্যাটাস</th>
-                  <th className="p-3.5 text-center w-36">অ্যাকশন</th>
+                  <th className="p-[10px]">ব্যাচ নং ও তারিখ</th>
+                  <th className="p-[10px]">পুকুর ও মাছের জাত</th>
+                  <th className="p-[10px] text-center">বয়স</th>
+                  <th className="p-[10px] text-center">মাছের সাইজ</th>
+                  <th className="p-[10px] text-right">মজুদ পোনা</th>
+                  <th className="p-[10px] text-right">বর্তমান জীবন্ত মাছ</th>
+                  <th className="p-[10px] text-right">গড় ওজন</th>
+                  <th className="p-[10px] text-right">সম্ভাব্য বায়োমাস</th>
+                  <th className="p-[10px] text-right">মোট আহরণ</th>
+                  <th className="p-[10px] text-right">মোট উৎপাদন ব্যয়</th>
+                  <th className="p-[10px] text-center">স্ট্যাটাস</th>
+                  <th className="p-[10px] text-center w-36">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -733,26 +761,26 @@ export default function FishFarmingPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredBatches.map((b) => (
+                  displayedBatches.map((b) => (
                     <tr
                       key={b.id}
                       className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                     >
-                      <td className="p-3.5 font-medium text-slate-800 dark:text-slate-200">
+                      <td className="p-[10px] font-medium text-slate-800 dark:text-slate-200">
                         <div className="font-semibold text-emerald-800 dark:text-emerald-400">
                           {b.batch_no}
                         </div>
                         <div className="text-[11px] text-slate-400 mt-0.5">{b.stocking_date}</div>
                       </td>
-                      <td className="p-3.5">
+                      <td className="p-[10px]">
                         <div className="font-medium text-slate-800 dark:text-slate-100">{cleanPondName(b.pond_name)}</div>
                         <div className="text-[11px] text-sky-600 dark:text-sky-400">{b.species_name}</div>
                       </td>
-                      <td className="p-3.5 text-center font-bold text-slate-700 dark:text-slate-300">
+                      <td className="p-[10px] text-center font-bold text-slate-700 dark:text-slate-300">
                         {Math.max(1, Math.floor((new Date().getTime() - new Date(b.stocking_date).getTime()) / 86400000))} দিন
                       </td>
-                      <td className="p-3.5 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      <td className="p-[10px] text-center">
+                        <span className={`whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           b.latest_avg_weight_g > 800
                             ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
                             : b.latest_avg_weight_g >= 200
@@ -762,10 +790,10 @@ export default function FishFarmingPage() {
                           {b.latest_avg_weight_g > 800 ? "বড় মাছ" : b.latest_avg_weight_g >= 200 ? "মাঝারি মাছ" : "পোনা মাছ"}
                         </span>
                       </td>
-                      <td className="p-3.5 text-right text-slate-600 dark:text-slate-300">
+                      <td className="p-[10px] text-right text-slate-600 dark:text-slate-300">
                         {b.fingerling_count.toLocaleString()}
                       </td>
-                      <td className="p-3.5 text-right font-bold text-emerald-700 dark:text-emerald-400">
+                      <td className="p-[10px] text-right font-bold text-emerald-700 dark:text-emerald-400">
                         {b.current_fish_count.toLocaleString()}
                         {b.mortality_count > 0 && (
                           <span className="text-[10px] text-rose-500 font-normal ml-1">
@@ -773,21 +801,21 @@ export default function FishFarmingPage() {
                           </span>
                         )}
                       </td>
-                      <td className="p-3.5 text-right text-slate-700 dark:text-slate-200 font-medium">
+                      <td className="p-[10px] text-right text-slate-700 dark:text-slate-200 font-medium">
                         {b.latest_avg_weight_g > 0 ? `${b.latest_avg_weight_g} g` : "নমুনা নেই"}
                       </td>
-                      <td className="p-3.5 text-right font-bold text-amber-700 dark:text-amber-400">
+                      <td className="p-[10px] text-right font-bold text-amber-700 dark:text-amber-400">
                         {b.estimated_biomass_kg.toLocaleString()} kg
                       </td>
-                      <td className="p-3.5 text-right text-sky-700 dark:text-sky-400 font-semibold">
+                      <td className="p-[10px] text-right text-sky-700 dark:text-sky-400 font-semibold">
                         {b.harvested_kg.toLocaleString()} kg
                       </td>
-                      <td className="p-3.5 text-right font-semibold text-slate-800 dark:text-slate-200">
+                      <td className="p-[10px] text-right font-semibold text-slate-800 dark:text-slate-200">
                         {formatBdCurrency(b.total_cost)}
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-[10px] text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${b.status === "ACTIVE"
+                          className={`whitespace-nowrap inline-flex items-center shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${b.status === "ACTIVE"
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
                               : b.status === "PARTIALLY_HARVESTED"
                                 ? "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
@@ -797,7 +825,7 @@ export default function FishFarmingPage() {
                           {b.status}
                         </span>
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-[10px] text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
@@ -832,6 +860,14 @@ export default function FishFarmingPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={batchPage}
+            totalItems={filteredBatches.length}
+            pageSize={batchPageSize}
+            onPageChange={setBatchPage}
+            onPageSizeChange={setBatchPageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
         </div>
       ) : activeTab === "harvests" ? (
         /* Harvests Table */
@@ -840,16 +876,16 @@ export default function FishFarmingPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                  <th className="p-3.5">আহরণ নং ও তারিখ</th>
-                  <th className="p-3.5">পুকুর ও মাছ</th>
-                  <th className="p-3.5">ইনভেন্টরি প্রোডাক্ট</th>
-                  <th className="p-3.5 text-center">আহরণের ধরণ</th>
-                  <th className="p-3.5 text-right">মাছের সংখ্যা</th>
-                  <th className="p-3.5 text-right">মোট ওজন (কেজি)</th>
-                  <th className="p-3.5 text-right">গড় ওজন (কেজি)</th>
-                  <th className="p-3.5 text-right">উৎপাদন খরচ / কেজি</th>
-                  <th className="p-3.5 text-right">মোট বরাদ্দকৃত ব্যয়</th>
-                  <th className="p-3.5 text-center w-24">অ্যাকশন</th>
+                  <th className="p-[10px]">আহরণ নং ও তারিখ</th>
+                  <th className="p-[10px]">পুকুর ও মাছ</th>
+                  <th className="p-[10px]">ইনভেন্টরি প্রোডাক্ট</th>
+                  <th className="p-[10px] text-center">আহরণের ধরণ</th>
+                  <th className="p-[10px] text-right">মাছের সংখ্যা</th>
+                  <th className="p-[10px] text-right">মোট ওজন</th>
+                  <th className="p-[10px] text-right">গড় ওজন</th>
+                  <th className="p-[10px] text-right">খরচ/কেজি</th>
+                  <th className="p-[10px] text-right">মোট বরাদ্দকৃত ব্যয়</th>
+                  <th className="p-[10px] text-center w-24">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -860,25 +896,25 @@ export default function FishFarmingPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredHarvests.map((h) => (
+                  displayedHarvests.map((h) => (
                     <tr
                       key={h.id}
                       className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                     >
-                      <td className="p-3.5 font-medium text-slate-800 dark:text-slate-200">
+                      <td className="p-[10px] font-medium text-slate-800 dark:text-slate-200">
                         <div className="font-semibold text-sky-800 dark:text-sky-400">{h.harvest_no}</div>
                         <div className="text-[11px] text-slate-400 mt-0.5">{h.date}</div>
                       </td>
-                      <td className="p-3.5">
+                      <td className="p-[10px]">
                         <div className="font-medium text-slate-800 dark:text-slate-200">{h.pond_name}</div>
                         <div className="text-[11px] text-slate-400">{h.species_name}</div>
                       </td>
-                      <td className="p-3.5 font-medium text-slate-700 dark:text-slate-300">
+                      <td className="p-[10px] font-medium text-slate-700 dark:text-slate-300">
                         {h.product_name}
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-[10px] text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${h.harvest_type === "FINAL"
+                          className={`whitespace-nowrap inline-flex items-center shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${h.harvest_type === "FINAL"
                               ? "bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300"
                               : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
                             }`}
@@ -886,22 +922,22 @@ export default function FishFarmingPage() {
                           {h.harvest_type === "FINAL" ? "চূড়ান্ত আহরণ" : "আংশিক আহরণ"}
                         </span>
                       </td>
-                      <td className="p-3.5 text-right text-slate-600 dark:text-slate-300">
+                      <td className="p-[10px] text-right text-slate-600 dark:text-slate-300">
                         {h.fish_count.toLocaleString()}
                       </td>
-                      <td className="p-3.5 text-right font-bold text-sky-700 dark:text-sky-400">
+                      <td className="p-[10px] text-right font-bold text-sky-700 dark:text-sky-400">
                         {h.total_weight_kg.toLocaleString()} kg
                       </td>
-                      <td className="p-3.5 text-right text-slate-600 dark:text-slate-400">
+                      <td className="p-[10px] text-right text-slate-600 dark:text-slate-400">
                         {h.avg_weight_kg} kg/pc
                       </td>
-                      <td className="p-3.5 text-right font-medium text-slate-800 dark:text-slate-200">
+                      <td className="p-[10px] text-right font-medium text-slate-800 dark:text-slate-200">
                         {formatBdCurrency(h.cost_per_kg)}
                       </td>
-                      <td className="p-3.5 text-right font-bold text-slate-900 dark:text-white">
+                      <td className="p-[10px] text-right font-bold text-slate-900 dark:text-white">
                         {formatBdCurrency(h.cost_allocated)}
                       </td>
-                      <td className="p-3.5 text-center">
+                      <td className="p-[10px] text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
@@ -927,6 +963,14 @@ export default function FishFarmingPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={harvestPage}
+            totalItems={filteredHarvests.length}
+            pageSize={harvestPageSize}
+            onPageChange={setHarvestPage}
+            onPageSizeChange={setHarvestPageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
         </div>
       ) : activeTab === "ponds" ? (
         /* Ponds Table */
@@ -977,34 +1021,34 @@ export default function FishFarmingPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                  <th className="p-3.5">পণ্য আইডি</th>
-                  <th className="p-3.5">মাছের পণ্যের নাম</th>
-                  <th className="p-3.5 text-right">বর্তমান মজুত (কেজি)</th>
-                  <th className="p-3.5 text-right">গড় উৎপাদন ব্যয় / কেজি</th>
-                  <th className="p-3.5 text-right">বর্তমান বিক্রয় মূল্য / কেজি</th>
-                  <th className="p-3.5 text-right">মজুত পণ্যের মোট মূল্যায়ন</th>
+                  <th className="p-[10px]">পণ্য আইডি</th>
+                  <th className="p-[10px]">মাছের পণ্যের নাম</th>
+                  <th className="p-[10px] text-right">বর্তমান মজুত</th>
+                  <th className="p-[10px] text-right">উৎপাদন ব্যয়/কেজি</th>
+                  <th className="p-[10px] text-right">বিক্রয় দর/কেজি</th>
+                  <th className="p-[10px] text-right">মজুত পণ্যের মোট মূল্যায়ন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {data?.saleable_fish_products.map((sp) => (
+                {displayedProducts.map((sp) => (
                   <tr
                     key={sp.id}
                     className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                   >
-                    <td className="p-3.5 font-medium text-slate-400">#{sp.id}</td>
-                    <td className="p-3.5 font-semibold text-slate-800 dark:text-white">
+                    <td className="p-[10px] font-medium text-slate-400">#{sp.id}</td>
+                    <td className="p-[10px] font-semibold text-slate-800 dark:text-white">
                       {sp.product_name}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-emerald-700 dark:text-emerald-400 text-sm">
+                    <td className="p-[10px] text-right font-bold text-emerald-700 dark:text-emerald-400 text-sm">
                       {sp.stock_kg.toLocaleString()} kg
                     </td>
-                    <td className="p-3.5 text-right font-medium text-slate-600 dark:text-slate-300">
+                    <td className="p-[10px] text-right font-medium text-slate-600 dark:text-slate-300">
                       {formatBdCurrency(sp.cost_price)}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-sky-700 dark:text-sky-400">
+                    <td className="p-[10px] text-right font-bold text-sky-700 dark:text-sky-400">
                       {formatBdCurrency(sp.sell_price)}
                     </td>
-                    <td className="p-3.5 text-right font-bold text-slate-800 dark:text-slate-200">
+                    <td className="p-[10px] text-right font-bold text-slate-800 dark:text-slate-200">
                       {formatBdCurrency(sp.stock_kg * sp.cost_price)}
                     </td>
                   </tr>
@@ -1012,6 +1056,14 @@ export default function FishFarmingPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={productPage}
+            totalItems={data?.saleable_fish_products?.length || 0}
+            pageSize={productPageSize}
+            onPageChange={setProductPage}
+            onPageSizeChange={setProductPageSize}
+            pageSizeOptions={[20, 50, 100, 200, 500]}
+          />
         </div>
       )}
 
@@ -1036,7 +1088,8 @@ export default function FishFarmingPage() {
             </div>
 
             {/* Form Body */}
-            <form onSubmit={handleCreateBatch} className="p-5 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleCreateBatch} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   পুকুর নির্বাচন করুন <span className="text-red-500">*</span>
@@ -1148,22 +1201,24 @@ export default function FishFarmingPage() {
                 />
               </div>
 
-              {/* Sticky Footer */}
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsBatchModalOpen(false)}
-                  className="h-[38px] px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors"
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-semibold text-xs transition-colors cursor-pointer"
                 >
                   বাতিল
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="h-[38px] px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold flex items-center gap-1.5 transition-colors"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                 >
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  ব্যাচ সংরক্ষণ করুন
+                  <span>ব্যাচ সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>
@@ -1190,7 +1245,8 @@ export default function FishFarmingPage() {
               </button>
             </div>
 
-            <form onSubmit={handleHarvest} className="p-5 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleHarvest} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
@@ -1318,7 +1374,10 @@ export default function FishFarmingPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsHarvestModalOpen(false)}
@@ -1359,7 +1418,8 @@ export default function FishFarmingPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSampling} className="p-5 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleSampling} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
@@ -1396,7 +1456,7 @@ export default function FishFarmingPage() {
                 </div>
                 <div>
                   <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
-                    স্যাম্পলের মোট ওজন (কেজি) <span className="text-red-500">*</span>
+                    স্যাম্পলের মোট ওজন <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -1441,7 +1501,10 @@ export default function FishFarmingPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsSamplingModalOpen(false)}
@@ -1482,7 +1545,8 @@ export default function FishFarmingPage() {
               </button>
             </div>
 
-            <form onSubmit={handleMortality} className="p-5 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleMortality} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
@@ -1538,7 +1602,10 @@ export default function FishFarmingPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsMortalityModalOpen(false)}
@@ -1579,7 +1646,8 @@ export default function FishFarmingPage() {
               </button>
             </div>
 
-            <form onSubmit={handleExpense} className="p-5 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleExpense} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   ব্যাচ নির্বাচন করুন <span className="text-red-500">*</span>
@@ -1669,7 +1737,10 @@ export default function FishFarmingPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsExpenseModalOpen(false)}
@@ -1710,7 +1781,8 @@ export default function FishFarmingPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreatePond} className="p-5 overflow-y-auto space-y-4 text-xs">
+            <form onSubmit={handleCreatePond} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   পুকুর কোড (Pond Code) <span className="text-red-500">*</span>
@@ -1790,7 +1862,10 @@ export default function FishFarmingPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsPondModalOpen(false)}

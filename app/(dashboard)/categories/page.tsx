@@ -188,23 +188,23 @@ export default function CategoriesPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">ক্র: নং (SL)</th>
-                <th className="p-[10px]">ক্যাটাগরির নাম (Category Name)</th>
+                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">ক্র: নং</th>
+                <th className="p-[10px]">ক্যাটাগরির নাম</th>
                 <th className="p-[10px] text-center">স্ট্যাটাস (Status)</th>
-                <th className="p-[10px] text-center w-[95px] rounded-tr-xl">অ্যাকশন (Action)</th>
+                <th className="p-[10px] text-center w-[95px] rounded-tr-xl">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={4} className="text-center text-slate-400 font-medium p-[10px]">
                     <Loader2 className="w-5 h-5 animate-spin inline mr-2 text-emerald-600" />
                     Loading categories...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={4} className="text-center text-slate-400 font-medium p-[10px]">
                     No categories found.
                   </td>
                 </tr>
@@ -335,7 +335,8 @@ export default function CategoriesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-4 flex-1 min-h-0 overflow-y-auto">
               {error && (
                 <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-xs font-semibold">
                   {error}
@@ -344,7 +345,7 @@ export default function CategoriesPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  ক্যাটাগরির নাম (Category Name) *
+                  ক্যাটাগরির নাম *
                 </label>
                 <input
                   type="text"
@@ -371,7 +372,10 @@ export default function CategoriesPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}

@@ -492,19 +492,19 @@ export default function DashboardPage() {
             <thead>
               <tr className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                 <th className="p-[10px] text-center w-[45px]">SL</th>
-                <th className="p-[10px]">Order No</th>
-                <th className="p-[10px]">Customer</th>
-                <th className="p-[10px] text-right">Sub Total</th>
-                <th className="p-[10px] text-right">Paid Amount</th>
-                <th className="p-[10px] text-right">Due Amount</th>
-                <th className="p-[10px] text-center">Status</th>
-                <th className="p-[10px] text-center">Date</th>
+                <th className="p-[10px]">অর্ডার নং</th>
+                <th className="p-[10px]">কাস্টমার</th>
+                <th className="p-[10px] text-right">সাব টোটাল</th>
+                <th className="p-[10px] text-right">পরিশোধিত</th>
+                <th className="p-[10px] text-right">বকেয়া</th>
+                <th className="p-[10px] text-center">স্ট্যাটাস</th>
+                <th className="p-[10px] text-center">তারিখ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
               {recentOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={8} className="text-center text-slate-400 font-medium p-[10px]">
                     No orders recorded yet. Launch the Sales Portal to start ringing sales!
                   </td>
                 </tr>
@@ -635,8 +635,8 @@ export default function DashboardPage() {
                   Daily sales revenue vs actual net profit
                 </p>
               </div>
-              <span className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="whitespace-nowrap inline-flex items-center shrink-0 self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40">
+                <span className="whitespace-nowrap inline-flex items-center shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Analytics
               </span>
             </div>
@@ -1001,7 +1001,7 @@ export default function DashboardPage() {
                       {activeDonutSegment === "collection" ? (
                         <div className="animate-in fade-in zoom-in-95 duration-150">
                           <span className="text-xs font-bold text-[#7c3aed] flex items-center justify-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-[#7c3aed]" />
+                            <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2 h-2 rounded-full bg-[#7c3aed]" />
                             Monthly Collection
                           </span>
                           <span className="block text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
@@ -1014,7 +1014,7 @@ export default function DashboardPage() {
                       ) : activeDonutSegment === "dues" ? (
                         <div className="animate-in fade-in zoom-in-95 duration-150">
                           <span className="text-xs font-bold text-[#ef4444] flex items-center justify-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                            <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2 h-2 rounded-full bg-[#ef4444]" />
                             Customer Dues
                           </span>
                           <span className="block text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
@@ -1027,7 +1027,7 @@ export default function DashboardPage() {
                       ) : activeDonutSegment === "expenses" ? (
                         <div className="animate-in fade-in zoom-in-95 duration-150">
                           <span className="text-xs font-bold text-[#f59e0b] flex items-center justify-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+                            <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2 h-2 rounded-full bg-[#f59e0b]" />
                             Monthly Expenses
                           </span>
                           <span className="block text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
@@ -1069,7 +1069,7 @@ export default function DashboardPage() {
                   : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#7c3aed] shrink-0" />
+              <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2.5 h-2.5 rounded-full bg-[#7c3aed] shrink-0" />
               <span>Monthly Collection</span>
             </button>
             <button
@@ -1082,7 +1082,7 @@ export default function DashboardPage() {
                   : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444] shrink-0" />
+              <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2.5 h-2.5 rounded-full bg-[#ef4444] shrink-0" />
               <span>Customer Dues</span>
             </button>
             <button
@@ -1095,7 +1095,7 @@ export default function DashboardPage() {
                   : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] shrink-0" />
+              <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2.5 h-2.5 rounded-full bg-[#f59e0b] shrink-0" />
               <span>Monthly Expenses</span>
             </button>
           </div>

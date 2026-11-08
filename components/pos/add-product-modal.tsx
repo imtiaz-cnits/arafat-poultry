@@ -153,8 +153,9 @@ export function AddProductModal({
         </div>
 
         {/* MODAL BODY (Form) */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
-          {/* Product Name */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4">
+            {/* Product Name */}
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               পণ্যের নাম (Product Name) <span className="text-red-500">*</span>
@@ -269,8 +270,10 @@ export function AddProductModal({
             </div>
           </div>
 
-          {/* STICKY FOOTER: Cancel (Red #dc2626) & Submit (Deep Forest Green #166534) */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+          </div>
+
+          {/* STICKY FOOTER: Flush with bottom edges */}
+          <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-[#cbd5e1] dark:border-[#334155] flex items-center justify-end gap-2.5 z-10">
             <button
               type="button"
               disabled={loading}

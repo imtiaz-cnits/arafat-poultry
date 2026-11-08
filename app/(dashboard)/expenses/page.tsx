@@ -476,26 +476,26 @@ export default function ExpensesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং</th>
-                <th className="py-3 px-4">তারিখ ও ভাউচার নং</th>
-                <th className="py-3 px-3">খরচের খাত</th>
-                <th className="py-3 px-3">সুবিধাভোগী / কর্মচারী</th>
-                <th className="py-3 px-3">বিবরণ ও মন্তব্য</th>
-                <th className="py-3 px-3 text-right">খরচের পরিমাণ (৳)</th>
-                <th className="py-3 px-4 text-center w-24">অ্যাকশন</th>
+                <th className="text-center w-[50px] p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">তারিখ ও ভাউচার নং</th>
+                <th className="p-[10px]">খরচের খাত</th>
+                <th className="p-[10px]">সুবিধাভোগী / কর্মচারী</th>
+                <th className="p-[10px]">বিবরণ ও মন্তব্য</th>
+                <th className="text-right p-[10px]">খরচের পরিমাণ (৳)</th>
+                <th className="text-center w-24 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400">
+                  <td colSpan={7} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading expense records...</span>
                   </td>
                 </tr>
               ) : expenses.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={7} className="text-center text-slate-400 font-bold p-[10px]">
                     No expense records found. Click "+ Add Expense" to record one.
                   </td>
                 </tr>
@@ -505,10 +505,10 @@ export default function ExpensesPage() {
                     key={exp.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="text-center font-bold text-slate-500 p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 text-xs flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         <span>{exp.date}</span>
@@ -517,12 +517,12 @@ export default function ExpensesPage() {
                         #EXP-{exp.id} &bull; by {exp.creator}
                       </div>
                     </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-700 dark:text-slate-300">
+                    <td className="p-[10px]">
+                      <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-xs text-slate-700 dark:text-slate-300">
                         {exp.type_name}
                       </span>
                     </td>
-                    <td className="py-3 px-3 font-semibold text-slate-700 dark:text-slate-300">
+                    <td className="font-semibold text-slate-700 dark:text-slate-300 p-[10px]">
                       {exp.staff_name ? (
                         <div>
                           <div className="font-bold">{exp.staff_name}</div>
@@ -534,13 +534,13 @@ export default function ExpensesPage() {
                         <span className="text-slate-400">—</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-300 max-w-[240px]">
+                    <td className="text-slate-600 dark:text-slate-300 max-w-[240px] p-[10px]">
                       {exp.expense_details || "No remarks"}
                     </td>
-                    <td className="py-3 px-3 text-right font-black text-rose-600 dark:text-rose-400 text-xs">
+                    <td className="text-right font-black text-rose-600 dark:text-rose-400 text-xs p-[10px]">
                       {formatBdCurrency(exp.expense_amount)}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
@@ -662,7 +662,8 @@ export default function ExpensesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {errorMsg && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
                   {errorMsg}
@@ -759,7 +760,10 @@ export default function ExpensesPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -802,7 +806,8 @@ export default function ExpensesPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveOpening} className="p-5 space-y-4 flex-1 overflow-y-auto">
+            <form onSubmit={handleSaveOpening} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-4 flex-1 min-h-0 overflow-y-auto">
               <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
                 Set or update the beginning cash amount held in the retail shop register drawer at the start of business day.
               </p>
@@ -846,7 +851,10 @@ export default function ExpensesPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsOpeningModalOpen(false)}

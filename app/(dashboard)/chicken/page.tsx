@@ -24,7 +24,7 @@ import {
   Tag,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
 
 interface Flock {
   id: number;
@@ -53,21 +53,23 @@ export default function ChickenManagementPage() {
   const [flocks, setFlocks] = useState<Flock[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [suppliers, setSuppliers] = useState<Array<{ id: number; name: string }>>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   // Modal: Add New Chicks / Flock
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newFlock, setNewFlock] = useState({
-    shed_name: "শেড #১ (Shed 1)",
+    shed_name: "",
     flock_code: "",
-    breed: "হাই-লাইন ব্রাউন (Hy-Line Brown)",
-    initial_chicks_count: "2000",
+    breed: "",
+    initial_chicks_count: "",
     housing_date: new Date().toISOString().split("T")[0],
-    avg_weight_g: "45", // chick weight ~45g, adult ~1800g
-    daily_feed_g: "120", // default 120g adult, custom for chick
+    avg_weight_g: "",
+    daily_feed_g: "",
     supplier_id: "",
-    unit_price: "45",
-    paid_amount: "90000",
+    unit_price: "",
+    paid_amount: "",
     payment_method: "Cash",
     note: "",
   });
@@ -319,125 +321,141 @@ export default function ChickenManagementPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-12">ক্র: নং</th>
-                <th className="py-3 px-4">শেডের নাম ও ব্যাচ কোড</th>
-                <th className="py-3 px-3">মুরগির জাত (Breed)</th>
-                <th className="py-3 px-3 text-center">বাচ্চা এন্ট্রি</th>
-                <th className="py-3 px-3 text-center">বর্তমান মুরগি</th>
-                <th className="py-3 px-3 text-center">বয়স (দিন / মাস)</th>
-                <th className="py-3 px-3 text-center">দৈনিক খাবার (কেজি)</th>
-                <th className="py-3 px-3 text-center">গড় ওজন</th>
-                <th className="py-3 px-3 text-center">মারা গেছে</th>
-                <th className="py-3 px-3 text-center">স্ট্যাটাস</th>
-                <th className="py-3 px-4 text-center w-32">অ্যাকশন</th>
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold">
+                <th className="p-[10px] text-center w-12">ক্র: নং</th>
+                <th className="p-[10px]">শেডের নাম ও ব্যাচ কোড</th>
+                <th className="p-[10px]">মুরগির জাত</th>
+                <th className="p-[10px] text-center">বাচ্চা এন্ট্রি</th>
+                <th className="p-[10px] text-center">বর্তমান মুরগি</th>
+                <th className="p-[10px] text-center">বয়স</th>
+                <th className="p-[10px] text-center">দৈনিক খাবার</th>
+                <th className="p-[10px] text-center">গড় ওজন</th>
+                <th className="p-[10px] text-center">মারা গেছে</th>
+                <th className="p-[10px] text-center">স্ট্যাটাস</th>
+                <th className="p-[10px] text-center w-28">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-10 text-center text-slate-400">
+                  <td colSpan={11} className="p-[10px] py-10 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>মুরগির শেড ডাটা লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredFlocks.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={11} className="p-[10px] py-10 text-center text-slate-400 font-bold">
                     কোনো মুরগির শেড পাওয়া যায়নি। "নতুন মুরগি / বাচ্চা যুক্ত করুন" বাটনে ক্লিক করুন।
                   </td>
                 </tr>
               ) : (
-                filteredFlocks.map((flock, idx) => {
-                  const flockDailyFeedKg = Math.round(((flock.current_birds || 0) * 120) / 1000);
-                  const isAdult = (flock.age_days || 0) >= 120; // 4+ months
+                filteredFlocks
+                  .slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize)
+                  .map((flock, idx) => {
+                    const flockDailyFeedKg = Math.round(((flock.current_birds || 0) * 120) / 1000);
+                    const isAdult = (flock.age_days || 0) >= 120; // 4+ months
+                    const actualIdx = (currentPage - 1) * pageSize + idx;
 
-                  return (
-                    <tr key={flock.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-3 text-center font-bold text-slate-400">
-                        {idx + 1}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                          {flock.shed_name}
-                        </div>
-                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium">
-                            {flock.flock_code}
+                    return (
+                      <tr key={flock.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="p-[10px] text-center font-bold text-slate-400">
+                          {actualIdx + 1}
+                        </td>
+                        <td className="p-[10px]">
+                          <div className="font-bold text-slate-900 dark:text-slate-100 text-xs break-words">
+                            {flock.shed_name}
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium">
+                              {flock.flock_code}
+                            </span>
+                            <span className="text-[10px] text-slate-300 dark:text-slate-700">•</span>
+                            <span className="whitespace-nowrap inline-flex items-center shrink-0 gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 text-[10.5px] font-bold shadow-2xs">
+                              📅 আগমন: {flock.housing_date || "—"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-[10px] font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
+                            {flock.breed}
                           </span>
-                          <span className="text-[10px] text-slate-300 dark:text-slate-700">•</span>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 text-[10.5px] font-bold shadow-2xs">
-                            📅 আগমন: {flock.housing_date || "—"}
+                        </td>
+                        <td className="p-[10px] text-center font-semibold text-slate-600 dark:text-slate-300">
+                          {Number(flock.initial_chicks_count || flock.current_birds || 0).toLocaleString("en-US")} পিস
+                        </td>
+                        <td className="p-[10px] text-center font-black text-emerald-700 dark:text-emerald-400 text-sm">
+                          {Number(flock.current_birds ?? flock.current_birds_count ?? 0).toLocaleString("en-US")}
+                        </td>
+                        <td className="p-[10px] text-center">
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {flock.age_display || `${flock.age_days || 0} দিন`}
                           </span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
-                          {flock.breed}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-center font-semibold text-slate-600 dark:text-slate-300">
-                        {Number(flock.initial_chicks_count || flock.current_birds || 0).toLocaleString("en-US")} পিস
-                      </td>
-                      <td className="py-3 px-3 text-center font-black text-emerald-700 dark:text-emerald-400 text-sm">
-                        {Number(flock.current_birds ?? flock.current_birds_count ?? 0).toLocaleString("en-US")}
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                          {flock.age_display || `${flock.age_days || 0} দিন`}
-                        </span>
-                        <div className="text-[10px] text-slate-400">
-                          {isAdult ? "প্রাপ্তবয়স্ক লেয়ার" : "বাচ্চা / গ্রোয়ার"}
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="font-bold text-amber-600 dark:text-amber-400">
-                          {flockDailyFeedKg} কেজি
-                        </span>
-                        <div className="text-[10px] text-slate-400">১২০ গ্রাম/মুরগি/দিন</div>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">
-                          {isAdult ? "১.৬৫ - ১.৮৫ কেজি" : "৩৫০ - ৫৫০ গ্রাম"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="font-bold text-rose-600 dark:text-rose-400">
-                          {(flock.mortality_count || 0).toLocaleString("en-US")} টি
-                        </span>
-                        <div className="text-[10px] text-slate-400">
-                          {flock.mortality_rate_percent?.toFixed(1) || 0}%
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                          {flock.status || "ACTIVE"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedFlock(flock);
-                              setMortalityCount("1");
-                              setIsMortalityModalOpen(true);
-                            }}
-                            className="h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                            title="মুরগির মৃত্যু এন্ট্রি করুন"
-                          >
-                            <HeartCrack className="w-3.5 h-3.5" />
-                            <span>মৃত্যু এন্ট্রি</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                          <div className="text-[10px] text-slate-400">
+                            {isAdult ? "প্রাপ্তবয়স্ক লেয়ার" : "বাচ্চা / গ্রোয়ার"}
+                          </div>
+                        </td>
+                        <td className="p-[10px] text-center">
+                          <span className="font-bold text-amber-600 dark:text-amber-400">
+                            {flockDailyFeedKg} কেজি
+                          </span>
+                          <div className="text-[10px] text-slate-400">১২০ গ্রাম/মুরগি/দিন</div>
+                        </td>
+                        <td className="p-[10px] text-center">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">
+                            {isAdult ? "১.৬৫ - ১.৮৫ কেজি" : "৩৫০ - ৫৫০ গ্রাম"}
+                          </span>
+                        </td>
+                        <td className="p-[10px] text-center">
+                          <span className="font-bold text-rose-600 dark:text-rose-400">
+                            {(flock.mortality_count || 0).toLocaleString("en-US")} টি
+                          </span>
+                          <div className="text-[10px] text-slate-400">
+                            {flock.mortality_rate_percent?.toFixed(1) || 0}%
+                          </div>
+                        </td>
+                        <td className="p-[10px] text-center">
+                          <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                            {flock.status || "ACTIVE"}
+                          </span>
+                        </td>
+                        <td className="p-[10px] text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedFlock(flock);
+                                setMortalityCount("1");
+                                setIsMortalityModalOpen(true);
+                              }}
+                              className="h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                              title="মুরগির মৃত্যু এন্ট্রি করুন"
+                            >
+                              <HeartCrack className="w-3.5 h-3.5" />
+                              <span>মৃত্যু এন্ট্রি</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls Desktop & Mobile */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredFlocks.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[20, 50, 100, 200, 500]}
+        />
       </div>
 
       {/* 5. MODAL: ADD NEW CHICKS / FLOCK */}
@@ -460,7 +478,8 @@ export default function ChickenManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleAddFlockSubmit} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleAddFlockSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               <div className="grid grid-cols-2 gap-3">
                 {/* Shed Name */}
                 <div className="space-y-1">
@@ -503,7 +522,7 @@ export default function ChickenManagementPage() {
                     type="number"
                     min="1"
                     required
-                    placeholder="0"
+                    placeholder="যেমন: ২০০০"
                     value={newFlock.initial_chicks_count}
                     onChange={(e) => setNewFlock({ ...newFlock, initial_chicks_count: e.target.value })}
                     className="w-full h-[42px] px-3 text-base bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-emerald-700 font-black focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -546,7 +565,7 @@ export default function ChickenManagementPage() {
                     type="number"
                     min="10"
                     max="200"
-                    placeholder="120"
+                    placeholder="যেমন: ১২০"
                     value={newFlock.daily_feed_g}
                     onChange={(e) => setNewFlock({ ...newFlock, daily_feed_g: e.target.value })}
                     className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-bold text-amber-600 focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -581,6 +600,7 @@ export default function ChickenManagementPage() {
                     type="number"
                     min="0"
                     step="any"
+                    placeholder="যেমন: ৪৫.০০"
                     value={newFlock.unit_price}
                     onChange={(e) => setNewFlock({ ...newFlock, unit_price: e.target.value })}
                     className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -619,7 +639,9 @@ export default function ChickenManagementPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-[#cbd5e1] dark:border-[#334155] flex justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -635,14 +657,6 @@ export default function ChickenManagementPage() {
                 >
                   {adding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>বাচ্চা এন্ট্রি সংরক্ষণ করুন (Save)</span>
-                </button>
-                <button
-                  type="submit"
-                  disabled={adding}
-                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
-                >
-                  {adding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>
@@ -670,7 +684,8 @@ export default function ChickenManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleMortalitySubmit} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleMortalitySubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
                 <div className="font-bold text-slate-800 dark:text-slate-100">
                   {selectedFlock.shed_name} ({selectedFlock.breed})
@@ -721,7 +736,9 @@ export default function ChickenManagementPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-[#cbd5e1] dark:border-[#334155] flex justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsMortalityModalOpen(false)}

@@ -371,7 +371,7 @@ export default function PurchasesPage() {
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>নতুন ক্রয় (New Purchase)</span>
+            <span>নতুন ক্রয়</span>
           </button>
         </div>
       </div>
@@ -401,30 +401,30 @@ export default function PurchasesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
-                <th className="py-3 px-4">ক্রয় আইডি / তারিখ (Purchase ID / Date)</th>
-                <th className="py-3 px-3">সরবরাহকারী (Supplier)</th>
-                <th className="py-3 px-3">চালান / মেমো নং (Ref Memo)</th>
-                <th className="py-3 px-3 text-center">আইটেম সংখ্যা (Items)</th>
-                <th className="py-3 px-3 text-right">মোট টাকা (Total ৳)</th>
-                <th className="py-3 px-3 text-right">পরিশোধিত (Paid ৳)</th>
-                <th className="py-3 px-3 text-right">বকেয়া দেনা (Due ৳)</th>
-                <th className="py-3 px-4 text-center w-24">অ্যাকশন (Actions)</th>
+              <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold">
+                <th className="p-[10px] text-center w-[45px]">ক্র: নং</th>
+                <th className="p-[10px]">ক্রয় আইডি ও তারিখ</th>
+                <th className="p-[10px]">সরবরাহকারী</th>
+                <th className="p-[10px]">চালান / মেমো নং</th>
+                <th className="p-[10px] text-center">আইটেম সংখ্যা</th>
+                <th className="p-[10px] text-right">মোট টাকা</th>
+                <th className="p-[10px] text-right">পরিশোধিত</th>
+                <th className="p-[10px] text-right">বকেয়া দেনা</th>
+                <th className="p-[10px] text-center w-20">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={9} className="p-[10px] py-10 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-                    <span>Loading purchases...</span>
+                    <span>লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredPurchases.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
-                    No purchases recorded yet. Click "+ New Purchase" to inward stock.
+                  <td colSpan={9} className="p-[10px] py-10 text-center text-slate-400 font-bold">
+                    কোনো ক্রয়ের তথ্য পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
@@ -433,10 +433,10 @@ export default function PurchasesPage() {
                     key={p.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="p-[10px] text-center font-bold text-slate-500">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 font-mono text-xs">
                         {p.purchase_id}
                       </div>
@@ -445,12 +445,12 @@ export default function PurchasesPage() {
                         <span>{p.date || "N/A"}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
-                      <div className="font-bold text-slate-800 dark:text-slate-200">
+                    <td className="p-[10px]">
+                      <div className="font-bold text-slate-800 dark:text-slate-200 break-words">
                         {p.supplier ? (
                           <Link
                             href={`/suppliers/${p.supplier.id}`}
-                            className="hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                            className="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                           >
                             {p.supplier.name}
                           </Link>
@@ -458,38 +458,38 @@ export default function PurchasesPage() {
                           "N/A"
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400">{p.supplier?.company}</div>
+                      <div className="text-[10px] text-slate-400 break-words">{p.supplier?.company}</div>
                     </td>
-                    <td className="py-3 px-3 font-mono text-slate-600 dark:text-slate-300">
+                    <td className="p-[10px] font-mono text-slate-600 dark:text-slate-300">
                       {p.referance_no || "—"}
                     </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-300">
+                    <td className="p-[10px] text-center">
+                      <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-300">
                         {p.total_items} Pcs
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-black text-slate-900 dark:text-white">
+                    <td className="p-[10px] text-right font-black text-slate-900 dark:text-white">
                       {formatBdCurrency(p.grand_subtotal + p.delivery_charge)}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                    <td className="p-[10px] text-right font-bold text-emerald-600 dark:text-emerald-400">
                       {formatBdCurrency(p.paid_amount)}
                     </td>
-                    <td className="py-3 px-3 text-right">
+                    <td className="p-[10px] text-right">
                       <span
-                        className={`font-black ${p.due_amount > 0 ? "text-rose-600" : "text-emerald-600"
+                        className={`whitespace-nowrap inline-flex items-center shrink-0 font-black ${p.due_amount > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
                           }`}
                       >
                         {formatBdCurrency(p.due_amount)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="p-[10px] text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <Link
                           href={`/purchases/${p.id}`}
                           className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
                           title="View Purchase Bill"
                         >
-                          <Eye className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                          <Eye className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
                         </Link>
 
                         <button
@@ -622,7 +622,8 @@ export default function PurchasesPage() {
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleSubmitPurchase} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+            <form onSubmit={handleSubmitPurchase} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4">
               {errorMsg && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
                   {errorMsg}
@@ -632,28 +633,31 @@ export default function PurchasesPage() {
               {/* Meta: Supplier, Memo No, Date */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155]">
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      সরবরাহকারী / ভেন্ডর (Supplier) <span className="text-red-500">*</span>
-                    </label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    সরবরাহকারী / ভেন্ডর (Supplier) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex-1">
+                      <CustomSelect
+                        options={suppliers.map((s) => ({
+                          value: s.id,
+                          label: `${s.name} (${s.company})`,
+                          subLabel: `Due: ৳${s.purchase_payable_amount}`,
+                        }))}
+                        value={selectedSupplierId}
+                        onChange={(val) => setSelectedSupplierId(String(val))}
+                        placeholder="Select Supplier..."
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => setIsSupplierModalOpen(true)}
-                      className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      className="w-[42px] h-[42px] bg-[#166534] hover:bg-[#14532d] text-white rounded-xl flex items-center justify-center shrink-0 shadow-xs cursor-pointer active:scale-95 transition-all"
+                      title="নতুন সরবরাহকারী যুক্ত করুন"
                     >
-                      <Plus className="w-3 h-3" />নতুন সরবরাহকারী
+                      <Plus className="w-5 h-5 text-white stroke-[2.5]" />
                     </button>
                   </div>
-                  <CustomSelect
-                    options={suppliers.map((s) => ({
-                      value: s.id,
-                      label: `${s.name} (${s.company})`,
-                      subLabel: `Due: ৳${s.purchase_payable_amount}`,
-                    }))}
-                    value={selectedSupplierId}
-                    onChange={(val) => setSelectedSupplierId(String(val))}
-                    placeholder="Select Supplier..."
-                  />
                 </div>
 
                 <div className="space-y-1">
@@ -754,24 +758,24 @@ export default function PurchasesPage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-slate-100 dark:bg-[#1e293b] font-bold text-slate-700 dark:text-slate-300">
                     <tr>
-                      <th className="py-2.5 px-3">Product Name</th>
-                      <th className="py-2.5 px-2 text-center w-24">Inward Qty</th>
-                      <th className="py-2.5 px-2 text-right w-28">Unit Cost (৳)</th>
-                      <th className="py-2.5 px-2 text-right w-28">Line Total (৳)</th>
-                      <th className="py-2.5 px-2 text-center w-12"></th>
+                      <th className="p-[10px]">পণ্যের নাম</th>
+                      <th className="p-[10px] text-center w-24">পরিমাণ</th>
+                      <th className="p-[10px] text-right w-28">ক্রয় দর (৳)</th>
+                      <th className="p-[10px] text-right w-28">মোট টাকা</th>
+                      <th className="p-[10px] text-center w-12">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {newItems.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-400 font-bold">
-                          No items added yet. Select a product above.
+                        <td colSpan={5} className="p-[10px] py-8 text-center text-slate-400 font-bold">
+                          কোনো আইটেম যুক্ত করা হয়নি। উপরে পণ্য সিলেক্ট করুন।
                         </td>
                       </tr>
                     ) : (
                       newItems.map((item) => (
                         <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                          <td className="py-2 px-3 font-bold text-slate-800 dark:text-slate-100">
+                          <td className="p-[10px] font-bold text-slate-800 dark:text-slate-100 break-words">
                             <div>{item.product_name}</div>
                             {(item.tile_size || item.sqft_per_box) && (
                               <span className="text-[10px] text-slate-500 font-normal">
@@ -780,20 +784,20 @@ export default function PurchasesPage() {
                               </span>
                             )}
                           </td>
-                          <td className="py-2 px-2 text-center font-bold">
+                          <td className="p-[10px] text-center font-bold">
                             {formatTileOrItemQty(item.quantity, item)}
                           </td>
-                          <td className="py-2 px-2 text-right font-medium">
+                          <td className="p-[10px] text-right font-medium">
                             {item.cost_price.toFixed(2)}
                           </td>
-                          <td className="py-2 px-2 text-right font-black text-slate-900 dark:text-white">
+                          <td className="p-[10px] text-right font-black text-slate-900 dark:text-white">
                             {(item.cost_price * item.quantity).toFixed(2)}
                           </td>
-                          <td className="py-2 px-2 text-center">
+                          <td className="p-[10px] text-center">
                             <button
                               type="button"
                               onClick={() => handleRemoveLineItem(item.product_id)}
-                              className="text-rose-500 hover:text-rose-700 p-1"
+                              className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -884,7 +888,10 @@ export default function PurchasesPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsNewPurchaseOpen(false)}
@@ -977,26 +984,26 @@ export default function PurchasesPage() {
 
               {/* Line Items */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-slate-100 dark:bg-[#1e293b] font-bold">
                     <tr>
-                      <th className="py-2 px-3">Item</th>
-                      <th className="py-2 px-2 text-center w-16">Qty</th>
-                      <th className="py-2 px-2 text-right w-20">Cost</th>
-                      <th className="py-2 px-3 text-right w-24">Total</th>
+                      <th className="p-[10px]">পণ্যের বিবরণ</th>
+                      <th className="p-[10px] text-center w-20">পরিমাণ</th>
+                      <th className="p-[10px] text-right w-24">দর (৳)</th>
+                      <th className="p-[10px] text-right w-28">মোট টাকা</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {selectedPurchase.details.map((d) => (
                       <tr key={d.id}>
-                        <td className="py-2 px-3 font-medium">
+                        <td className="p-[10px] font-medium break-words">
                           {d.product_name}
                         </td>
-                        <td className="py-2 px-2 text-center font-bold">
+                        <td className="p-[10px] text-center font-bold">
                           {formatTileOrItemQty(d.quantity, d)}
                         </td>
-                        <td className="py-2 px-2 text-right">{d.cost_price.toFixed(2)}</td>
-                        <td className="py-2 px-3 text-right font-bold">
+                        <td className="p-[10px] text-right">{d.cost_price.toFixed(2)}</td>
+                        <td className="p-[10px] text-right font-bold">
                           {d.subtotal.toFixed(2)}
                         </td>
                       </tr>
@@ -1054,6 +1061,26 @@ export default function PurchasesPage() {
         description="Are you sure you want to delete this purchase inward record? Product stock will be decremented and supplier payable due balances will be safely reversed. Purchases with returns cannot be deleted."
         loading={isDeleting}
         error={deleteError}
+      />
+
+      {/* 8. NEW SUPPLIER MODAL */}
+      <SupplierModal
+        isOpen={isSupplierModalOpen}
+        onClose={() => setIsSupplierModalOpen(false)}
+        onSupplierCreated={(newSupp) => {
+          setSuppliers((prev) => [
+            {
+              id: newSupp.id,
+              name: newSupp.name,
+              company: newSupp.company,
+              mobile: newSupp.mobile || "",
+              purchase_payable_amount: newSupp.purchase_payable_amount || 0,
+            },
+            ...prev,
+          ]);
+          setSelectedSupplierId(String(newSupp.id));
+          toast.success("নতুন সরবরাহকারী সফলভাবে যুক্ত হয়েছে!");
+        }}
       />
     </div>
   );

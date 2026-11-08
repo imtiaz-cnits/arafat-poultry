@@ -719,7 +719,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
         </div>
 
         {/* MODAL FOOTER */}
-        <div className="pt-3 pb-3 px-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2.5 shrink-0 bg-white dark:bg-[#0f172a]">
+        <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2.5 z-10">
           <button
             type="button"
             onClick={handleReset}

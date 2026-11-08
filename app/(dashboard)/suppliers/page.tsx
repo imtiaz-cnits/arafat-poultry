@@ -323,27 +323,27 @@ export default function SuppliersPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
-                <th className="py-3 px-4">সরবরাহকারী / আইডি (Supplier)</th>
-                <th className="py-3 px-3">কোম্পানি (Company)</th>
-                <th className="py-3 px-3">যোগাযোগ (Contact)</th>
-                <th className="py-3 px-3">ঠিকানা (Address)</th>
-                <th className="py-3 px-3 text-center">ক্রয় (Purchases)</th>
-                <th className="py-3 px-3 text-right">মোট দেনা (Payable ৳)</th>
-                <th className="py-3 px-4 text-center w-28">অ্যাকশন (Actions)</th>
+                <th className="text-center w-[50px] p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">সরবরাহকারী ও আইডি</th>
+                <th className="p-[10px]">কোম্পানি</th>
+                <th className="p-[10px]">যোগাযোগ</th>
+                <th className="p-[10px]">ঠিকানা</th>
+                <th className="text-center p-[10px]">ক্রয়</th>
+                <th className="text-right p-[10px]">মোট দেনা</th>
+                <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400">
+                  <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading suppliers...</span>
                   </td>
                 </tr>
               ) : suppliers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={8} className="text-center text-slate-400 font-bold p-[10px]">
                     No suppliers found. Click "+ Add Supplier" to create one.
                   </td>
                 </tr>
@@ -353,10 +353,10 @@ export default function SuppliersPage() {
                     key={s.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="text-center font-bold text-slate-500 p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 text-xs">
                         <Link
                           href={`/suppliers/${s.id}`}
@@ -374,22 +374,22 @@ export default function SuppliersPage() {
                         </Link>
                       </div>
                     </td>
-                    <td className="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">
+                    <td className="font-semibold text-slate-700 dark:text-slate-200 p-[10px]">
                       {s.company}
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-200">{s.mobile}</div>
                       {s.email && <div className="text-[10px] text-slate-400">{s.email}</div>}
                     </td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-300 max-w-[160px] truncate">
+                    <td className="text-slate-600 dark:text-slate-300 max-w-[160px] truncate p-[10px]">
                       {s.address || "N/A"}
                     </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-300">
+                    <td className="text-center p-[10px]">
+                      <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-300">
                         {s.total_purchases} Bills
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right">
+                    <td className="text-right p-[10px]">
                       <span
                         className={`font-black text-xs ${s.purchase_payable_amount > 0
                           ? "text-rose-600 dark:text-rose-400"
@@ -399,7 +399,7 @@ export default function SuppliersPage() {
                         {formatBdCurrency(s.purchase_payable_amount)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <div className="flex items-center justify-center gap-1.5">
                         {/* Pay Due Button */}
                         {s.purchase_payable_amount > 0 && (
@@ -556,7 +556,8 @@ export default function SuppliersPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitSupplier} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmitSupplier} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {errorMsg && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
                   {errorMsg}
@@ -650,7 +651,10 @@ export default function SuppliersPage() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -693,7 +697,8 @@ export default function SuppliersPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitPayment} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmitPayment} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {/* Supplier Info Badge */}
               <div className="bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-1 text-xs">
                 <div className="flex justify-between">
@@ -781,7 +786,10 @@ export default function SuppliersPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsPayModalOpen(false)}

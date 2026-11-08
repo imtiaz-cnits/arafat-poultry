@@ -25,7 +25,7 @@ import {
   HeartPulse,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
 
 interface MedicationItem {
   id: number;
@@ -48,6 +48,12 @@ export default function MedicationsPage() {
   const [items, setItems] = useState<MedicationItem[]>([]);
   const [activeTab, setActiveTab] = useState<"ALL" | "POULTRY" | "FISH" | "TODAY">("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeTab]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,6 +114,11 @@ export default function MedicationsPage() {
       return true;
     });
   }, [items, activeTab, searchTerm, todayStr]);
+
+  const displayedItems = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, currentPage, pageSize]);
 
   // KPIs
   const totalCount = items.length;
@@ -194,28 +205,28 @@ export default function MedicationsPage() {
     switch (time) {
       case "MORNING":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200">
+          <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200">
             <Sunrise className="w-3.5 h-3.5 text-amber-600" />
             <span>সকাল (Morning)</span>
           </span>
         );
       case "NOON":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-50 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-200">
+          <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-50 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-200">
             <Sun className="w-3.5 h-3.5 text-orange-600" />
             <span>দুপুর (Noon)</span>
           </span>
         );
       case "AFTERNOON":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200">
+          <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200">
             <Sunset className="w-3.5 h-3.5 text-sky-600" />
             <span>বিকাল (Afternoon)</span>
           </span>
         );
       case "NIGHT":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200">
+          <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200">
             <Moon className="w-3.5 h-3.5 text-indigo-600" />
             <span>রাত (Night)</span>
           </span>
@@ -362,37 +373,37 @@ export default function MedicationsPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-12">ক্র: নং</th>
-                <th className="py-3 px-4">ওষুধ / ভ্যাকসিনের নাম ও লক্ষ্য</th>
-                <th className="py-3 px-3">প্রয়োগের স্থান (শেড / পুকুর)</th>
-                <th className="py-3 px-3">সঠিক ডোজ (Dosage)</th>
-                <th className="py-3 px-3 text-center">কতবার / শিডিউল</th>
-                <th className="py-3 px-3 text-center">প্রয়োগের বেলা</th>
-                <th className="py-3 px-3 text-center">পরবর্তী প্রয়োগের তারিখ</th>
-                <th className="py-3 px-4 text-center w-20">অ্যাকশন</th>
+                <th className="text-center w-12 p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">ওষুধ / ভ্যাকসিনের নাম ও লক্ষ্য</th>
+                <th className="p-[10px]">প্রয়োগের স্থান</th>
+                <th className="p-[10px]">ডোজ</th>
+                <th className="text-center p-[10px]">কতবার / শিডিউল</th>
+                <th className="text-center p-[10px]">প্রয়োগের বেলা</th>
+                <th className="text-center p-[10px]">পরবর্তী প্রয়োগের তারিখ</th>
+                <th className="text-center w-20 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400">
+                  <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>ওষুধ ও ভ্যাকসিন শিডিউল লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={8} className="text-center text-slate-400 font-bold p-[10px]">
                     কোনো ওষুধ বা ভ্যাকসিন শিডিউল পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
-                filteredItems.map((item, idx) => (
+                displayedItems.map((item, idx) => (
                   <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-3 px-3 text-center font-bold text-slate-400">
-                      {idx + 1}
+                    <td className="text-center font-bold text-slate-400 p-[10px]">
+                      {(currentPage - 1) * pageSize + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
                         <HeartPulse className="w-3.5 h-3.5 text-emerald-700" />
                         <span>{item.medicine_name}</span>
@@ -406,7 +417,7 @@ export default function MedicationsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-3 font-semibold">
+                    <td className="font-semibold p-[10px]">
                       <div className="flex items-center gap-1.5">
                         {item.target_type === "POULTRY" ? (
                           <Egg className="w-3.5 h-3.5 text-orange-600" />
@@ -416,16 +427,16 @@ export default function MedicationsPage() {
                         <span className="text-slate-800 dark:text-slate-200">{item.target_name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-3 font-bold text-emerald-800 dark:text-emerald-400">
+                    <td className="font-bold text-emerald-800 dark:text-emerald-400 p-[10px]">
                       {item.dosage}
                     </td>
-                    <td className="py-3 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                    <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                       {getFrequencyLabel(item.frequency)}
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="text-center p-[10px]">
                       {getTimeOfDayBadge(item.time_of_day)}
                     </td>
-                    <td className="py-3 px-3 text-center font-bold text-slate-800 dark:text-slate-100">
+                    <td className="text-center font-bold text-slate-800 dark:text-slate-100 p-[10px]">
                       <div className="flex items-center justify-center gap-1">
                         <Calendar className="w-3 h-3 text-slate-400" />
                         <span>{item.next_due_date}</span>
@@ -436,7 +447,7 @@ export default function MedicationsPage() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <button
                         type="button"
                         onClick={() => handleDelete(item.id)}
@@ -452,6 +463,19 @@ export default function MedicationsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredItems.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[20, 50, 100, 200, 500]}
+        />
       </div>
 
       {/* 5. MODAL: ADD NEW MEDICATION SCHEDULE */}
@@ -474,7 +498,8 @@ export default function MedicationsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {/* Medicine Name */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -525,7 +550,7 @@ export default function MedicationsPage() {
               {/* Dosage */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  সঠিক ডোজ (Dosage) <span className="text-red-500">*</span>
+                  ডোজ <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -614,7 +639,10 @@ export default function MedicationsPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

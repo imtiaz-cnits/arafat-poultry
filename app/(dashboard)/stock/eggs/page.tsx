@@ -17,7 +17,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
 
 interface EggCollection {
   id: number;
@@ -58,6 +58,12 @@ export default function StockEggsPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<EggStockData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Collection Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -122,6 +128,11 @@ export default function StockEggsPage() {
         c.date.includes(term)
     );
   }, [data?.recent_collections, searchTerm]);
+
+  const displayedCollections = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredCollections.slice(start, start + pageSize);
+  }, [filteredCollections, currentPage, pageSize]);
 
   // Handle Collection Submit
   const handleCollectionSubmit = async (e: React.FormEvent) => {
@@ -239,7 +250,7 @@ export default function StockEggsPage() {
         {/* Large Eggs (Grade A) */}
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>বড় ডিম (Grade A)</span>
+            <span>বড় ডিম</span>
             <Egg className="w-4 h-4 text-sky-600" />
           </div>
           <div className="text-xl font-black text-sky-700 dark:text-sky-400 mt-1">
@@ -253,7 +264,7 @@ export default function StockEggsPage() {
         {/* Small Eggs (Grade B) */}
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>ছোট ডিম (Grade B)</span>
+            <span>ছোট ডিম</span>
             <Egg className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
@@ -303,42 +314,42 @@ export default function StockEggsPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-12">ক্র: নং</th>
-                <th className="py-3 px-4">তারিখ ও ভাউচার নং</th>
-                <th className="py-3 px-3">শেডের নাম</th>
-                <th className="py-3 px-3 text-center">মোট সংগ্রহ</th>
-                <th className="py-3 px-3 text-center">বড় ডিম (Grade A)</th>
-                <th className="py-3 px-3 text-center">ছোট ডিম (Grade B)</th>
-                <th className="py-3 px-3 text-center">ফাটা ও নষ্ট ডিম</th>
-                <th className="py-3 px-3 text-center">গৃহীত ভালো ডিম</th>
-                <th className="py-3 px-3 text-right">গড় উৎপাদন খরচ</th>
+                <th className="text-center w-12 p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">তারিখ ও ভাউচার নং</th>
+                <th className="p-[10px]">শেডের নাম</th>
+                <th className="text-center p-[10px]">মোট সংগ্রহ</th>
+                <th className="text-center p-[10px]">বড় ডিম</th>
+                <th className="text-center p-[10px]">ছোট ডিম</th>
+                <th className="text-center p-[10px]">ফাটা ও নষ্ট ডিম</th>
+                <th className="text-center p-[10px]">গৃহীত ভালো ডিম</th>
+                <th className="text-right p-[10px]">গড় উৎপাদন খরচ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={9} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>ডিম সংগ্রহের ডাটা লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredCollections.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={9} className="text-center text-slate-400 font-bold p-[10px]">
                     কোনো ডিম সংগ্রহের তথ্য পাওয়া যায়নি। "নতুন ডিম সংগ্রহ" বাটনে ক্লিক করুন।
                   </td>
                 </tr>
               ) : (
-                filteredCollections.map((col, idx) => {
+                displayedCollections.map((col, idx) => {
                   const grpA = col.grades?.find((g) => g.grade_name.toLowerCase().includes("grade a"));
                   const grpB = col.grades?.find((g) => g.grade_name.toLowerCase().includes("grade b"));
 
                   return (
                     <tr key={col.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-3 text-center font-bold text-slate-400">
-                        {idx + 1}
+                      <td className="text-center font-bold text-slate-400 p-[10px]">
+                        {(currentPage - 1) * pageSize + idx + 1}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <div className="font-bold text-slate-800 dark:text-slate-100 text-xs">
                           {col.date}
                         </div>
@@ -346,28 +357,28 @@ export default function StockEggsPage() {
                           {col.collection_no}
                         </div>
                       </td>
-                      <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                      <td className="font-semibold text-slate-800 dark:text-slate-200 p-[10px]">
                         {col.flock_name}
                       </td>
-                      <td className="py-3 px-3 text-center font-black text-slate-900 dark:text-white text-sm">
+                      <td className="text-center font-black text-slate-900 dark:text-white text-sm p-[10px]">
                         {col.total_collected.toLocaleString()} টি
                         <div className="text-[10px] text-slate-400 font-normal">
                           {Math.floor(col.total_collected / 30)} খাঁচি + {col.total_collected % 30}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-sky-700 dark:text-sky-400">
+                      <td className="text-center font-bold text-sky-700 dark:text-sky-400 p-[10px]">
                         {grpA ? `${grpA.pieces.toLocaleString()} পিস` : "—"}
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-amber-600 dark:text-amber-400">
+                      <td className="text-center font-bold text-amber-600 dark:text-amber-400 p-[10px]">
                         {grpB ? `${grpB.pieces.toLocaleString()} পিস` : "—"}
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-rose-600 dark:text-rose-400">
+                      <td className="text-center font-bold text-rose-600 dark:text-rose-400 p-[10px]">
                         {col.rejected_breakage > 0 ? `${col.rejected_breakage} টি` : "০"}
                       </td>
-                      <td className="py-3 px-3 text-center font-black text-emerald-700 dark:text-emerald-400">
+                      <td className="text-center font-black text-emerald-700 dark:text-emerald-400 p-[10px]">
                         {col.accepted_quantity.toLocaleString()} পিস
                       </td>
-                      <td className="py-3 px-3 text-right font-semibold text-slate-800 dark:text-slate-200">
+                      <td className="text-right font-semibold text-slate-800 dark:text-slate-200 p-[10px]">
                         {col.cost_per_accepted_egg > 0 ? `৳${col.cost_per_accepted_egg.toFixed(2)}` : "—"}
                       </td>
                     </tr>
@@ -377,6 +388,19 @@ export default function StockEggsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredCollections.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[20, 50, 100, 200, 500]}
+        />
       </div>
 
       {/* 5. MODAL: COLLECT EGGS */}
@@ -399,7 +423,8 @@ export default function StockEggsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCollectionSubmit} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleCollectionSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {/* Flock / Shed */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -452,7 +477,7 @@ export default function StockEggsPage() {
                 <div className="grid grid-cols-3 gap-2.5">
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-sky-700 dark:text-sky-300">
-                      বড় ডিম (Grade A)
+                      বড় ডিম
                     </label>
                     <input
                       type="number"
@@ -465,7 +490,7 @@ export default function StockEggsPage() {
 
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                      ছোট ডিম (Grade B)
+                      ছোট ডিম
                     </label>
                     <input
                       type="number"
@@ -519,7 +544,10 @@ export default function StockEggsPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

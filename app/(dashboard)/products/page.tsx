@@ -794,28 +794,28 @@ export default function ProductsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">ক্র: নং (SL)</th>
-                <th className="p-[10px]">পণ্যের নাম (Product Name)</th>
-                <th className="p-[10px]">ক্যাটাগরি (Category)</th>
-                <th className="p-[10px]">ব্র্যান্ড (Brand)</th>
-                <th className="p-[10px] text-right">ক্রয় মূল্য (Cost ৳)</th>
-                <th className="p-[10px] text-right">বিক্রয় মূল্য (Sell ৳)</th>
-                <th className="p-[10px] text-center">মজুত (Stock)</th>
-                <th className="p-[10px] text-center">অবস্থা (Status)</th>
-                <th className="p-[10px] text-center w-[95px] rounded-tr-xl">অ্যাকশন (Action)</th>
+                <th className="p-[10px] text-center w-[45px] rounded-tl-xl">ক্র: নং</th>
+                <th className="p-[10px]">পণ্যের নাম</th>
+                <th className="p-[10px]">ক্যাটাগরি</th>
+                <th className="p-[10px]">ব্র্যান্ড</th>
+                <th className="p-[10px] text-right">ক্রয় দর</th>
+                <th className="p-[10px] text-right">বিক্রয় দর</th>
+                <th className="p-[10px] text-center">মজুত</th>
+                <th className="p-[10px] text-center">স্ট্যাটাস</th>
+                <th className="p-[10px] text-center w-[95px] rounded-tr-xl">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={9} className="text-center text-slate-400 font-medium p-[10px]">
                     <Loader2 className="w-5 h-5 animate-spin inline mr-2 text-rose-600" />
                     Loading products...
                   </td>
                 </tr>
               ) : displayedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={9} className="text-center text-slate-400 font-medium p-[10px]">
                     No products found. Click "Add Product" to create your first item.
                   </td>
                 </tr>
@@ -940,7 +940,7 @@ export default function ProductsPage() {
                   <div className="font-bold text-xs text-slate-800 dark:text-white flex items-center gap-1.5">
                     <span>{p.product_name}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-50 text-rose-700">
+                  <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-50 text-rose-700">
                     Stock: {p.tile_size || p.pcs_per_box ? formatBoxAndPcs(p.quantity, p.pcs_per_box) : `${p.quantity} ${p.unit}`}
                   </span>
                 </div>
@@ -1222,7 +1222,7 @@ export default function ProductsPage() {
                           </div>
                         </div>
                         {formData.tile_size && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                          <span className="whitespace-nowrap inline-flex items-center shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
                             Tiles Mode Active
                           </span>
                         )}
@@ -1898,31 +1898,31 @@ export default function ProductsPage() {
         <table className="print-table w-full text-left border-collapse text-xs">
           <thead>
             <tr className="bg-slate-100 text-black font-bold border-b-2 border-slate-900">
-              <th className="p-1.5 text-center w-8">SL</th>
-              <th className="p-1.5">Product Name</th>
-              <th className="p-1.5">Category & Brand</th>
-              <th className="p-1.5">Category</th>
-              <th className="p-1.5">Size / Brand</th>
-              <th className="p-1.5 text-center">Stock</th>
-              <th className="p-1.5 text-right">Cost Price</th>
-              <th className="p-1.5 text-right">Sell Price</th>
+              <th className="text-center w-8 p-[10px]">SL</th>
+              <th className="p-[10px]">পণ্যের নাম</th>
+              <th className="p-[10px]">ক্যাটাগরি ও ব্র্যান্ড</th>
+              <th className="p-[10px]">Category</th>
+              <th className="p-[10px]">Size / Brand</th>
+              <th className="text-center p-[10px]">Stock</th>
+              <th className="text-right p-[10px]">Cost Price</th>
+              <th className="text-right p-[10px]">Sell Price</th>
             </tr>
           </thead>
           <tbody>
             {filteredProducts.map((p, idx) => (
               <tr key={p.id} className="border-b border-slate-300">
-                <td className="p-1.5 text-center font-bold">{idx + 1}</td>
-                <td className="p-1.5 font-bold">{p.product_name}</td>
-                <td className="p-1.5">{p.category} - {p.brand}</td>
-                <td className="p-1.5">{p.category}</td>
-                <td className="p-1.5">{p.tile_size || p.brand || "-"}</td>
-                <td className="p-1.5 text-center font-bold">
+                <td className="text-center font-bold p-[10px]">{idx + 1}</td>
+                <td className="font-bold p-[10px]">{p.product_name}</td>
+                <td className="p-[10px]">{p.category} - {p.brand}</td>
+                <td className="p-[10px]">{p.category}</td>
+                <td className="p-[10px]">{p.tile_size || p.brand || "-"}</td>
+                <td className="text-center font-bold p-[10px]">
                   {p.tile_size || p.pcs_per_box
                     ? formatBoxAndPcs(p.quantity, p.pcs_per_box, p.tile_size)
                     : `${p.quantity} pcs`}
                 </td>
-                <td className="p-1.5 text-right">{formatBdCurrency(p.cost_price)}</td>
-                <td className="p-1.5 text-right font-bold">{formatBdCurrency(p.sell_price)}</td>
+                <td className="text-right p-[10px]">{formatBdCurrency(p.cost_price)}</td>
+                <td className="text-right font-bold p-[10px]">{formatBdCurrency(p.sell_price)}</td>
               </tr>
             ))}
           </tbody>

@@ -578,7 +578,7 @@ export default function ConsolidatedAccountingPage() {
                   সময়কাল: {pnlData?.period.start_date} থেকে {pnlData?.period.end_date}
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+              <span className="whitespace-nowrap inline-flex items-center shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                 নিট লাভ: {formatBdCurrency(pnlData?.net_operating_profit || 0)}
               </span>
             </div>
@@ -682,7 +682,7 @@ export default function ConsolidatedAccountingPage() {
                     {bu.unit_code === "GENERAL" && <Scale className="w-5 h-5 text-purple-600" />}
                     <h3 className="font-bold text-sm text-slate-800 dark:text-white">{bu.unit_name}</h3>
                   </div>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  <span className="whitespace-nowrap inline-flex items-center shrink-0 text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                     {bu.unit_code}
                   </span>
                 </div>
@@ -732,39 +732,39 @@ export default function ConsolidatedAccountingPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
-                    <th className="p-3.5">অ্যাকাউন্ট নাম</th>
-                    <th className="p-3.5">ধরণ</th>
-                    <th className="p-3.5 text-right">প্রারম্ভিক স্থিতি</th>
-                    <th className="p-3.5 text-right text-emerald-600">মোট জমা (Inflows)</th>
-                    <th className="p-3.5 text-right text-rose-600">মোট উত্তোলন (Outflows)</th>
-                    <th className="p-3.5 text-right">বর্তমান ক্যাশ স্থিতি</th>
-                    <th className="p-3.5 text-center">রিকনসিলিয়েশন</th>
+                    <th className="p-[10px]">অ্যাকাউন্ট নাম</th>
+                    <th className="p-[10px]">ধরণ</th>
+                    <th className="text-right p-[10px]">প্রারম্ভিক স্থিতি</th>
+                    <th className="text-right text-emerald-600 p-[10px]">মোট জমা</th>
+                    <th className="text-right text-rose-600 p-[10px]">মোট উত্তোলন</th>
+                    <th className="text-right p-[10px]">বর্তমান ক্যাশ স্থিতি</th>
+                    <th className="text-center p-[10px]">রিকনসিলিয়েশন</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {reconData?.accounts.map((acc) => (
                     <tr key={acc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-                      <td className="p-3.5 font-semibold text-slate-800 dark:text-white">
+                      <td className="font-semibold text-slate-800 dark:text-white p-[10px]">
                         {acc.account_name}
                         {acc.account_number && (
                           <div className="text-[10px] text-slate-400 font-normal">{acc.account_number}</div>
                         )}
                       </td>
-                      <td className="p-3.5 text-slate-500 font-medium">{acc.account_type}</td>
-                      <td className="p-3.5 text-right text-slate-600 dark:text-slate-300">
+                      <td className="text-slate-500 font-medium p-[10px]">{acc.account_type}</td>
+                      <td className="text-right text-slate-600 dark:text-slate-300 p-[10px]">
                         {formatBdCurrency(acc.opening_balance)}
                       </td>
-                      <td className="p-3.5 text-right font-bold text-emerald-700 dark:text-emerald-400">
+                      <td className="text-right font-bold text-emerald-700 dark:text-emerald-400 p-[10px]">
                         (+) {formatBdCurrency(acc.total_inflow)}
                       </td>
-                      <td className="p-3.5 text-right font-bold text-rose-600 dark:text-rose-400">
+                      <td className="text-right font-bold text-rose-600 dark:text-rose-400 p-[10px]">
                         (-) {formatBdCurrency(acc.total_outflow)}
                       </td>
-                      <td className="p-3.5 text-right font-black text-slate-900 dark:text-white text-sm">
+                      <td className="text-right font-black text-slate-900 dark:text-white text-sm p-[10px]">
                         {formatBdCurrency(acc.current_balance)}
                       </td>
-                      <td className="p-3.5 text-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <td className="text-center p-[10px]">
+                        <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                           <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           শতভাগ মিলেছে
                         </span>
@@ -819,29 +819,29 @@ export default function ConsolidatedAccountingPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
-                      <th className="p-3.5">পণ্যের নাম</th>
-                      <th className="p-3.5">ব্যবসায়িক ইউনিট</th>
-                      <th className="p-3.5 text-right">মজুত পরিমাণ</th>
-                      <th className="p-3.5 text-right">গড় উৎপাদন/ক্রয় মূল্য</th>
-                      <th className="p-3.5 text-right">মোট মজুত মূল্যায়ন</th>
+                      <th className="p-[10px]">পণ্যের নাম</th>
+                      <th className="p-[10px]">ব্যবসায়িক ইউনিট</th>
+                      <th className="text-right p-[10px]">মজুত পরিমাণ</th>
+                      <th className="text-right p-[10px]">গড় উৎপাদন/ক্রয় মূল্য</th>
+                      <th className="text-right p-[10px]">মোট মজুত মূল্যায়ন</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {inventoryData?.products.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-                        <td className="p-3.5 font-semibold text-slate-800 dark:text-white">{p.name}</td>
-                        <td className="p-3.5">
+                        <td className="font-semibold text-slate-800 dark:text-white p-[10px]">{p.name}</td>
+                        <td className="p-[10px]">
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                             {p.business_unit}
                           </span>
                         </td>
-                        <td className="p-3.5 text-right font-bold text-slate-800 dark:text-white">
+                        <td className="text-right font-bold text-slate-800 dark:text-white p-[10px]">
                           {p.quantity.toLocaleString()} {p.unit}
                         </td>
-                        <td className="p-3.5 text-right text-slate-600 dark:text-slate-300">
+                        <td className="text-right text-slate-600 dark:text-slate-300 p-[10px]">
                           {formatBdCurrency(p.cost_price)}
                         </td>
-                        <td className="p-3.5 text-right font-black text-emerald-700 dark:text-emerald-400">
+                        <td className="text-right font-black text-emerald-700 dark:text-emerald-400 p-[10px]">
                           {formatBdCurrency(p.valuation)}
                         </td>
                       </tr>
@@ -892,25 +892,25 @@ export default function ConsolidatedAccountingPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
-                      <th className="p-3.5">গ্রাহক নাম ও আইডি</th>
-                      <th className="p-3.5">মোবাইল</th>
-                      <th className="p-3.5 text-center">কতদিন যাবৎ বকেয়া</th>
-                      <th className="p-3.5 text-center">এজিন ব্র্যাকেট</th>
-                      <th className="p-3.5 text-right">বকেয়ার পরিমাণ</th>
+                      <th className="p-[10px]">গ্রাহক নাম ও আইডি</th>
+                      <th className="p-[10px]">মোবাইল</th>
+                      <th className="text-center p-[10px]">কতদিন যাবৎ বকেয়া</th>
+                      <th className="text-center p-[10px]">এজিন ব্র্যাকেট</th>
+                      <th className="text-right p-[10px]">বকেয়ার পরিমাণ</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {receivablesData?.due_customers.map((c) => (
                       <tr key={c.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-                        <td className="p-3.5 font-semibold text-slate-800 dark:text-white">
+                        <td className="font-semibold text-slate-800 dark:text-white p-[10px]">
                           {c.name}
                           <div className="text-[10px] text-slate-400 font-normal">{c.customer_id}</div>
                         </td>
-                        <td className="p-3.5 text-slate-600 dark:text-slate-300">{c.mobile}</td>
-                        <td className="p-3.5 text-center text-slate-600 dark:text-slate-300 font-medium">
+                        <td className="text-slate-600 dark:text-slate-300 p-[10px]">{c.mobile}</td>
+                        <td className="text-center text-slate-600 dark:text-slate-300 font-medium p-[10px]">
                           {c.days_overdue} দিন
                         </td>
-                        <td className="p-3.5 text-center">
+                        <td className="text-center p-[10px]">
                           <span
                             className={`px-2 py-0.5 rounded text-[10px] font-bold ${c.days_overdue > 90
                                 ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
@@ -924,7 +924,7 @@ export default function ConsolidatedAccountingPage() {
                             {c.aging_bracket}
                           </span>
                         </td>
-                        <td className="p-3.5 text-right font-black text-rose-600 text-sm">
+                        <td className="text-right font-black text-rose-600 text-sm p-[10px]">
                           {formatBdCurrency(c.due_amount)}
                         </td>
                       </tr>
@@ -947,20 +947,20 @@ export default function ConsolidatedAccountingPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-semibold">
-                    <th className="p-3.5">সাপ্লায়ার নাম ও কোম্পানি</th>
-                    <th className="p-3.5">মোবাইল</th>
-                    <th className="p-3.5 text-right">বাকি পাওনা পরিমাণ</th>
+                    <th className="p-[10px]">সাপ্লায়ার নাম ও কোম্পানি</th>
+                    <th className="p-[10px]">মোবাইল</th>
+                    <th className="text-right p-[10px]">বাকি পাওনা পরিমাণ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {payablesData?.due_suppliers.map((s) => (
                     <tr key={s.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
-                      <td className="p-3.5 font-semibold text-slate-800 dark:text-white">
+                      <td className="font-semibold text-slate-800 dark:text-white p-[10px]">
                         {s.name}
                         <div className="text-[10px] text-slate-400 font-normal">{s.company} ({s.supplier_id})</div>
                       </td>
-                      <td className="p-3.5 text-slate-600 dark:text-slate-300">{s.mobile}</td>
-                      <td className="p-3.5 text-right font-black text-sky-700 dark:text-sky-400 text-sm">
+                      <td className="text-slate-600 dark:text-slate-300 p-[10px]">{s.mobile}</td>
+                      <td className="text-right font-black text-sky-700 dark:text-sky-400 text-sm p-[10px]">
                         {formatBdCurrency(s.payable_amount)}
                       </td>
                     </tr>
@@ -1243,7 +1243,7 @@ export default function ConsolidatedAccountingPage() {
           <table className="print-table">
             <thead>
               <tr className="bg-slate-100 font-bold text-left">
-                <th>হিসাব খাত (Account Head)</th>
+                <th>হিসাব খাত</th>
                 <th className="text-right">পরিমাণ (৳)</th>
                 <th className="text-right">শতাংশ / নোট</th>
               </tr>

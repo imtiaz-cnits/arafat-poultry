@@ -109,6 +109,12 @@ export default function SupplierProfilePage({
   const [supplier, setSupplier] = useState<SupplierData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"purchases" | "payments" | "returns" | "ledger">("purchases");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   // Pay Due Modal State
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
@@ -279,7 +285,7 @@ export default function SupplierProfilePage({
               <Building2 className="w-4 h-4 text-rose-600" />
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Company</span>
+              <span className="text-[10px] text-slate-400 uppercase font-bold block">কোম্পানি</span>
               <span className="font-bold text-slate-800 dark:text-white">
                 {supplier.company || "N/A"}
               </span>
@@ -303,7 +309,7 @@ export default function SupplierProfilePage({
               <MapPin className="w-4 h-4 text-rose-600" />
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 uppercase font-bold block">Address</span>
+              <span className="text-[10px] text-slate-400 uppercase font-bold block">ঠিকানা</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">
                 {supplier.address || "N/A"}
               </span>
@@ -434,51 +440,51 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
-                  <th className="p-3">ক্রয় চালান / মেমো (Purchase Memo)</th>
-                  <th className="p-3">রেফারেন্স নং (Ref No)</th>
-                  <th className="p-3">Date</th>
-                  <th className="p-3 text-right">মোট টাকা (Total ৳)</th>
-                  <th className="p-3 text-right">পরিশোধিত (Paid ৳)</th>
-                  <th className="p-3 text-right">বকেয়া দেনা (Due ৳)</th>
-                  <th className="p-3 text-center">Action</th>
+                  <th className="text-center w-[45px] p-[10px]">ক্র: নং</th>
+                  <th className="p-[10px]">ক্রয় মেমো</th>
+                  <th className="p-[10px]">রেফারেন্স নং</th>
+                  <th className="p-[10px]">তারিখ</th>
+                  <th className="text-right p-[10px]">মোট টাকা</th>
+                  <th className="text-right p-[10px]">পরিশোধিত</th>
+                  <th className="text-right p-[10px]">বকেয়া দেনা</th>
+                  <th className="text-center p-[10px]">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
                 {supplier.purchases.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
+                    <td colSpan={8} className="text-center text-slate-400 font-medium p-[10px]">
                       No purchase records found for this supplier.
                     </td>
                   </tr>
                 ) : (
-                  supplier.purchases.map((p, idx) => (
+                  supplier.purchases.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((p, idx) => (
                     <tr
                       key={p.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
-                      <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="p-3 font-mono font-bold text-slate-800 dark:text-white whitespace-nowrap">
+                      <td className="text-center font-bold text-slate-400 p-[10px]">{(currentPage - 1) * pageSize + idx + 1}</td>
+                      <td className="font-mono font-bold text-slate-800 dark:text-white whitespace-nowrap p-[10px]">
                         <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                           {p.purchase_id}
                         </span>
                       </td>
-                      <td className="p-3 text-slate-500 font-mono">
+                      <td className="text-slate-500 font-mono p-[10px]">
                         {p.referance_no || "-"}
                       </td>
-                      <td className="p-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      <td className="text-slate-600 dark:text-slate-300 whitespace-nowrap p-[10px]">
                         {p.date ? new Date(p.date).toLocaleDateString("en-GB") : new Date(p.created_at).toLocaleDateString("en-GB")}
                       </td>
-                      <td className="p-3 text-right font-bold text-slate-800 dark:text-white">
+                      <td className="text-right font-bold text-slate-800 dark:text-white p-[10px]">
                         {formatBdCurrency(p.grand_subtotal)}
                       </td>
-                      <td className="p-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                      <td className="text-right font-bold text-emerald-600 dark:text-emerald-400 p-[10px]">
                         {formatBdCurrency(p.paid_amount)}
                       </td>
-                      <td className="p-3 text-right font-black text-rose-600 dark:text-rose-400">
+                      <td className="text-right font-black text-rose-600 dark:text-rose-400 p-[10px]">
                         {formatBdCurrency(p.due_amount)}
                       </td>
-                      <td className="p-3 text-center">
+                      <td className="text-center p-[10px]">
                         <Link
                           href={`/purchases/${p.id}`}
                           className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 text-[11px] font-bold transition-all inline-block border border-rose-200 dark:border-rose-900/50"
@@ -499,21 +505,21 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
-                  <th className="p-3">পরিশোধের তারিখ (Date)</th>
-                  <th className="p-3 text-right">পূর্বের দেনা (Prev Payable)</th>
-                  <th className="p-3 text-right">পরিশোধিত (Paid ৳)</th>
-                  <th className="p-3 text-right">Discount</th>
-                  <th className="p-3 text-right">অবশিষ্ট দেনা (Due ৳)</th>
-                  <th className="p-3 text-center">Method</th>
-                  <th className="p-3 text-center">Trx ID</th>
-                  <th className="p-3 text-center">Status</th>
+                  <th className="text-center w-[45px] p-[10px]">ক্র: নং</th>
+                  <th className="p-[10px]">পরিশোধের তারিখ</th>
+                  <th className="text-right p-[10px]">পূর্বের দেনা</th>
+                  <th className="text-right p-[10px]">পরিশোধিত</th>
+                  <th className="text-right p-[10px]">Discount</th>
+                  <th className="text-right p-[10px]">অবশিষ্ট দেনা</th>
+                  <th className="text-center p-[10px]">মাধ্যম</th>
+                  <th className="text-center p-[10px]">ট্রানজেকশন আইডি</th>
+                  <th className="text-center p-[10px]">স্ট্যাটাস</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
                 {supplier.supplier_due_collections.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-slate-400 font-medium">
+                    <td colSpan={9} className="text-center text-slate-400 font-medium p-[10px]">
                       No due payment records found for this supplier.
                     </td>
                   </tr>
@@ -523,8 +529,8 @@ export default function SupplierProfilePage({
                       key={p.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
-                      <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="p-3 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                      <td className="text-center font-bold text-slate-400 p-[10px]">{idx + 1}</td>
+                      <td className="font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap p-[10px]">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5 text-rose-600" />
                           <span>
@@ -534,28 +540,28 @@ export default function SupplierProfilePage({
                           </span>
                         </div>
                       </td>
-                      <td className="p-3 text-right font-medium text-slate-600 dark:text-slate-400">
+                      <td className="text-right font-medium text-slate-600 dark:text-slate-400 p-[10px]">
                         {formatBdCurrency(p.purchase_payable_amount)}
                       </td>
-                      <td className="p-3 text-right font-black text-emerald-600 dark:text-emerald-400">
+                      <td className="text-right font-black text-emerald-600 dark:text-emerald-400 p-[10px]">
                         {formatBdCurrency(p.paid_amount)}
                       </td>
-                      <td className="p-3 text-right text-amber-600 dark:text-amber-400">
+                      <td className="text-right text-amber-600 dark:text-amber-400 p-[10px]">
                         {p.discount_amount > 0 ? formatBdCurrency(p.discount_amount) : "-"}
                       </td>
-                      <td className="p-3 text-right font-bold text-rose-600 dark:text-rose-400">
+                      <td className="text-right font-bold text-rose-600 dark:text-rose-400 p-[10px]">
                         {formatBdCurrency(p.due_amount)}
                       </td>
-                      <td className="p-3 text-center font-medium">
+                      <td className="text-center font-medium p-[10px]">
                         <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                           {p.payment_method || "Cash"}
                         </span>
                       </td>
-                      <td className="p-3 text-center font-mono text-[11px] text-slate-500">
+                      <td className="text-center font-mono text-[11px] text-slate-500 p-[10px]">
                         {p.transaction_id || "-"}
                       </td>
-                      <td className="p-3 text-center">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      <td className="text-center p-[10px]">
+                        <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
                           {p.payment_status || "Paid"}
                         </span>
                       </td>
@@ -572,18 +578,18 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
-                  <th className="p-3">ফেরতের তারিখ (Date)</th>
-                  <th className="p-3">Purchase ID</th>
-                  <th className="p-3">ফেরতকৃত পণ্য (Returned Item)</th>
-                  <th className="p-3 text-center">Qty</th>
-                  <th className="p-3 text-right">ফেরত / সমন্বয় মূল্য (Amount ৳)</th>
+                  <th className="text-center w-[45px] p-[10px]">ক্র: নং</th>
+                  <th className="p-[10px]">ফেরতের তারিখ</th>
+                  <th className="p-[10px]">ক্রয় আইডি</th>
+                  <th className="p-[10px]">ফেরতকৃত পণ্য</th>
+                  <th className="text-center p-[10px]">পরিমাণ</th>
+                  <th className="text-right p-[10px]">ফেরত / সমন্বয় মূল্য</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
                 {supplier.purchase_returns.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-400 font-medium">
+                    <td colSpan={6} className="text-center text-slate-400 font-medium p-[10px]">
                       No purchase return records found for this supplier.
                     </td>
                   </tr>
@@ -593,20 +599,20 @@ export default function SupplierProfilePage({
                       key={r.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
-                      <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="p-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      <td className="text-center font-bold text-slate-400 p-[10px]">{idx + 1}</td>
+                      <td className="text-slate-600 dark:text-slate-300 whitespace-nowrap p-[10px]">
                         {r.date ? new Date(r.date).toLocaleDateString("en-GB") : "N/A"}
                       </td>
-                      <td className="p-3 font-mono font-bold text-slate-800 dark:text-white">
+                      <td className="font-mono font-bold text-slate-800 dark:text-white p-[10px]">
                         #{r.purchase_id}
                       </td>
-                      <td className="p-3">
+                      <td className="p-[10px]">
                         <div className="font-bold text-slate-800 dark:text-white">{r.product_name}</div>
                       </td>
-                      <td className="p-3 text-center font-bold text-slate-800 dark:text-white">
+                      <td className="text-center font-bold text-slate-800 dark:text-white p-[10px]">
                         {r.quantity} pcs
                       </td>
-                      <td className="p-3 text-right font-black text-rose-600 dark:text-rose-400">
+                      <td className="text-right font-black text-rose-600 dark:text-rose-400 p-[10px]">
                         {formatBdCurrency(r.amount)}
                       </td>
                     </tr>
@@ -622,57 +628,57 @@ export default function SupplierProfilePage({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                  <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
-                  <th className="p-3">তারিখ</th>
-                  <th className="p-3">ভাউচার / রেফারেন্স নং</th>
-                  <th className="p-3">লেনদেনের ধরন</th>
-                  <th className="p-3">বিবরণ / নোট</th>
-                  <th className="p-3 text-right">ডেবিট (৳)</th>
-                  <th className="p-3 text-right">ক্রেডিট (৳)</th>
-                  <th className="p-3 text-right">অবশিষ্ট পাওনা (৳)</th>
+                  <th className="text-center w-[45px] p-[10px]">ক্র: নং</th>
+                  <th className="p-[10px]">তারিখ</th>
+                  <th className="p-[10px]">ভাউচার / রেফারেন্স নং</th>
+                  <th className="p-[10px]">লেনদেনের ধরন</th>
+                  <th className="p-[10px]">বিবরণ / নোট</th>
+                  <th className="text-right p-[10px]">ডেবিট (৳)</th>
+                  <th className="text-right p-[10px]">ক্রেডিট (৳)</th>
+                  <th className="text-right p-[10px]">অবশিষ্ট পাওনা (৳)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
                 {(!supplier.party_ledger_entries || supplier.party_ledger_entries.length === 0) ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
+                    <td colSpan={8} className="text-center text-slate-400 font-medium p-[10px]">
                       এই সরবরাহকারীর কোনো লেজার রেকর্ড পাওয়া যায়নি।
                     </td>
                   </tr>
                 ) : (
-                  supplier.party_ledger_entries.map((ple, idx) => (
+                  supplier.party_ledger_entries.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((ple, idx) => (
                     <tr
                       key={ple.id || idx}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
-                      <td className="p-3 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="p-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      <td className="text-center font-bold text-slate-400 p-[10px]">{idx + 1}</td>
+                      <td className="text-slate-600 dark:text-slate-300 whitespace-nowrap p-[10px]">
                         {ple.date ? new Date(ple.date).toLocaleDateString("en-GB") : "-"}
                       </td>
-                      <td className="p-3 font-mono font-bold text-slate-800 dark:text-white whitespace-nowrap">
+                      <td className="font-mono font-bold text-slate-800 dark:text-white whitespace-nowrap p-[10px]">
                         <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                           {ple.reference_no || "-"}
                         </span>
                       </td>
-                      <td className="p-3 font-bold text-slate-700 dark:text-slate-300">
+                      <td className="font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                         {ple.reference_no?.startsWith("EXC-") || ple.note?.includes("বিনিময়") ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 inline-flex items-center gap-1">
+                          <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 inline-flex items-center gap-1">
                             🔄 পণ্য বিনিময় (Exchange)
                           </span>
                         ) : (
                           ple.transaction_type
                         )}
                       </td>
-                      <td className="p-3 text-slate-500 dark:text-slate-400 max-w-xs truncate">
+                      <td className="text-slate-500 dark:text-slate-400 max-w-xs truncate p-[10px]">
                         {ple.note || "-"}
                       </td>
-                      <td className="p-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                      <td className="text-right font-bold text-emerald-600 dark:text-emerald-400 p-[10px]">
                         {ple.debit > 0 ? formatBdCurrency(ple.debit) : "-"}
                       </td>
-                      <td className="p-3 text-right font-bold text-rose-600 dark:text-rose-400">
+                      <td className="text-right font-bold text-rose-600 dark:text-rose-400 p-[10px]">
                         {ple.credit > 0 ? formatBdCurrency(ple.credit) : "-"}
                       </td>
-                      <td className="p-3 text-right font-black text-slate-900 dark:text-white">
+                      <td className="text-right font-black text-slate-900 dark:text-white p-[10px]">
                         {formatBdCurrency(ple.balance)}
                       </td>
                     </tr>
@@ -714,7 +720,8 @@ export default function SupplierProfilePage({
             </div>
 
             {/* Form */}
-            <form onSubmit={handlePayDue} className="p-5 space-y-4 overflow-y-auto flex-1">
+            <form onSubmit={handlePayDue} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-4 overflow-y-auto flex-1 min-h-0">
               <div className="p-3 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">
@@ -826,19 +833,21 @@ export default function SupplierProfilePage({
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-200 dark:border-slate-800">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsPayModalOpen(false)}
-                  className="px-4 h-[42px] rounded-xl bg-[#dc2626] hover:bg-rose-700 text-white font-bold text-xs transition-all cursor-pointer shadow-xs"
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-rose-700 text-white font-bold text-xs transition-all cursor-pointer shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingPayment}
-                  className="px-6 h-[42px] rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] active:scale-[0.98] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] active:scale-[0.98] text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {submittingPayment ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

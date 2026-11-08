@@ -502,7 +502,7 @@ function ReturnsManagementContent() {
               <Clock className="w-4 h-4 text-rose-600" />
               <span>{activeTab === "purchase" ? "Purchase Return History" : "Sales Return History"}</span>
             </h3>
-            <span className="font-bold text-rose-700 dark:text-rose-300 px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/50 text-xs">
+            <span className="whitespace-nowrap inline-flex items-center shrink-0 font-bold text-rose-700 dark:text-rose-300 px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/50 text-xs">
               {filteredHistory.length} Records
             </span>
           </div>
@@ -561,33 +561,33 @@ function ReturnsManagementContent() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-semibold uppercase tracking-wider whitespace-nowrap">
-                <th className="p-3 text-center w-[45px]">ক্র: নং (SL)</th>
-                <th className="p-3 w-[120px] whitespace-nowrap">ফেরতের তারিখ (Date)</th>
-                <th className="p-3 min-w-[170px] whitespace-nowrap">
+                <th className="text-center w-[45px] p-[10px]">ক্র: নং</th>
+                <th className="w-[120px] whitespace-nowrap p-[10px]">ফেরতের তারিখ</th>
+                <th className="min-w-[170px] whitespace-nowrap p-[10px]">
                   {activeTab === "purchase" ? "Purchase Memo No" : "Invoice No"}
                 </th>
-                <th className="p-3">
+                <th className="p-[10px]">
                   {activeTab === "purchase" ? "Supplier Name" : "Customer Name"}
                 </th>
-                <th className="p-3">ফেরতকৃত পণ্য (Product)</th>
-                <th className="p-3 text-center w-[110px]">পরিমাণ (Qty)</th>
-                <th className="p-3 text-right w-[150px]">
+                <th className="p-[10px]">ফেরতকৃত পণ্য</th>
+                <th className="text-center w-[110px] p-[10px]">পরিমাণ</th>
+                <th className="text-right w-[150px] p-[10px]">
                   {activeTab === "purchase" ? "Adjusted Amount" : "Refund Amount"}
                 </th>
-                <th className="p-3 text-center w-[120px] whitespace-nowrap">অ্যাকশন (Action)</th>
+                <th className="text-center w-[120px] whitespace-nowrap p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">
+                  <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-5 h-5 animate-spin inline mr-2 text-rose-600" />
                     Loading return records...
                   </td>
                 </tr>
               ) : displayedHistory.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
+                  <td colSpan={8} className="text-center text-slate-400 font-medium p-[10px]">
                     No return records found. Use the search box above to process a return.
                   </td>
                 </tr>
@@ -616,16 +616,16 @@ function ReturnsManagementContent() {
                       key={item.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
                     >
-                      <td className="p-3 text-center font-bold text-slate-400">
+                      <td className="text-center font-bold text-slate-400 p-[10px]">
                         {startIndex + idx + 1}
                       </td>
-                      <td className="p-3 font-medium whitespace-nowrap text-slate-600 dark:text-slate-300">
+                      <td className="font-medium whitespace-nowrap text-slate-600 dark:text-slate-300 p-[10px]">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-rose-600" />
                           <span>{item.date || "N/A"}</span>
                         </div>
                       </td>
-                      <td className="p-3 whitespace-nowrap">
+                      <td className="whitespace-nowrap p-[10px]">
                         <div className="flex flex-col items-start gap-1">
                           {/* Return Badge */}
                           <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-2xs">
@@ -648,7 +648,7 @@ function ReturnsManagementContent() {
                           )}
                         </div>
                       </td>
-                      <td className="p-3">
+                      <td className="p-[10px]">
                         {profileUrl ? (
                           <Link
                             href={profileUrl}
@@ -665,7 +665,7 @@ function ReturnsManagementContent() {
                           <div className="text-[10px] text-slate-400 font-normal">{item.party_mobile}</div>
                         )}
                       </td>
-                      <td className="p-3">
+                      <td className="p-[10px]">
                         <div className="font-bold text-slate-800 dark:text-white">{item.product_name}</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           <span className="text-[10px] font-mono text-slate-400">Code: {item.product_code}</span>
@@ -676,15 +676,15 @@ function ReturnsManagementContent() {
                           )}
                         </div>
                       </td>
-                      <td className="p-3 text-center font-bold text-slate-800 dark:text-white">
+                      <td className="text-center font-bold text-slate-800 dark:text-white p-[10px]">
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-xs whitespace-nowrap">
                           {formatTileOrItemQty(item.quantity, item)}
                         </span>
                       </td>
-                      <td className="p-3 text-right font-black text-rose-700 dark:text-rose-400 text-xs">
+                      <td className="text-right font-black text-rose-700 dark:text-rose-400 text-xs p-[10px]">
                         {formatBdCurrency(item.amount)}
                       </td>
-                      <td className="p-3 text-center whitespace-nowrap">
+                      <td className="text-center whitespace-nowrap p-[10px]">
                         <div className="flex items-center justify-center gap-1.5">
                           {/* 1. Quick View Summary (Eye) */}
                           <button
@@ -730,10 +730,10 @@ function ReturnsManagementContent() {
             {filteredHistory.length > 0 && (
               <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-bold border-t-2 border-rose-200 dark:border-rose-900/50 text-xs">
                 <tr>
-                  <td colSpan={5} className="p-3 text-right text-slate-600 dark:text-slate-300">
+                  <td colSpan={5} className="text-right text-slate-600 dark:text-slate-300 p-[10px]">
                     Total Returned Refund Value:
                   </td>
-                  <td className="p-3 text-center font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                  <td className="text-center font-bold text-slate-900 dark:text-white whitespace-nowrap p-[10px]">
                     {(() => {
                       const hasTiles = filteredHistory.some((i) => Boolean(i.tile_size || i.pcs_per_box));
                       const totalQty = filteredHistory.reduce((acc, i) => acc + i.quantity, 0);
@@ -758,10 +758,10 @@ function ReturnsManagementContent() {
                       return `${totalQty} Pcs`;
                     })()}
                   </td>
-                  <td className="p-3 text-right font-black text-rose-700 dark:text-rose-400 text-sm">
+                  <td className="text-right font-black text-rose-700 dark:text-rose-400 text-sm p-[10px]">
                     {formatBdCurrency(filteredHistory.reduce((acc, i) => acc + i.amount, 0))}
                   </td>
-                  <td className="p-3" />
+                  <td className="p-[10px]" />
                 </tr>
               </tfoot>
             )}
@@ -801,7 +801,7 @@ function ReturnsManagementContent() {
                 >
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-500">
+                      <span className="whitespace-nowrap inline-flex items-center shrink-0 w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold flex items-center justify-center text-slate-500">
                         #{startIndex + idx + 1}
                       </span>
                       <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900">
@@ -847,7 +847,7 @@ function ReturnsManagementContent() {
 
                   <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg text-xs">
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-bold uppercase">Qty</span>
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase">পরিমাণ</span>
                       <span className="font-bold text-slate-800 dark:text-white whitespace-nowrap">
                         {formatTileOrItemQty(item.quantity, item)}
                       </span>
@@ -1049,7 +1049,7 @@ function ReturnsManagementContent() {
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white text-[11px] font-semibold uppercase tracking-wider">
-                          <th className="p-2.5 text-center w-[40px]">
+                          <th className="text-center w-[40px] p-[10px]">
                             <input
                               type="checkbox"
                               checked={Boolean(isAllEligibleSelected)}
@@ -1058,11 +1058,11 @@ function ReturnsManagementContent() {
                               title="Select All Eligible Items"
                             />
                           </th>
-                          <th className="p-2.5">Product Name</th>
-                          <th className="p-2.5 text-center w-[100px]">Purchased</th>
-                          <th className="p-2.5 text-right w-[110px]">Unit Price</th>
-                          <th className="p-2.5 text-center w-[120px]">Return Qty</th>
-                          <th className="p-2.5 text-right w-[120px] pr-4">Refund Total</th>
+                          <th className="p-[10px]">পণ্যের নাম</th>
+                          <th className="text-center w-[100px] p-[10px]">Purchased</th>
+                          <th className="text-right w-[110px] p-[10px]">Unit Price</th>
+                          <th className="text-center w-[120px] p-[10px]">Return Qty</th>
+                          <th className="text-right w-[120px] pr-4 p-[10px]">Refund Total</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-700 dark:text-slate-200">
@@ -1083,7 +1083,7 @@ function ReturnsManagementContent() {
                                   : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                               }`}
                             >
-                              <td className="p-2.5 text-center">
+                              <td className="text-center p-[10px]">
                                 <input
                                   type="checkbox"
                                   disabled={!isEligible}
@@ -1094,7 +1094,7 @@ function ReturnsManagementContent() {
                                   className="rounded text-rose-600 focus:ring-emerald-600 cursor-pointer disabled:cursor-not-allowed"
                                 />
                               </td>
-                              <td className="p-2.5">
+                              <td className="p-[10px]">
                                 <div className="font-bold text-slate-800 dark:text-white">
                                   {item.product_name}
                                 </div>
@@ -1114,7 +1114,7 @@ function ReturnsManagementContent() {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-2.5 text-center font-bold text-slate-700 dark:text-slate-300">
+                              <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                                 <div className="whitespace-nowrap">{formatTileOrItemQty(item.purchased_quantity, item)}</div>
                                 {item.returnable_quantity < item.purchased_quantity && (
                                   <div className="text-[10px] text-emerald-600 whitespace-nowrap">
@@ -1122,10 +1122,10 @@ function ReturnsManagementContent() {
                                   </div>
                                 )}
                               </td>
-                              <td className="p-2.5 text-right font-semibold text-slate-700 dark:text-slate-300">
+                              <td className="text-right font-semibold text-slate-700 dark:text-slate-300 p-[10px]">
                                 {formatBdCurrency(item.unit_price)}
                               </td>
-                              <td className="p-2.5 text-center">
+                              <td className="text-center p-[10px]">
                                 <input
                                   type="number"
                                   min="1"
@@ -1142,7 +1142,7 @@ function ReturnsManagementContent() {
                                   className="w-20 h-[34px] px-2 text-center font-bold text-slate-800 dark:text-white bg-white dark:bg-slate-800 rounded-lg border border-[#cbd5e1] dark:border-[#334155] focus:outline-none focus:border-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed"
                                 />
                               </td>
-                              <td className="p-2.5 text-right pr-4 font-bold text-rose-700 dark:text-rose-400">
+                              <td className="text-right pr-4 font-bold text-rose-700 dark:text-rose-400 p-[10px]">
                                 {isChecked ? formatBdCurrency(lineRefund) : "৳ 0.00"}
                               </td>
                             </tr>
@@ -1151,10 +1151,10 @@ function ReturnsManagementContent() {
                       </tbody>
                       <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-bold border-t border-slate-200 dark:border-slate-700">
                         <tr>
-                          <td colSpan={5} className="p-2.5 text-right text-xs uppercase text-slate-500">
+                          <td colSpan={5} className="text-right text-xs uppercase text-slate-500 p-[10px]">
                             Total Refund Amount:
                           </td>
-                          <td className="p-2.5 text-right pr-4 font-black text-rose-700 dark:text-rose-400 text-sm">
+                          <td className="text-right pr-4 font-black text-rose-700 dark:text-rose-400 text-sm p-[10px]">
                             {formatBdCurrency(grandRefundTotal)}
                           </td>
                         </tr>
@@ -1245,10 +1245,10 @@ function ReturnsManagementContent() {
                       : "Sales Return Summary"}
                   </h3>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className="bg-white/20 text-white font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-white/30">
+                    <span className="whitespace-nowrap inline-flex items-center shrink-0 bg-white/20 text-white font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-white/30">
                       {`#RET${String(selectedReturnForQuickView.id).padStart(5, "0")}`}
                     </span>
-                    <span className="bg-emerald-500/30 text-emerald-100 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-emerald-400/30">
+                    <span className="whitespace-nowrap inline-flex items-center shrink-0 bg-emerald-500/30 text-emerald-100 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border border-emerald-400/30">
                       {selectedReturnForQuickView.type === "purchase" ? "Supplier Return" : "Customer Return"}
                     </span>
                   </div>
@@ -1450,17 +1450,17 @@ function ReturnsManagementContent() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-500 uppercase">
-                      <th className="p-2.5 text-center w-[40px]">SL</th>
-                      <th className="p-2.5">Product Name</th>
-                      <th className="p-2.5 text-center w-[100px]">Qty</th>
-                      <th className="p-2.5 text-right w-[110px]">Unit Rate</th>
-                      <th className="p-2.5 text-right w-[120px] pr-4">Total Amount</th>
+                      <th className="text-center w-[40px] p-[10px]">SL</th>
+                      <th className="p-[10px]">পণ্যের নাম</th>
+                      <th className="text-center w-[100px] p-[10px]">পরিমাণ</th>
+                      <th className="text-right w-[110px] p-[10px]">Unit Rate</th>
+                      <th className="text-right w-[120px] pr-4 p-[10px]">Total Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     <tr>
-                      <td className="p-2.5 text-center text-slate-400">1</td>
-                      <td className="p-2.5 font-bold text-slate-800 dark:text-white">
+                      <td className="text-center text-slate-400 p-[10px]">1</td>
+                      <td className="font-bold text-slate-800 dark:text-white p-[10px]">
                         {selectedReturnForQuickView.product_name}
                         {selectedReturnForQuickView.tile_size && (
                           <span className="ml-1.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
@@ -1468,33 +1468,33 @@ function ReturnsManagementContent() {
                           </span>
                         )}
                       </td>
-                      <td className="p-2.5 text-center font-bold whitespace-nowrap">
+                      <td className="text-center font-bold whitespace-nowrap p-[10px]">
                         {formatTileOrItemQty(selectedReturnForQuickView.quantity, selectedReturnForQuickView)}
                       </td>
-                      <td className="p-2.5 text-right font-medium">
+                      <td className="text-right font-medium p-[10px]">
                         {formatBdCurrency(
                           selectedReturnForQuickView.quantity > 0
                             ? selectedReturnForQuickView.amount / selectedReturnForQuickView.quantity
                             : 0
                         )}
                       </td>
-                      <td className="p-2.5 text-right pr-4 font-bold text-rose-600 dark:text-rose-400">
+                      <td className="text-right pr-4 font-bold text-rose-600 dark:text-rose-400 p-[10px]">
                         {formatBdCurrency(selectedReturnForQuickView.amount)}
                       </td>
                     </tr>
                   </tbody>
                   <tfoot className="bg-slate-50 dark:bg-slate-800/80 font-bold border-t border-slate-200 dark:border-slate-700">
                     <tr>
-                      <td colSpan={2} className="p-2.5 text-right text-xs uppercase text-slate-500">
+                      <td colSpan={2} className="text-right text-xs uppercase text-slate-500 p-[10px]">
                         Total Returned:
                       </td>
-                      <td className="p-2.5 text-center font-bold whitespace-nowrap">
+                      <td className="text-center font-bold whitespace-nowrap p-[10px]">
                         {formatTileOrItemQty(selectedReturnForQuickView.quantity, selectedReturnForQuickView)}
                       </td>
-                      <td className="p-2.5 text-right text-slate-500 uppercase text-[10px]">
+                      <td className="text-right text-slate-500 uppercase text-[10px] p-[10px]">
                         Total Value:
                       </td>
-                      <td className="p-2.5 text-right pr-4 font-black text-rose-600 dark:text-rose-400 text-sm">
+                      <td className="text-right pr-4 font-black text-rose-600 dark:text-rose-400 text-sm p-[10px]">
                         {formatBdCurrency(selectedReturnForQuickView.amount)}
                       </td>
                     </tr>
@@ -1683,19 +1683,19 @@ function ReturnsManagementContent() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-100 border-b border-slate-300 font-bold uppercase text-slate-700">
-                      <th className="p-2.5 text-center w-[40px]">SL</th>
-                      <th className="p-2.5">Item Description</th>
-                      <th className="p-2.5 text-center w-[100px]">Qty</th>
-                      <th className="p-2.5 text-right w-[110px]">Rate</th>
-                      <th className="p-2.5 text-right w-[120px] pr-3">
+                      <th className="text-center w-[40px] p-[10px]">SL</th>
+                      <th className="p-[10px]">Item Description</th>
+                      <th className="text-center w-[100px] p-[10px]">পরিমাণ</th>
+                      <th className="text-right w-[110px] p-[10px]">Rate</th>
+                      <th className="text-right w-[120px] pr-3 p-[10px]">
                         {selectedReturnForPrint.type === "purchase" ? "Adjusted Amount" : "Refund Amount"}
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     <tr>
-                      <td className="p-2.5 text-center text-slate-500">1</td>
-                      <td className="p-2.5">
+                      <td className="text-center text-slate-500 p-[10px]">1</td>
+                      <td className="p-[10px]">
                         <div className="font-bold text-slate-900">
                           {selectedReturnForPrint.product_name}
                         </div>
@@ -1704,42 +1704,42 @@ function ReturnsManagementContent() {
                           {selectedReturnForPrint.tile_size && ` | Size: ${selectedReturnForPrint.tile_size}`}
                         </div>
                       </td>
-                      <td className="p-2.5 text-center font-bold whitespace-nowrap">
+                      <td className="text-center font-bold whitespace-nowrap p-[10px]">
                         {formatTileOrItemQty(selectedReturnForPrint.quantity, selectedReturnForPrint)}
                       </td>
-                      <td className="p-2.5 text-right">
+                      <td className="text-right p-[10px]">
                         {formatBdCurrency(
                           selectedReturnForPrint.quantity > 0
                             ? selectedReturnForPrint.amount / selectedReturnForPrint.quantity
                             : 0
                         )}
                       </td>
-                      <td className="p-2.5 text-right pr-3 font-bold text-rose-800">
+                      <td className="text-right pr-3 font-bold text-rose-800 p-[10px]">
                         {formatBdCurrency(selectedReturnForPrint.amount)}
                       </td>
                     </tr>
                   </tbody>
                   <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-300">
                     <tr>
-                      <td colSpan={2} className="p-2.5 text-right uppercase text-[11px] text-slate-600">
+                      <td colSpan={2} className="text-right uppercase text-[11px] text-slate-600 p-[10px]">
                         Total Returned Quantity:
                       </td>
-                      <td className="p-2.5 text-center whitespace-nowrap">
+                      <td className="text-center whitespace-nowrap p-[10px]">
                         {formatTileOrItemQty(selectedReturnForPrint.quantity, selectedReturnForPrint)}
                       </td>
-                      <td className="p-2.5 text-right uppercase text-[11px] text-slate-600">
+                      <td className="text-right uppercase text-[11px] text-slate-600 p-[10px]">
                         Total Amount:
                       </td>
-                      <td className="p-2.5 text-right pr-3 text-rose-800 font-black">
+                      <td className="text-right pr-3 text-rose-800 font-black p-[10px]">
                         {formatBdCurrency(selectedReturnForPrint.amount)}
                       </td>
                     </tr>
                     {selectedReturnForPrint.due_amount > 0 && (
                       <tr>
-                        <td colSpan={4} className="p-2 text-right text-emerald-700 text-[11px]">
+                        <td colSpan={4} className="text-right text-emerald-700 text-[11px] p-[10px]">
                           Due Adjustment:
                         </td>
-                        <td className="p-2 text-right pr-3 text-emerald-700 font-bold">
+                        <td className="text-right pr-3 text-emerald-700 font-bold p-[10px]">
                           {formatBdCurrency(selectedReturnForPrint.due_amount)}
                         </td>
                       </tr>

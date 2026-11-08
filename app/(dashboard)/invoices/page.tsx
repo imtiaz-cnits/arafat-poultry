@@ -302,28 +302,28 @@ export default function InvoicesPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-[50px]">ক্র: নং (SL)</th>
-                <th className="py-3 px-4">মেমো নং / তারিখ (Invoice # / Date)</th>
-                <th className="py-3 px-3">কাস্টমার (Customer)</th>
-                <th className="py-3 px-3 text-center">আইটেম (Items)</th>
-                <th className="py-3 px-3 text-right">পরিশোধযোগ্য (Net Payable ৳)</th>
-                <th className="py-3 px-3 text-right">পরিশোধিত (Paid ৳)</th>
-                <th className="py-3 px-3 text-right">বকেয়া (Due ৳)</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-4 text-center w-36">অ্যাকশন (Actions)</th>
+                <th className="text-center w-[50px] p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">মেমো নং ও তারিখ</th>
+                <th className="p-[10px]">কাস্টমার</th>
+                <th className="text-center p-[10px]">আইটেম</th>
+                <th className="text-right p-[10px]">পরিশোধযোগ্য</th>
+                <th className="text-right p-[10px]">পরিশোধিত</th>
+                <th className="text-right p-[10px]">বকেয়া</th>
+                <th className="text-center p-[10px]">স্ট্যাটাস</th>
+                <th className="text-center w-36 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={9} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-rose-600" />
                     <span>Loading invoices...</span>
                   </td>
                 </tr>
               ) : filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={9} className="text-center text-slate-400 font-bold p-[10px]">
                     No invoices matching the search criteria.
                   </td>
                 </tr>
@@ -333,10 +333,10 @@ export default function InvoicesPage() {
                     key={inv.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-3 text-center font-bold text-slate-500">
+                    <td className="text-center font-bold text-slate-500 p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 font-mono text-xs">
                         {inv.order_no}
                       </div>
@@ -345,24 +345,24 @@ export default function InvoicesPage() {
                         <span>{inv.invoice_date || "N/A"}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-200">
                         {inv.customer_name}
                       </div>
                       <div className="text-[10px] text-slate-400">{inv.customer_mobile}</div>
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="text-center p-[10px]">
                       <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-300 whitespace-nowrap">
                         {formatOrderQty(inv.details, inv.total_items, inv.has_tiles)}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-black text-slate-900 dark:text-white">
+                    <td className="text-right font-black text-slate-900 dark:text-white p-[10px]">
                       {formatBdCurrency(inv.net_payable)}
                     </td>
-                    <td className="py-3 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                    <td className="text-right font-bold text-emerald-600 dark:text-emerald-400 p-[10px]">
                       {formatBdCurrency(inv.paid_amount)}
                     </td>
-                    <td className="py-3 px-3 text-right">
+                    <td className="text-right p-[10px]">
                       <span
                         className={`font-black ${inv.due_amount > 0 ? "text-rose-600" : "text-emerald-600"
                           }`}
@@ -370,7 +370,7 @@ export default function InvoicesPage() {
                         {formatBdCurrency(inv.due_amount)}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="text-center p-[10px]">
                       <span
                         className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${inv.payment_status === "Paid"
                           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
@@ -382,7 +382,7 @@ export default function InvoicesPage() {
                         {inv.payment_status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <div className="flex items-center justify-center gap-1.5">
                         {/* View Invoice Bill */}
                         <Link
@@ -654,16 +654,16 @@ export default function InvoicesPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100 dark:bg-[#1e293b] font-bold">
                     <tr>
-                      <th className="py-2.5 px-3">Item Name</th>
-                      <th className="py-2.5 px-2 text-center w-16">Qty</th>
-                      <th className="py-2.5 px-2 text-right w-24">Price (৳)</th>
-                      <th className="py-2.5 px-3 text-right w-28">Total (৳)</th>
+                      <th className="p-[10px]">আইটেম</th>
+                      <th className="text-center w-16 p-[10px]">পরিমাণ</th>
+                      <th className="text-right w-24 p-[10px]">দর (৳)</th>
+                      <th className="text-right w-28 p-[10px]">মোট (৳)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {selectedInvoice.details.map((d) => (
                       <tr key={d.id}>
-                        <td className="py-2 px-3 font-medium">
+                        <td className="font-medium p-[10px]">
                           <div>{d.product_name}</div>
                           {(d.tile_size || d.sqft_per_box) && (
                             <div className="flex items-center gap-1.5 mt-0.5">
@@ -685,11 +685,11 @@ export default function InvoicesPage() {
                             </div>
                           )}
                         </td>
-                        <td className="py-2 px-2 text-center font-bold whitespace-nowrap">
+                        <td className="text-center font-bold whitespace-nowrap p-[10px]">
                           {formatTileOrItemQty(d.quantity, d)}
                         </td>
-                        <td className="py-2 px-2 text-right">{d.selling_price.toFixed(2)}</td>
-                        <td className="py-2 px-3 text-right font-bold">{d.line_total.toFixed(2)}</td>
+                        <td className="text-right p-[10px]">{d.selling_price.toFixed(2)}</td>
+                        <td className="text-right font-bold p-[10px]">{d.line_total.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>

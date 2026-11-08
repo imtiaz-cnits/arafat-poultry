@@ -396,26 +396,26 @@ export default function StaffPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-4 w-12 text-center">ক্র: নং</th>
-                <th className="py-3 px-4">কর্মচারীর নাম ও যোগাযোগ</th>
-                <th className="py-3 px-4 text-center">পদবী / ভূমিকা</th>
-                <th className="py-3 px-4 text-center">স্ট্যাটাস</th>
-                <th className="py-3 px-4 text-center">ভাউচার সংখ্যা</th>
-                <th className="py-3 px-4 text-right">মোট পরিশোধ (৳)</th>
-                <th className="py-3 px-4 text-center w-36">অ্যাকশন</th>
+                <th className="w-12 text-center p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">কর্মচারীর নাম ও যোগাযোগ</th>
+                <th className="text-center p-[10px]">পদবী / ভূমিকা</th>
+                <th className="text-center p-[10px]">স্ট্যাটাস</th>
+                <th className="text-center p-[10px]">ভাউচার সংখ্যা</th>
+                <th className="text-right p-[10px]">মোট পরিশোধ (৳)</th>
+                <th className="text-center w-36 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400">
+                  <td colSpan={7} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>Loading staff directory...</span>
                   </td>
                 </tr>
               ) : staffList.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={7} className="text-center text-slate-400 font-bold p-[10px]">
                     No staff members found. Click "+ Add New Staff" to register one.
                   </td>
                 </tr>
@@ -425,10 +425,10 @@ export default function StaffPage() {
                     key={item.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="py-3 px-4 text-center text-slate-400 font-mono">
+                    <td className="text-center text-slate-400 font-mono p-[10px]">
                       {startIndex + idx + 1}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="p-[10px]">
                       <div className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-black text-xs shrink-0">
                           {item.name.charAt(0).toUpperCase()}
@@ -450,12 +450,12 @@ export default function StaffPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                    <td className="text-center p-[10px]">
+                      <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
                         {item.role}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${item.status === "approved"
                           ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
@@ -470,13 +470,13 @@ export default function StaffPage() {
                         <span>{item.status}</span>
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-slate-700 dark:text-slate-300">
+                    <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                       {item.total_payout_count} vouchers
                     </td>
-                    <td className="py-3 px-4 text-right font-black text-rose-600 dark:text-rose-400 text-xs">
+                    <td className="text-right font-black text-rose-600 dark:text-rose-400 text-xs p-[10px]">
                       {formatBdCurrency(item.total_salary_paid)}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="text-center p-[10px]">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
@@ -544,7 +544,7 @@ export default function StaffPage() {
                 </h3>
                 <p className="text-[11px] text-slate-500">{item.mobile}</p>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+              <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                 {item.role}
               </span>
             </div>
@@ -624,7 +624,8 @@ export default function StaffPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitStaff} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmitStaff} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {errorMsg && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
                   {errorMsg}
@@ -728,7 +729,10 @@ export default function StaffPage() {
               </div>
 
               {/* Sticky Footer: Cancel Red #dc2626, Save Emerald #15803d */}
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -771,7 +775,8 @@ export default function StaffPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitPayout} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmitPayout} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               {payoutError && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
                   {payoutError}
@@ -873,7 +878,10 @@ export default function StaffPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsPayoutModalOpen(false)}

@@ -329,27 +329,27 @@ export default function DailyLedgerPage() {
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-              <th className="py-3 px-3 text-center w-[50px]">SL</th>
-              <th className="py-3 px-4 w-36">Date & Time</th>
-              <th className="py-3 px-4">Particulars / বিবরণ</th>
-              <th className="py-3 px-3">Party / Category</th>
-              <th className="py-3 px-3">Voucher Ref</th>
-              <th className="py-3 px-3 text-right">Inflow / জমা (৳)</th>
-              <th className="py-3 px-3 text-right">Outflow / খরচ (৳)</th>
-              <th className="py-3 px-4 text-right">Running Balance (৳)</th>
+              <th className="text-center w-[50px] p-[10px]">SL</th>
+              <th className="w-36 p-[10px]">তারিখ ও সময়</th>
+              <th className="p-[10px]">বিবরণ</th>
+              <th className="p-[10px]">পার্টি / ক্যাটাগরি</th>
+              <th className="p-[10px]">ভাউচার নং</th>
+              <th className="text-right p-[10px]">জমা (৳)</th>
+              <th className="text-right p-[10px]">খরচ (৳)</th>
+              <th className="text-right p-[10px]">ব্যালেন্স (৳)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-slate-400">
+                <td colSpan={8} className="text-center text-slate-400 p-[10px]">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                   <span>Loading daily ledger transactions...</span>
                 </td>
               </tr>
             ) : filteredLedger.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-slate-400 font-bold">
+                <td colSpan={8} className="text-center text-slate-400 font-bold p-[10px]">
                   No cashbook transactions found for the selected date range.
                 </td>
               </tr>
@@ -359,30 +359,30 @@ export default function DailyLedgerPage() {
                   key={tx.id}
                   className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
-                  <td className="py-3 px-3 text-center font-bold text-slate-500">
+                  <td className="text-center font-bold text-slate-500 p-[10px]">
                     {startIndex + idx + 1}
                   </td>
-                  <td className="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                  <td className="font-mono text-[11px] text-slate-500 whitespace-nowrap p-[10px]">
                     {tx.date_formatted}
                   </td>
-                  <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-100">
+                  <td className="font-bold text-slate-800 dark:text-slate-100 p-[10px]">
                     {tx.particulars}
                   </td>
-                  <td className="py-3 px-3 font-medium text-slate-600 dark:text-slate-300">
+                  <td className="font-medium text-slate-600 dark:text-slate-300 p-[10px]">
                     <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800">
                       {tx.category}
                     </span>
                   </td>
-                  <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
+                  <td className="font-mono text-[11px] text-slate-500 p-[10px]">
                     {tx.ref_no}
                   </td>
-                  <td className="py-3 px-3 text-right font-black text-emerald-600 dark:text-emerald-400">
+                  <td className="text-right font-black text-emerald-600 dark:text-emerald-400 p-[10px]">
                     {tx.inflow > 0 ? formatBdCurrency(tx.inflow) : "—"}
                   </td>
-                  <td className="py-3 px-3 text-right font-black text-rose-600 dark:text-rose-400">
+                  <td className="text-right font-black text-rose-600 dark:text-rose-400 p-[10px]">
                     {tx.outflow > 0 ? formatBdCurrency(tx.outflow) : "—"}
                   </td>
-                  <td className="py-3 px-4 text-right font-black text-slate-900 dark:text-white">
+                  <td className="text-right font-black text-slate-900 dark:text-white p-[10px]">
                     {formatBdCurrency(tx.running_balance)}
                   </td>
                 </tr>
@@ -492,11 +492,11 @@ export default function DailyLedgerPage() {
           <thead>
             <tr className="bg-slate-100 font-bold text-left">
               <th className="text-center w-8">SL</th>
-              <th>Date & Time</th>
+              <th>তারিখ ও সময়</th>
               <th>Particulars / Description</th>
               <th>Category</th>
-              <th className="text-right">Inflow / জমা (৳)</th>
-              <th className="text-right">Outflow / খরচ (৳)</th>
+              <th className="text-right">জমা (৳)</th>
+              <th className="text-right">খরচ (৳)</th>
               <th className="text-right">Balance / স্থিতি (৳)</th>
             </tr>
           </thead>
@@ -524,16 +524,16 @@ export default function DailyLedgerPage() {
           </tbody>
           <tfoot>
             <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
-              <td colSpan={4} className="text-right font-bold py-1.5 px-2">
+              <td colSpan={4} className="text-right font-bold p-[10px]">
                 Ledger Totals:
               </td>
-              <td className="text-right font-black text-emerald-800 py-1.5 px-2">
+              <td className="text-right font-black text-emerald-800 p-[10px]">
                 +{formatBdCurrency(summary?.total_inflow || 0)}
               </td>
-              <td className="text-right font-black text-red-700 py-1.5 px-2">
+              <td className="text-right font-black text-red-700 p-[10px]">
                 -{formatBdCurrency(summary?.total_outflow || 0)}
               </td>
-              <td className="text-right font-black text-slate-900 py-1.5 px-2">
+              <td className="text-right font-black text-slate-900 p-[10px]">
                 {formatBdCurrency(summary?.net_balance || 0)}
               </td>
             </tr>

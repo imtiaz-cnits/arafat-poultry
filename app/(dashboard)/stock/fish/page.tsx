@@ -15,7 +15,7 @@ import {
   Plus,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { useToast } from "@/components/ui";
+import { useToast, Pagination } from "@/components/ui";
 
 interface PondStockItem {
   id: number;
@@ -37,6 +37,12 @@ export default function StockFishPage() {
   const [loading, setLoading] = useState(true);
   const [batches, setBatches] = useState<PondStockItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [ponds, setPonds] = useState<any[]>([]);
@@ -126,6 +132,11 @@ export default function StockFishPage() {
         b.batch_no.toLowerCase().includes(term)
     );
   }, [batches, searchTerm]);
+
+  const displayedItems = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
 
   // Aggregate stats by size:
   // পোনা মাছ: avg weight < 200g
@@ -253,33 +264,33 @@ export default function StockFishPage() {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold whitespace-nowrap">
-                <th className="py-3 px-3 text-center w-12">ক্র: নং</th>
-                <th className="py-3 px-4">পুকুরের নাম ও অবস্থান</th>
-                <th className="py-3 px-3">মাছের নাম ও জাত</th>
-                <th className="py-3 px-3 text-center">সাইজ ক্যাটাগরি</th>
-                <th className="py-3 px-3 text-center">বর্তমান জীবন্ত সংখ্যা</th>
-                <th className="py-3 px-3 text-center">গড় ওজন (গ্রাম / কেজি)</th>
-                <th className="py-3 px-3 text-right">সম্ভাব্য মোট ওজন (কেজি)</th>
-                <th className="py-3 px-3 text-center">চাষকাল (বয়স)</th>
-                <th className="py-3 px-3 text-center">স্ট্যাটাস</th>
+                <th className="text-center w-12 p-[10px]">ক্র: নং</th>
+                <th className="p-[10px]">পুকুরের নাম ও অবস্থান</th>
+                <th className="p-[10px]">মাছের নাম ও জাত</th>
+                <th className="text-center p-[10px]">সাইজ ক্যাটাগরি</th>
+                <th className="text-center p-[10px]">বর্তমান জীবন্ত সংখ্যা</th>
+                <th className="text-center p-[10px]">গড় ওজন</th>
+                <th className="text-right p-[10px]">মোট ওজন</th>
+                <th className="text-center p-[10px]">চাষকাল</th>
+                <th className="text-center p-[10px]">স্ট্যাটাস</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400">
+                  <td colSpan={9} className="text-center text-slate-400 p-[10px]">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>মাছের স্টক ডাটা লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-slate-400 font-bold">
+                  <td colSpan={9} className="text-center text-slate-400 font-bold p-[10px]">
                     কোনো পুকুরের মাছের স্টক পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
-                filtered.map((item, idx) => {
+                displayedItems.map((item, idx) => {
                   const w = item.latest_avg_weight_g || 0;
                   const sizeCategory = w >= 800 ? "বড় মাছ" : w >= 200 ? "মাঝারি মাছ" : "পোনা মাছ";
                   const sizeColor =
@@ -293,10 +304,10 @@ export default function StockFishPage() {
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="py-3 px-3 text-center font-bold text-slate-400">
-                        {idx + 1}
+                      <td className="text-center font-bold text-slate-400 p-[10px]">
+                        {(currentPage - 1) * pageSize + idx + 1}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="p-[10px]">
                         <div className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-1.5">
                           <Droplets className="w-3.5 h-3.5 text-sky-600" />
                           <span>{item.pond_name}</span>
@@ -305,33 +316,33 @@ export default function StockFishPage() {
                           ব্যাচ: {item.batch_no} &bull; ছাড়া হয়েছে: {item.stocking_date}
                         </div>
                       </td>
-                      <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                      <td className="font-semibold text-slate-800 dark:text-slate-200 p-[10px]">
                         <span className="font-bold text-emerald-800 dark:text-emerald-400">
                           {item.species_name}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-center">
+                      <td className="text-center p-[10px]">
                         <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-black border ${sizeColor}`}>
                           {sizeCategory}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-center font-black text-emerald-700 dark:text-emerald-400 text-sm">
+                      <td className="text-center font-black text-emerald-700 dark:text-emerald-400 text-sm p-[10px]">
                         {item.current_fish_count.toLocaleString()} টি
                         <div className="text-[10px] text-slate-400 font-normal">
                           প্রারম্ভিক পোনা: {item.fingerling_count.toLocaleString()}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
+                      <td className="text-center font-bold text-slate-800 dark:text-slate-200 p-[10px]">
                         {w >= 1000 ? `${(w / 1000).toFixed(2)} কেজি` : `${w} গ্রাম`}
                       </td>
-                      <td className="py-3 px-3 text-right font-black text-amber-700 dark:text-amber-400 text-sm">
+                      <td className="text-right font-black text-amber-700 dark:text-amber-400 text-sm p-[10px]">
                         {Math.round(item.estimated_biomass_kg).toLocaleString()} কেজি
                       </td>
-                      <td className="py-3 px-3 text-center font-bold text-slate-700 dark:text-slate-300">
+                      <td className="text-center font-bold text-slate-700 dark:text-slate-300 p-[10px]">
                         {ageDays} দিন
                       </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      <td className="text-center p-[10px]">
+                        <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                           {item.status || "ACTIVE"}
                         </span>
                       </td>
@@ -342,6 +353,19 @@ export default function StockFishPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[20, 50, 100, 200, 500]}
+        />
       </div>
 
       {/* Inward Fish Stock Modal */}
@@ -364,7 +388,8 @@ export default function StockFishPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateFishStock} className="p-5 space-y-3.5 flex-1 overflow-y-auto">
+            <form onSubmit={handleCreateFishStock} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -460,7 +485,10 @@ export default function StockFishPage() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
