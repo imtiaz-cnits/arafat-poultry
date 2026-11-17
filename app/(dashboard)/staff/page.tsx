@@ -27,6 +27,7 @@ import { CustomDatePicker } from "@/components/ui/date-picker";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useToast } from "@/components/ui/toast";
 import { Pagination, DeleteConfirmModal } from "@/components/ui";
+import { isProtectedSuperAdmin, SUPER_ADMIN_EMAIL } from "@/lib/roles";
 
 interface StaffMember {
   id: number;
@@ -190,8 +191,8 @@ export default function StaffPage() {
   };
 
   const handleDeleteStaff = (item: StaffMember) => {
-    if (item.id === 1 || item.id === 7) {
-      toast.error("Super Admin account cannot be deleted!");
+    if (isProtectedSuperAdmin(item)) {
+      toast.error(`Super Admin account (${SUPER_ADMIN_EMAIL}) cannot be deleted!`);
       return;
     }
     setDeleteError(null);
@@ -498,8 +499,8 @@ export default function StaffPage() {
                         <button
                           type="button"
                           onClick={() => handleDeleteStaff(item)}
-                          disabled={item.id === 1 || item.id === 7}
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${item.id === 1 || item.id === 7
+                          disabled={isProtectedSuperAdmin(item)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isProtectedSuperAdmin(item)
                             ? "bg-slate-100 text-slate-300 cursor-not-allowed"
                             : "bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 cursor-pointer"
                             }`}
@@ -575,8 +576,8 @@ export default function StaffPage() {
               <button
                 type="button"
                 onClick={() => handleDeleteStaff(item)}
-                disabled={item.id === 1 || item.id === 7}
-                className={`h-[30px] w-full px-2 rounded-lg text-xs font-bold ${item.id === 1 || item.id === 7
+                disabled={isProtectedSuperAdmin(item)}
+                className={`h-[30px] w-full px-2 rounded-lg text-xs font-bold ${isProtectedSuperAdmin(item)
                   ? "bg-slate-100 text-slate-300 cursor-not-allowed"
                   : "bg-rose-50 text-rose-600"
                   }`}
@@ -669,10 +670,11 @@ export default function StaffPage() {
                   </label>
                   <input
                     type="email"
+                    disabled={Boolean(selectedStaff && isProtectedSuperAdmin(selectedStaff))}
                     placeholder="optional@gmail.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -683,17 +685,26 @@ export default function StaffPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     Designation / Role
                   </label>
-                  <CustomSelect
-                    options={[
-                      { value: "manager", label: "Manager" },
-                      { value: "cashier", label: "Cashier" },
-                      { value: "salesman", label: "Salesman" },
-                      { value: "staff", label: "General Staff" },
-                      { value: "technician", label: "Technician" },
-                    ]}
-                    value={formData.role}
-                    onChange={(val) => setFormData({ ...formData, role: String(val) })}
-                  />
+                  {selectedStaff && isProtectedSuperAdmin(selectedStaff) ? (
+                    <CustomSelect
+                      disabled
+                      options={[{ value: "super_admin", label: "Super Admin" }]}
+                      value="super_admin"
+                      onChange={() => {}}
+                    />
+                  ) : (
+                    <CustomSelect
+                      options={[
+                        { value: "manager", label: "Manager" },
+                        { value: "cashier", label: "Cashier" },
+                        { value: "salesman", label: "Salesman" },
+                        { value: "staff", label: "General Staff" },
+                        { value: "technician", label: "Technician" },
+                      ]}
+                      value={formData.role}
+                      onChange={(val) => setFormData({ ...formData, role: String(val) })}
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -701,6 +712,7 @@ export default function StaffPage() {
                     Status
                   </label>
                   <CustomSelect
+                    disabled={Boolean(selectedStaff && isProtectedSuperAdmin(selectedStaff))}
                     options={[
                       { value: "approved", label: "Approved / Active" },
                       { value: "pending", label: "Pending" },

@@ -30,6 +30,8 @@ import {
   SIDEBAR_MODULES,
   DEFAULT_PERMISSIONS,
   ROLE_PRESETS,
+  isProtectedSuperAdmin,
+  SUPER_ADMIN_EMAIL,
   type SystemRole,
 } from "@/lib/roles";
 
@@ -68,7 +70,7 @@ export default function UsersPage() {
     email: string;
     mobile: string;
     password: string;
-    role: SystemRole;
+    role: SystemRole | "super_admin";
     status: string;
     img_url: string;
     permissions: Record<string, boolean>;
@@ -124,24 +126,27 @@ export default function UsersPage() {
 
   const handleOpenEdit = (user: UserItem) => {
     const rawRole = (user.role || "staff").toLowerCase();
-    const cleanRole: SystemRole =
-      rawRole === "admin" || rawRole === "super_admin"
+    const isSuperTarget = isProtectedSuperAdmin(user);
+    const cleanRole: SystemRole | "super_admin" = isSuperTarget
+      ? "super_admin"
+      : rawRole === "admin"
         ? "admin"
         : rawRole === "manager"
           ? "manager"
           : "staff";
 
-    const basePermissions = ROLE_PRESETS[cleanRole] || DEFAULT_PERMISSIONS;
+    const presetKey: SystemRole = cleanRole === "super_admin" ? "admin" : cleanRole;
+    const basePermissions = ROLE_PRESETS[presetKey] || DEFAULT_PERMISSIONS;
     const merged = { ...basePermissions, ...(user.permissions || {}) };
 
     setSelectedUser(user);
     setFormData({
       name: user.name,
-      email: user.email || "",
+      email: isSuperTarget ? SUPER_ADMIN_EMAIL : user.email || "",
       mobile: user.mobile,
       password: "",
       role: cleanRole,
-      status: user.status || "approved",
+      status: isSuperTarget ? "approved" : user.status || "approved",
       img_url: user.img_url || "",
       permissions: merged,
     });
@@ -231,9 +236,8 @@ export default function UsersPage() {
   };
 
   const handleDeleteUser = (user: UserItem) => {
-    const roleLower = user.role.toLowerCase();
-    if (user.id === 1 || user.id === 7 || roleLower === "admin" || roleLower === "super_admin") {
-      toast.error("Super Admin account cannot be deleted!");
+    if (isProtectedSuperAdmin(user)) {
+      toast.error(`Super Admin account (${SUPER_ADMIN_EMAIL}) cannot be deleted!`);
       return;
     }
     setDeleteError(null);
@@ -462,19 +466,24 @@ export default function UsersPage() {
               ) : (
                 displayedUsers.map((user, idx) => {
                   const r = user.role.toLowerCase();
+                  const isSuperUser = isProtectedSuperAdmin(user);
                   const roleLabel =
-                    r === "admin" || r === "super_admin"
-                      ? "👑 Admin"
-                      : r === "manager"
-                        ? "💼 Manager"
-                        : "👤 Staff";
+                    r === "super_admin"
+                      ? "🛡️ Super Admin"
+                      : r === "admin"
+                        ? "👑 Admin"
+                        : r === "manager"
+                          ? "💼 Manager"
+                          : "👤 Staff";
 
                   const roleBadgeClass =
-                    r === "admin" || r === "super_admin"
-                      ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-300"
-                      : r === "manager"
-                        ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300"
-                        : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300";
+                    r === "super_admin"
+                      ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300"
+                      : r === "admin"
+                        ? "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-300"
+                        : r === "manager"
+                          ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300"
+                          : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300";
 
                   const activePermCount = user.permissions
                     ? Object.values(user.permissions).filter(Boolean).length
@@ -553,7 +562,7 @@ export default function UsersPage() {
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          {user.id !== 1 && user.id !== 7 && (
+                          {!isSuperUser && (
                             <button
                               type="button"
                               onClick={() => handleDeleteUser(user)}
@@ -597,7 +606,7 @@ export default function UsersPage() {
                   >
                     Edit
                   </button>
-                  {user.id !== 1 && user.id !== 7 && (
+                  {!isProtectedSuperAdmin(user) && (
                     <button
                       onClick={() => handleDeleteUser(user)}
                       className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold"
@@ -693,10 +702,11 @@ export default function UsersPage() {
                   </label>
                   <input
                     type="email"
+                    disabled={Boolean(selectedUser && isProtectedSuperAdmin(selectedUser))}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="user@arafatpoultry.com"
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -719,20 +729,31 @@ export default function UsersPage() {
                   />
                 </div>
 
-                {/* System Role: STRICTLY 3 OPTIONS (admin, manager, staff) */}
+                {/* System Role: Protected Super Admin or 3 Standard Roles */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     পদবী / রোল (System Role) <span className="text-red-500">*</span>
                   </label>
-                  <CustomSelect
-                    options={[
-                      { value: "admin", label: "👑 Admin (অ্যাডমিন)" },
-                      { value: "manager", label: "💼 Manager (ম্যানেজার)" },
-                      { value: "staff", label: "👤 Staff (স্টাফ)" },
-                    ]}
-                    value={formData.role}
-                    onChange={(v) => handleRoleChange(v as "admin" | "manager" | "staff")}
-                  />
+                  {selectedUser && isProtectedSuperAdmin(selectedUser) ? (
+                    <CustomSelect
+                      disabled
+                      options={[
+                        { value: "super_admin", label: "🛡️ Super Admin (অপরিবর্তনীয়)" },
+                      ]}
+                      value={formData.role}
+                      onChange={() => {}}
+                    />
+                  ) : (
+                    <CustomSelect
+                      options={[
+                        { value: "admin", label: "👑 Admin (অ্যাডমিন)" },
+                        { value: "manager", label: "💼 Manager (ম্যানেজার)" },
+                        { value: "staff", label: "👤 Staff (স্টাফ)" },
+                      ]}
+                      value={formData.role}
+                      onChange={(v) => handleRoleChange(v as SystemRole)}
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -740,6 +761,7 @@ export default function UsersPage() {
                     অ্যাকাউন্ট স্ট্যাটাস <span className="text-red-500">*</span>
                   </label>
                   <CustomSelect
+                    disabled={Boolean(selectedUser && isProtectedSuperAdmin(selectedUser))}
                     options={[
                       { value: "approved", label: "সক্রিয় (Approved / Active)" },
                       { value: "pending", label: "অননুমোদিত (Pending Approval)" },

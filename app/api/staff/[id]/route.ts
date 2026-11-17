@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { requireAuth } from "@/lib/auth";
+import { isProtectedSuperAdmin, isSuperAdminRole, SUPER_ADMIN_EMAIL } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -9,18 +11,44 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAuth(req, { requiredRole: "admin" });
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
     const { id } = await params;
     const staffId = BigInt(id);
-    const body = await req.json();
+    const existingStaff = await prisma.users.findUnique({
+      where: { id: staffId },
+      select: { id: true, email: true, role: true },
+    });
+    if (!existingStaff) {
+      return NextResponse.json({ status: "fail", message: "Staff member not found" }, { status: 404 });
+    }
 
+    const body = await req.json();
     const { name, mobile, email, role, status, password } = body;
 
-    const dataToUpdate: any = {
+    const isSuperTarget = isProtectedSuperAdmin(existingStaff);
+    if (!isSuperTarget && isSuperAdminRole(role)) {
+      return NextResponse.json(
+        { status: "fail", message: `Super Admin role is reserved exclusively for ${SUPER_ADMIN_EMAIL}` },
+        { status: 400 }
+      );
+    }
+
+    const dataToUpdate: Record<string, unknown> = {
       name: name !== undefined ? name.trim() : undefined,
       mobile: mobile !== undefined ? mobile.trim() : undefined,
-      email: email !== undefined ? (email ? email.trim() : null) : undefined,
-      role: role !== undefined ? role : undefined,
-      status: status !== undefined ? status : undefined,
+      email: isSuperTarget
+        ? SUPER_ADMIN_EMAIL
+        : email !== undefined
+          ? email
+            ? email.trim()
+            : null
+          : undefined,
+      role: isSuperTarget ? "super_admin" : role !== undefined ? role : undefined,
+      status: isSuperTarget ? "approved" : status !== undefined ? status : undefined,
     };
 
     if (password && password.trim()) {
@@ -44,8 +72,11 @@ export async function PUT(
         status: updated.status,
       },
     });
-  } catch (error: any) {
-    return NextResponse.json({ status: "fail", message: error?.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { status: "fail", message: error instanceof Error ? error.message : "Failed to update staff" },
+      { status: 500 }
+    );
   }
 }
 
@@ -54,13 +85,33 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAuth(req, { requiredRole: "admin" });
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
     const { id } = await params;
     const staffId = BigInt(id);
 
-    // Prevent deleting admin
-    if (staffId === BigInt(1) || staffId === BigInt(7)) {
+    const targetStaff = await prisma.users.findUnique({
+      where: { id: staffId },
+      select: { id: true, email: true, role: true },
+    });
+    if (!targetStaff) {
+      return NextResponse.json({ status: "fail", message: "Staff member not found" }, { status: 404 });
+    }
+
+    // Prevent deleting dev@arafatpoultry.com (super_admin) or currently logged-in user
+    if (isProtectedSuperAdmin(targetStaff)) {
       return NextResponse.json(
-        { status: "fail", message: "Super Admin account cannot be deleted!" },
+        { status: "fail", message: `Super Admin account (${SUPER_ADMIN_EMAIL}) cannot be deleted!` },
+        { status: 403 }
+      );
+    }
+
+    if (staffId === BigInt(authResult.user.id)) {
+      return NextResponse.json(
+        { status: "fail", message: "Currently logged-in account cannot be deleted." },
         { status: 400 }
       );
     }
@@ -88,7 +139,10 @@ export async function DELETE(
       status: "success",
       message: "Staff member deleted successfully",
     });
-  } catch (error: any) {
-    return NextResponse.json({ status: "fail", message: error?.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { status: "fail", message: error instanceof Error ? error.message : "Failed to delete staff" },
+      { status: 500 }
+    );
   }
 }

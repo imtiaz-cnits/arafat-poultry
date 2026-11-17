@@ -1,5 +1,7 @@
 export type SystemRole = "admin" | "manager" | "staff";
 
+export const SUPER_ADMIN_EMAIL = "dev@arafatpoultry.com";
+
 export const ALLOWED_SYSTEM_ROLES: readonly SystemRole[] = [
   "admin",
   "manager",
@@ -8,6 +10,24 @@ export const ALLOWED_SYSTEM_ROLES: readonly SystemRole[] = [
 
 export function isValidSystemRole(role: string): role is SystemRole {
   return (ALLOWED_SYSTEM_ROLES as readonly string[]).includes(role);
+}
+
+export function isSuperAdminRole(role?: string | null): boolean {
+  return (role || "").trim().toLowerCase() === "super_admin";
+}
+
+export function isAdminRole(role?: string | null): boolean {
+  const normalized = (role || "").trim().toLowerCase();
+  return normalized === "admin" || normalized === "super_admin";
+}
+
+export function isProtectedSuperAdmin(user?: {
+  email?: string | null;
+  role?: string | null;
+} | null): boolean {
+  if (!user) return false;
+  const email = (user.email || "").trim().toLowerCase();
+  return email === SUPER_ADMIN_EMAIL || isSuperAdminRole(user.role);
 }
 
 export const SYSTEM_ROLE_OPTIONS: {

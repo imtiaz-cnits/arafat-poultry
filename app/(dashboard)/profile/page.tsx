@@ -200,8 +200,10 @@ export default function ProfilePage() {
   }
 
   const roleLabel =
-    profile?.role === "admin" || profile?.role === "super_admin"
-      ? "Store Administrator"
+    profile?.role === "super_admin"
+      ? "Super Administrator"
+      : profile?.role === "admin"
+        ? "Store Administrator"
       : profile?.role === "manager"
         ? "Store Manager"
         : profile?.role === "cashier"

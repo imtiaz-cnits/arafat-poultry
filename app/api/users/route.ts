@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser, hashPassword } from "@/lib/auth";
+import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
 
 // GET: All Users (Ordered descending by ID as per PROJECT_RULES)
 export async function GET(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || authUser.role !== "admin") {
+    if (!authUser || !isAdminRole(authUser.role)) {
       return NextResponse.json({ status: "fail", message: "Unauthorized" }, { status: 403 });
     }
 
@@ -35,9 +36,9 @@ export async function GET(req: NextRequest) {
       status: "success",
       data: serializedUsers,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { status: "fail", message: error?.message || "Failed to load users" },
+      { status: "fail", message: error instanceof Error ? error.message : "Failed to load users" },
       { status: 500 }
     );
   }
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || authUser.role !== "admin") {
+    if (!authUser || !isAdminRole(authUser.role)) {
       return NextResponse.json({ status: "fail", message: "Unauthorized" }, { status: 403 });
     }
 
@@ -57,6 +58,13 @@ export async function POST(req: NextRequest) {
     if (!name || !mobile || !password || !role) {
       return NextResponse.json(
         { status: "fail", message: "Name, mobile, password, and role are required" },
+        { status: 400 }
+      );
+    }
+
+    if (isSuperAdminRole(role)) {
+      return NextResponse.json(
+        { status: "fail", message: "Super Admin role is reserved exclusively for dev@arafatpoultry.com" },
         { status: 400 }
       );
     }
@@ -98,9 +106,9 @@ export async function POST(req: NextRequest) {
         role: newUser.role,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { status: "fail", message: error?.message || "Failed to create user" },
+      { status: "fail", message: error instanceof Error ? error.message : "Failed to create user" },
       { status: 500 }
     );
   }

@@ -3,6 +3,33 @@ import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
+
+function parsePermissions(raw: string | null | undefined): Record<string, boolean> | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+async function findFallbackAdmin() {
+  const defaultAdmin = await prisma.users.findFirst({
+    where: {
+      role: { in: ["admin", "super_admin"] },
+      status: "approved",
+    },
+    orderBy: { id: "asc" },
+  });
+  if (!defaultAdmin) return null;
+  return {
+    ...defaultAdmin,
+    id: Number(defaultAdmin.id),
+    permissions: parsePermissions(defaultAdmin.permissions),
+  };
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || "arafat_poultry_fisheries_jwt_secret_key_prod_2026_x89k2m#v9!";
 const OLD_JWT_SECRET = "runa_traders_super_secret_jwt_key_2026_codenext_it";
@@ -88,34 +115,14 @@ export async function getAuthUser(req?: NextRequest) {
     }
 
     if (!token) {
-      const defaultAdmin = await prisma.users.findFirst({
-        where: { role: "admin", status: "approved" },
-      });
-      if (defaultAdmin) {
-        return {
-          ...defaultAdmin,
-          id: Number(defaultAdmin.id),
-          permissions: defaultAdmin.permissions ? JSON.parse(defaultAdmin.permissions) : null,
-        };
-      }
-      return null;
+      return await findFallbackAdmin();
     }
 
     const payload = verifyToken(token);
     const userId = payload?.userId || (payload as any)?.id;
 
     if (!userId) {
-      const defaultAdmin = await prisma.users.findFirst({
-        where: { role: "admin", status: "approved" },
-      });
-      if (defaultAdmin) {
-        return {
-          ...defaultAdmin,
-          id: Number(defaultAdmin.id),
-          permissions: defaultAdmin.permissions ? JSON.parse(defaultAdmin.permissions) : null,
-        };
-      }
-      return null;
+      return await findFallbackAdmin();
     }
 
     const user = await prisma.users.findUnique({
@@ -133,37 +140,18 @@ export async function getAuthUser(req?: NextRequest) {
     });
 
     if (!user || user.status !== "approved") {
-      const defaultAdmin = await prisma.users.findFirst({
-        where: { role: "admin", status: "approved" },
-      });
-      if (defaultAdmin) {
-        return {
-          ...defaultAdmin,
-          id: Number(defaultAdmin.id),
-          permissions: defaultAdmin.permissions ? JSON.parse(defaultAdmin.permissions) : null,
-        };
-      }
-      return null;
+      return await findFallbackAdmin();
     }
 
     return {
       ...user,
       id: Number(user.id),
-      permissions: user.permissions ? JSON.parse(user.permissions) : null,
+      permissions: parsePermissions(user.permissions),
     };
   } catch (error) {
     console.error("Auth check failed:", error);
     try {
-      const defaultAdmin = await prisma.users.findFirst({
-        where: { role: "admin", status: "approved" },
-      });
-      if (defaultAdmin) {
-        return {
-          ...defaultAdmin,
-          id: Number(defaultAdmin.id),
-          permissions: defaultAdmin.permissions ? JSON.parse(defaultAdmin.permissions) : null,
-        };
-      }
+      return await findFallbackAdmin();
     } catch {}
     return null;
   }
@@ -197,7 +185,11 @@ export async function requireAuth(
     const roles = Array.isArray(options.requiredRole)
       ? options.requiredRole
       : [options.requiredRole];
-    if (!roles.includes(user.role) && user.role !== "admin") {
+    const isSuperOnly = roles.length > 0 && roles.every((r) => isSuperAdminRole(r));
+    const allowed =
+      roles.includes(user.role) ||
+      (isSuperOnly ? isSuperAdminRole(user.role) : isAdminRole(user.role));
+    if (!allowed) {
       return {
         user,
         errorResponse: NextResponse.json(
@@ -208,7 +200,7 @@ export async function requireAuth(
     }
   }
 
-  if (options?.requiredPermission && user.role !== "admin") {
+  if (options?.requiredPermission && !isAdminRole(user.role)) {
     if (!user.permissions || !user.permissions[options.requiredPermission]) {
       return {
         user,
