@@ -42,6 +42,11 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow direct access to the unlinked user registration route
+  if (pathname === "/signup") {
+    return NextResponse.next();
+  }
+
   // If unauthenticated, redirect ANY protected page to /login immediately
   if (!authenticated) {
     return NextResponse.redirect(new URL("/login", request.url));
