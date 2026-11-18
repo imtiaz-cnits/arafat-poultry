@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export interface NotificationItem {
   id: string;
-  type: "stock" | "sale" | "due";
+  type: "stock" | "sale" | "due" | "log";
   title: string;
   description: string;
   badge: string;
@@ -17,9 +17,8 @@ export interface NotificationItem {
 export async function GET(req: NextRequest) {
   try {
     const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    const [allProducts, recentDueOrders, recentSales] = await Promise.all([
+    const [allProducts, recentDueOrders, recentSales, recentLogs] = await Promise.all([
       // Products with low or zero stock
       prisma.products.findMany({
         take: 100,
@@ -53,6 +52,17 @@ export async function GET(req: NextRequest) {
         include: {
           customers: {
             select: { customer_name: true },
+          },
+        },
+      }),
+
+      // Latest user activity audit logs
+      prisma.audit_logs.findMany({
+        take: 8,
+        orderBy: { id: "desc" },
+        include: {
+          users: {
+            select: { name: true, role: true },
           },
         },
       }),
@@ -120,9 +130,46 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Add recent audit activity logs
+    for (const l of recentLogs) {
+      let desc = "";
+      if (l.new_values) {
+        try {
+          const parsed = JSON.parse(l.new_values);
+          desc = parsed.description || `${l.action} on ${l.entity_type}`;
+        } catch {
+          desc = l.new_values;
+        }
+      } else {
+        desc = `${l.action} on ${l.entity_type}`;
+      }
+
+      const userName = l.users?.name || "System";
+      const badgeColor: "blue" | "emerald" | "amber" | "rose" =
+        l.action === "DELETE"
+          ? "rose"
+          : l.action === "LOGIN" || l.action === "LOGOUT"
+          ? "blue"
+          : l.action === "UPDATE"
+          ? "amber"
+          : "emerald";
+
+      notifications.push({
+        id: `log-${l.id}`,
+        type: "log",
+        title: `${userName}: ${l.action}`,
+        description: desc,
+        badge: l.entity_type,
+        badgeColor,
+        link: `/user-logs`,
+        timestamp: l.created_at ? l.created_at.toISOString() : new Date().toISOString(),
+      });
+    }
+
     const lowStockCount = notifications.filter((n) => n.type === "stock").length;
     const dueCount = notifications.filter((n) => n.type === "due").length;
     const salesCount = notifications.filter((n) => n.type === "sale").length;
+    const logCount = notifications.filter((n) => n.type === "log").length;
 
     return NextResponse.json({
       status: "success",
@@ -131,6 +178,7 @@ export async function GET(req: NextRequest) {
         lowStockCount,
         dueCount,
         salesCount,
+        logCount,
         items: notifications,
       },
     });

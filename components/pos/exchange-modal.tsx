@@ -44,7 +44,7 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
   } = usePosStore();
 
   const [saving, setSaving] = useState(false);
-  const [partyType, setPartyType] = useState<"CUSTOMER" | "SUPPLIER">("CUSTOMER");
+  const [partyType, setPartyType] = useState<"CUSTOMER" | "SUPPLIER">("SUPPLIER");
   const [customers, setCustomers] = useState<PartyOption[]>([]);
   const [suppliers, setSuppliers] = useState<PartyOption[]>([]);
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
@@ -254,6 +254,8 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
   };
 
   const handleReset = () => {
+    setPartyType("SUPPLIER");
+    setSelectedPartyId(null);
     setFeedQty(0);
     setFeedRate(0);
     setEggQty(0);
@@ -314,21 +316,6 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                 <button
                   type="button"
                   onClick={() => {
-                    setPartyType("CUSTOMER");
-                    setSelectedPartyId(selectedCustomer ? selectedCustomer.id : null);
-                  }}
-                  className={`px-3 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                    partyType === "CUSTOMER"
-                      ? "bg-[#166534] text-white shadow-2xs"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                  }`}
-                >
-                  <User className="w-3 h-3" />
-                  <span>কাস্টমার</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
                     setPartyType("SUPPLIER");
                     setSelectedPartyId(null);
                   }}
@@ -340,6 +327,21 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
                 >
                   <Truck className="w-3 h-3" />
                   <span>সরবরাহকারী</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPartyType("CUSTOMER");
+                    setSelectedPartyId(selectedCustomer ? selectedCustomer.id : null);
+                  }}
+                  className={`px-3 py-1 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                    partyType === "CUSTOMER"
+                      ? "bg-[#166534] text-white shadow-2xs"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  }`}
+                >
+                  <User className="w-3 h-3" />
+                  <span>কাস্টমার</span>
                 </button>
               </div>
             </div>

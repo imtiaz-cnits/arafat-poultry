@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +90,17 @@ export async function POST(req: NextRequest) {
         user_id: BigInt(userId),
       },
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "CREATE",
+        module: "Customers",
+        entityId: String(newCustomer.id),
+        description: `Created customer "${newCustomer.customer_name}" (${generatedCustomerId}, Mobile: ${newCustomer.mobile}, Initial Due: ৳ ${newCustomer.previous_due_amount || 0})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

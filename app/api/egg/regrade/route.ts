@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { regradeEggs } from "@/lib/egg-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,16 @@ export async function POST(req: NextRequest) {
       note,
       userId: authResult.user.id,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "ADJUST",
+        module: "Poultry & Egg",
+        description: `Regraded ${pieces} eggs from product #${source_product_id} to #${destination_product_id}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

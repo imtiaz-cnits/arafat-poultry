@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +115,17 @@ export async function POST(req: NextRequest) {
         user_id: BigInt(userId),
       },
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "CREATE",
+        module: "Suppliers",
+        entityId: String(newSupplier.id),
+        description: `Created supplier "${newSupplier.name}" (${newSupplier.company || "-"}, ${generatedSupplierId}, Mobile: ${newSupplier.mobile}, Initial Payable: ৳ ${newSupplier.purchase_payable_amount || 0})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

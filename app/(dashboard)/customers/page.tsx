@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
-import { Pagination, DeleteConfirmModal } from "@/components/ui";
+import { Pagination, DeleteConfirmModal, CustomSelect } from "@/components/ui";
 
 interface Customer {
   id: number;
@@ -57,6 +57,20 @@ export default function CustomersPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Due Collection Modal
+  const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
+  const [collectCustomer, setCollectCustomer] = useState<Customer | null>(null);
+  const [collectionData, setCollectionData] = useState({
+    paid_amount: "",
+    discount_amount: "0",
+    payment_method: "Cash",
+    transaction_id: "",
+    due_collection_date: "",
+    note: "",
+  });
+  const [collecting, setCollecting] = useState(false);
+  const [collectError, setCollectError] = useState<string | null>(null);
+
   const loadCustomers = async () => {
     try {
       setLoading(true);
@@ -88,6 +102,65 @@ export default function CustomersPage() {
     });
     setIsModalOpen(true);
   };
+
+  const handleOpenCollect = (c: Customer) => {
+    setCollectCustomer(c);
+    setCollectionData({
+      paid_amount: c.previous_due_amount > 0 ? String(c.previous_due_amount) : "",
+      discount_amount: "0",
+      payment_method: "Cash",
+      transaction_id: "",
+      due_collection_date: new Date().toISOString().split("T")[0],
+      note: `Due collection from ${c.customer_name}`,
+    });
+    setCollectError(null);
+    setIsCollectModalOpen(true);
+  };
+
+  const handleSubmitCollection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!collectCustomer) return;
+
+    const paidNum = parseFloat(collectionData.paid_amount || "0");
+    if (!paidNum || paidNum <= 0) {
+      setCollectError("অনুগ্রহ করে আদায়কৃত টাকার সঠিক পরিমাণ লিখুন!");
+      return;
+    }
+
+    try {
+      setCollecting(true);
+      setCollectError(null);
+
+      const res = await fetch("/api/customers/due-collection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer_id: collectCustomer.id,
+          paid_amount: collectionData.paid_amount,
+          discount_amount: collectionData.discount_amount || "0",
+          payment_method: collectionData.payment_method,
+          transaction_id: collectionData.transaction_id,
+          due_collection_date: collectionData.due_collection_date,
+          note: collectionData.note,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.status === "success") {
+        setIsCollectModalOpen(false);
+        setCollectCustomer(null);
+        toast.success("কাস্টমার বকেয়া সফলভাবে আদায় করা হয়েছে!");
+        loadCustomers();
+      } else {
+        setCollectError(data.message || "Failed to collect due");
+      }
+    } catch (err: any) {
+      setCollectError(err?.message || "Communication error");
+    } finally {
+      setCollecting(false);
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,7 +318,7 @@ export default function CustomersPage() {
                 <th className="p-[10px]">মোবাইল নম্বর</th>
                 <th className="p-[10px]">ঠিকানা</th>
                 <th className="text-right p-[10px]">মোট বকেয়া</th>
-                <th className="text-center w-24 p-[10px]">অ্যাকশন</th>
+                <th className="text-center w-36 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -306,6 +379,19 @@ export default function CustomersPage() {
                     </td>
                     <td className="text-center p-[10px]">
                       <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenCollect(c)}
+                          className={`h-7 px-2.5 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs ${
+                            c.previous_due_amount > 0
+                              ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white"
+                              : "border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 hover:text-emerald-700"
+                          }`}
+                          title="বকেয়া আদায় (Collect Due)"
+                        >
+                          <Wallet className="w-3.5 h-3.5" />
+                          <span className="whitespace-nowrap">বকেয়া</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(c)}
@@ -399,14 +485,26 @@ export default function CustomersPage() {
                 )}
               </div>
 
-              <div className="pt-1">
+              <div className="pt-1 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleOpenCollect(c)}
+                  className={`h-[32px] w-full text-center px-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
+                    c.previous_due_amount > 0
+                      ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white"
+                      : "border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                  }`}
+                >
+                  <Wallet className="w-3.5 h-3.5" />
+                  <span>বকেয়া আদায়</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(c)}
-                  className="h-[30px] w-full text-center px-3 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+                  className="h-[32px] w-full text-center px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                  <span>Edit Customer</span>
+                  <span>সম্পাদনা</span>
                 </button>
               </div>
             </div>
@@ -556,6 +654,195 @@ export default function CustomersPage() {
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Save Customer</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+            {/* Due Collection Modal */}
+      {isCollectModalOpen && collectCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="modal-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-white" />
+                <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
+                  কাস্টমার বকেয়া আদায় (Collect Due)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCollectModalOpen(false)}
+                className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitCollection} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
+                {collectError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
+                    {collectError}
+                  </div>
+                )}
+
+                {/* Customer Info Card */}
+                <div className="bg-slate-50 dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-slate-400">কাস্টমার (Customer):</span>
+                    <strong className="font-bold text-slate-800 dark:text-white">
+                      {collectCustomer.customer_name} ({collectCustomer.customer_id})
+                    </strong>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-slate-400">মোবাইল (Mobile):</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      {collectCustomer.mobile}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1.5 border-t border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-500 dark:text-slate-400">বর্তমান বকেয়া (Current Due):</span>
+                    <strong className="font-black text-rose-600 dark:text-rose-400 text-sm">
+                      {formatBdCurrency(collectCustomer.previous_due_amount)}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-slate-400">অবশিষ্ট বকেয়া (Remaining Due):</span>
+                    <strong className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                      {formatBdCurrency(
+                        Math.max(
+                          0,
+                          collectCustomer.previous_due_amount -
+                            ((parseFloat(collectionData.paid_amount) || 0) +
+                              (parseFloat(collectionData.discount_amount) || 0))
+                        )
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    আদায়কৃত টাকা (Collected Amount ৳) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0.01"
+                    step="any"
+                    value={collectionData.paid_amount}
+                    onChange={(e) =>
+                      setCollectionData({ ...collectionData, paid_amount: e.target.value })
+                    }
+                    placeholder="0.00"
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-black text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    ছাড় / সমন্বয় (Discount ৳)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={collectionData.discount_amount}
+                    onChange={(e) =>
+                      setCollectionData({ ...collectionData, discount_amount: e.target.value })
+                    }
+                    placeholder="0.00"
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    আদায়ের তারিখ (Collection Date)
+                  </label>
+                  <input
+                    type="date"
+                    value={collectionData.due_collection_date}
+                    onChange={(e) =>
+                      setCollectionData({ ...collectionData, due_collection_date: e.target.value })
+                    }
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    পরিশোধের মাধ্যম (Payment Method)
+                  </label>
+                  <CustomSelect
+                    value={collectionData.payment_method}
+                    onChange={(val) =>
+                      setCollectionData({ ...collectionData, payment_method: val })
+                    }
+                    options={[
+                      { value: "Cash", label: "Cash (নগদ)" },
+                      { value: "bKash", label: "bKash (বিকাশ)" },
+                      { value: "Nagad", label: "Nagad (নগদ)" },
+                      { value: "Rocket", label: "Rocket (রকেট)" },
+                      { value: "Bank", label: "Bank Transfer (ব্যাংক)" },
+                      { value: "Card", label: "Card (কার্ড)" },
+                    ]}
+                    placeholder="পরিশোধ মাধ্যম নির্বাচন করুন"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    ট্রানজেকশন আইডি / রেফারেন্স (Transaction ID)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ঐচ্ছিক রেফারেন্স / ট্রানজেকশন নম্বর"
+                    value={collectionData.transaction_id}
+                    onChange={(e) =>
+                      setCollectionData({ ...collectionData, transaction_id: e.target.value })
+                    }
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    নোট / মন্তব্য (Note)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ঐচ্ছিক মন্তব্য"
+                    value={collectionData.note}
+                    onChange={(e) =>
+                      setCollectionData({ ...collectionData, note: e.target.value })
+                    }
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              {/* Sticky Flush Footer */}
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
+                <button
+                  type="button"
+                  onClick={() => setIsCollectModalOpen(false)}
+                  disabled={collecting}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল (Cancel)
+                </button>
+                <button
+                  type="submit"
+                  disabled={collecting}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  {collecting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>বকেয়া সংগ্রহ নিশ্চিত করুন</span>
                 </button>
               </div>
             </form>

@@ -6,6 +6,7 @@ import {
   getEggPerformanceAndProfitability,
   reverseEggCollection,
 } from "@/lib/egg-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,16 @@ export async function POST(req: NextRequest) {
       userId: authResult.user.id,
     });
 
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "CREATE",
+        module: "Poultry & Egg",
+        description: `Recorded daily egg collection: ${total_collected} eggs (Breakage: ${rejected_breakage || 0}) for Flock #${flock_id}`,
+      });
+    } catch {}
+
     return NextResponse.json({
       status: "success",
       message: "দৈনিক ডিম সংগ্রহ ও গ্রেডিং সফলভাবে সংরক্ষিত হয়েছে",
@@ -109,6 +120,16 @@ export async function DELETE(req: NextRequest) {
     }
 
     const result = await reverseEggCollection(BigInt(id), authResult.user.id, "User requested collection voucher cancellation");
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "CANCEL",
+        module: "Poultry & Egg",
+        description: `Cancelled egg collection voucher #${id} and reversed graded egg inventory`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

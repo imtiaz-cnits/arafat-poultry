@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -135,6 +137,18 @@ export async function PUT(
       },
     });
 
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "UPDATE",
+        module: "Customers",
+        entityId: String(updated.id),
+        description: `Updated customer "${updated.customer_name}" (${updated.customer_id}, Mobile: ${updated.mobile}, Due: ৳ ${updated.previous_due_amount || 0})`,
+      });
+    } catch {}
+
     return NextResponse.json({
       status: "success",
       message: "Customer updated successfully",
@@ -188,9 +202,26 @@ export async function DELETE(
       );
     }
 
+    const existingCust = await prisma.customers.findUnique({
+      where: { id: custId },
+      select: { id: true, customer_name: true, customer_id: true, mobile: true },
+    });
+
     await prisma.customers.delete({
       where: { id: custId },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Customers",
+        entityId: String(custId),
+        description: `Deleted customer "${existingCust?.customer_name || custId}" (${existingCust?.customer_id || "-"}, Mobile: ${existingCust?.mobile || "-"})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Shield,
   Plus,
@@ -59,6 +60,7 @@ export default function UsersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [error, setError] = useState("");
+  const [currentUserRole, setCurrentUserRole] = useState<string>("");
 
   // Delete Confirm Modal State
   const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
@@ -88,7 +90,11 @@ export default function UsersPage() {
   async function loadUsers() {
     setLoading(true);
     try {
-      const res = await fetch("/api/users");
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const res = await fetch("/api/users", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        cache: "no-store",
+      });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.status === "success" && Array.isArray(data.data)) {
         setUsers(data.data);
@@ -102,6 +108,13 @@ export default function UsersPage() {
 
   useEffect(() => {
     loadUsers();
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.role) setCurrentUserRole(parsed.role);
+      }
+    } catch {}
   }, []);
 
   const resetForm = () => {
@@ -154,8 +167,8 @@ export default function UsersPage() {
     setModalOpen(true);
   };
 
-  const handleRoleChange = (newRole: SystemRole) => {
-    const preset = ROLE_PRESETS[newRole] || ROLE_PRESETS.staff;
+  const handleRoleChange = (newRole: SystemRole | "super_admin") => {
+    const preset = newRole === "super_admin" ? DEFAULT_PERMISSIONS : (ROLE_PRESETS[newRole] || ROLE_PRESETS.staff);
     setFormData((prev) => ({
       ...prev,
       role: newRole,
@@ -217,6 +230,11 @@ export default function UsersPage() {
       setUploadingAvatar(true);
       const fd = new FormData();
       fd.append("avatar", file);
+      if (selectedUser) {
+        fd.append("userId", String(selectedUser.id));
+      } else {
+        fd.append("userId", "new");
+      }
       const res = await fetch("/api/users/profile/avatar", {
         method: "POST",
         body: fd,
@@ -225,6 +243,14 @@ export default function UsersPage() {
       if (res.ok && data?.img_url) {
         setFormData((prev) => ({ ...prev, img_url: data.img_url }));
         toast.success("User avatar photo uploaded!");
+        try {
+          const cur = JSON.parse(localStorage.getItem("user") || "{}");
+          if (selectedUser && cur.id === selectedUser.id) {
+            cur.img_url = data.img_url;
+            localStorage.setItem("user", JSON.stringify(cur));
+            window.dispatchEvent(new Event("user-updated"));
+          }
+        } catch {}
       } else {
         toast.error(data?.message || "Failed to upload avatar");
       }
@@ -274,10 +300,14 @@ export default function UsersPage() {
     try {
       const url = selectedUser ? `/api/users/${selectedUser.id}` : "/api/users";
       const method = selectedUser ? "PUT" : "POST";
+      const payload = { ...formData };
+      if (selectedUser && currentUserRole !== "super_admin") {
+        delete (payload as any).password;
+      }
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json().catch(() => null);
@@ -290,6 +320,16 @@ export default function UsersPage() {
 
       setModalOpen(false);
       toast.success(selectedUser ? "User updated successfully!" : "User created successfully!");
+      if (selectedUser) {
+        try {
+          const cur = JSON.parse(localStorage.getItem("user") || "{}");
+          if (cur.id === selectedUser.id) {
+            const updatedUser = { ...cur, ...payload };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            window.dispatchEvent(new Event("user-updated"));
+          }
+        } catch {}
+      }
       resetForm();
       setCurrentPage(1);
       loadUsers();
@@ -314,10 +354,32 @@ export default function UsersPage() {
   const displayedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
 
   const adminCount = users.filter(
-    (u) => u.role.toLowerCase() === "admin" || u.role.toLowerCase() === "super_admin"
+    (u) => u.role.toLowerCase() === "admin"
   ).length;
   const managerCount = users.filter((u) => u.role.toLowerCase() === "manager").length;
   const staffCount = users.filter((u) => u.role.toLowerCase() === "staff").length;
+
+  if (!loading && currentUserRole && currentUserRole.toLowerCase() !== "super_admin") {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4 border border-rose-200 dark:border-rose-900 shadow-sm">
+          <Shield className="w-8 h-8" />
+        </div>
+        <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-2">
+          অননুমোদিত প্রবেশাধিকার (Access Restricted)
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mb-6 leading-relaxed">
+          ইউজার ও রোল ব্যবস্থাপনা পাতাটি শুধুমাত্র <strong>সুপার অ্যাডমিন (Super Admin)</strong> এর জন্য সংরক্ষিত। আপনি এই পাতায় প্রবেশ করতে পারবেন না।
+        </p>
+        <Link
+          href="/dashboard"
+          className="h-[42px] px-6 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-xs"
+        >
+          <span>ড্যাশবোর্ডে ফিরে যান</span>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -337,13 +399,15 @@ export default function UsersPage() {
           </div>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto shrink-0 w-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>নতুন ব্যবহারকারী<span className="hidden sm:inline"> (Add User)</span></span>
-        </button>
+        {currentUserRole && currentUserRole.toLowerCase() === "super_admin" && (
+          <button
+            onClick={handleOpenAdd}
+            className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto shrink-0 w-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>নতুন ব্যবহারকারী<span className="hidden sm:inline"> (Add User)</span></span>
+          </button>
+        )}
       </div>
 
       {/* 2. Top Summary KPI Cards (Strictly 3 roles: Admin, Manager, Staff + Total) */}
@@ -702,7 +766,7 @@ export default function UsersPage() {
                   </label>
                   <input
                     type="email"
-                    disabled={Boolean(selectedUser && isProtectedSuperAdmin(selectedUser))}
+                    disabled={Boolean(selectedUser && selectedUser.email === SUPER_ADMIN_EMAIL)}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="user@arafatpoultry.com"
@@ -710,35 +774,52 @@ export default function UsersPage() {
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    পাসওয়ার্ড{" "}
-                    {selectedUser ? (
-                      <span className="text-slate-400 font-normal">(অপরিবর্তিত রাখতে ফাঁকা রাখুন)</span>
-                    ) : (
-                      <span className="text-red-500">*</span>
-                    )}
-                  </label>
-                  <input
-                    type="password"
-                    required={!selectedUser}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড"
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
-                </div>
+                {(!selectedUser || currentUserRole === "super_admin") ? (
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      পাসওয়ার্ড{" "}
+                      {selectedUser ? (
+                        <span className="text-slate-400 font-normal">(অপরিবর্তিত রাখতে ফাঁকা রাখুন)</span>
+                      ) : (
+                        <span className="text-red-500">*</span>
+                      )}
+                    </label>
+                    <input
+                      type="password"
+                      required={!selectedUser}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড"
+                      className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      পাসওয়ার্ড
+                    </label>
+                    <input
+                      type="password"
+                      disabled
+                      value="••••••••"
+                      className="w-full h-[42px] px-3 text-xs bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-400 font-medium cursor-not-allowed"
+                    />
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">
+                      শুধুমাত্র সুপার অ্যাডমিনের পাসওয়ার্ড পরিবর্তনের অনুমতি রয়েছে।
+                    </p>
+                  </div>
+                )}
 
-                {/* System Role: Protected Super Admin or 3 Standard Roles */}
+                {/* System Role */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     পদবী / রোল (System Role) <span className="text-red-500">*</span>
                   </label>
-                  {selectedUser && isProtectedSuperAdmin(selectedUser) ? (
+                  {selectedUser && selectedUser.email === SUPER_ADMIN_EMAIL ? (
                     <CustomSelect
                       disabled
                       options={[
-                        { value: "super_admin", label: "🛡️ Super Admin (অপরিবর্তনীয়)" },
+                        { value: "super_admin", label: "🛡️ Super Admin (Developer Account)" },
                       ]}
                       value={formData.role}
                       onChange={() => {}}
@@ -751,7 +832,7 @@ export default function UsersPage() {
                         { value: "staff", label: "👤 Staff (স্টাফ)" },
                       ]}
                       value={formData.role}
-                      onChange={(v) => handleRoleChange(v as SystemRole)}
+                      onChange={(v) => handleRoleChange(v as any)}
                     />
                   )}
                 </div>

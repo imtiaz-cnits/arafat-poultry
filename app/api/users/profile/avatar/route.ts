@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import fs from "fs/promises";
 import path from "path";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("avatar") as File | null;
+    const targetUserIdStr = (formData.get("userId") as string | null)?.trim();
 
     if (!file) {
       return NextResponse.json({ status: "fail", message: "No avatar image file provided" }, { status: 400 });
@@ -37,18 +39,37 @@ export async function POST(req: NextRequest) {
 
     let ext = path.extname(file.name).toLowerCase();
     if (!ext || ext === ".") ext = ".jpg";
-    const filename = `avatar-${authUser.id}-${Date.now()}${ext}`;
+    const filename = `avatar-${targetUserIdStr || authUser.id}-${Date.now()}${ext}`;
     const filePath = path.join(uploadDir, filename);
 
     await fs.writeFile(filePath, buffer);
 
     const imgUrl = `/uploads/avatars/${filename}`;
 
-    // Update user record in DB
-    await prisma.users.update({
-      where: { id: BigInt(authUser.id) },
-      data: { img_url: imgUrl },
-    });
+    // Update user record in DB if target is an existing user or self
+    if (targetUserIdStr && targetUserIdStr !== "new" && targetUserIdStr !== "temp") {
+      try {
+        await prisma.users.update({
+          where: { id: BigInt(targetUserIdStr) },
+          data: { img_url: imgUrl },
+        });
+      } catch {}
+    } else if (!targetUserIdStr) {
+      await prisma.users.update({
+        where: { id: BigInt(authUser.id) },
+        data: { img_url: imgUrl },
+      });
+    }
+
+    try {
+      await recordActivity({
+        req,
+        userId: authUser.id,
+        action: "UPDATE",
+        module: "User Management",
+        description: `Uploaded new profile photo for user ID #${targetUserIdStr || authUser.id}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

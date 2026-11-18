@@ -1,5 +1,6 @@
 import { getAuthUser, hashPassword } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { recordActivity } from "@/lib/audit-service";
 import {
   isAdminRole,
   isProtectedSuperAdmin,
@@ -16,8 +17,8 @@ export async function PUT(
 ) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isAdminRole(authUser.role)) {
-      return NextResponse.json({ status: "fail", message: "Unauthorized" }, { status: 403 });
+    if (!authUser || !isSuperAdminRole(authUser.role)) {
+      return NextResponse.json({ status: "fail", message: "অননুমোদিত: শুধুমাত্র সুপার অ্যাডমিন ব্যবহারকারী সম্পাদনা করতে পারবেন" }, { status: 403 });
     }
 
     const { id } = await params;
@@ -34,14 +35,6 @@ export async function PUT(
     const body = await req.json();
     const { name, email, mobile, password, role, status, permissions, img_url } = body;
 
-    const isSuperTarget = isProtectedSuperAdmin(existingUser);
-    if (!isSuperTarget && isSuperAdminRole(role)) {
-      return NextResponse.json(
-        { status: "fail", message: `Super Admin role is reserved exclusively for ${SUPER_ADMIN_EMAIL}` },
-        { status: 400 }
-      );
-    }
-
     const data: Record<string, unknown> = {};
     if (name) data.name = name.trim();
     if (mobile) data.mobile = mobile.trim();
@@ -53,8 +46,9 @@ export async function PUT(
       data.permissions = typeof permissions === "object" ? JSON.stringify(permissions) : permissions;
     }
 
-    if (isSuperTarget) {
-      // Keep protected Super Admin role, approved status, and email locked
+    const isDevAccount = existingUser.email === SUPER_ADMIN_EMAIL;
+    if (isDevAccount) {
+      // Keep developer super admin account email and role locked
       data.role = "super_admin";
       data.status = "approved";
       data.email = SUPER_ADMIN_EMAIL;
@@ -80,6 +74,15 @@ export async function PUT(
       },
     });
 
+    await recordActivity({
+      req,
+      userId: authUser.id,
+      action: "UPDATE",
+      module: "Users & Roles",
+      entityId: updated.id,
+      description: `Updated user account "${updated.name}" (${updated.email || updated.mobile}, Role: ${updated.role})`,
+    });
+
     return NextResponse.json({
       status: "success",
       message: "User updated successfully",
@@ -103,8 +106,8 @@ export async function DELETE(
 ) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isAdminRole(authUser.role)) {
-      return NextResponse.json({ status: "fail", message: "Unauthorized" }, { status: 403 });
+    if (!authUser || !isSuperAdminRole(authUser.role)) {
+      return NextResponse.json({ status: "fail", message: "অননুমোদিত: শুধুমাত্র সুপার অ্যাডমিন ব্যবহারকারী মুছে ফেলতে পারবেন" }, { status: 403 });
     }
 
     const { id } = await params;
@@ -151,6 +154,15 @@ export async function DELETE(
 
     await prisma.users.delete({
       where: { id: targetUserId },
+    });
+
+    await recordActivity({
+      req,
+      userId: authUser.id,
+      action: "DELETE",
+      module: "Users & Roles",
+      entityId: targetUserId,
+      description: `Deleted user account #${targetUserId} (${targetUser.email || "No email"}, Role: ${targetUser.role})`,
     });
 
     return NextResponse.json({

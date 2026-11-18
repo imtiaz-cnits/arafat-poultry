@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export async function GET(
   req: NextRequest,
@@ -63,6 +65,20 @@ export async function PUT(
       },
     });
 
+    try {
+      const authUser = await getAuthUser(req);
+      if (authUser) {
+        await recordActivity({
+          req,
+          userId: authUser.id,
+          action: "UPDATE",
+          module: "Products",
+          entityId: String(updated.id),
+          description: `Updated product "${updated.product_name}" (Code: ${updated.product_code || "-"}, Sell Price: ৳ ${updated.sell_price})`,
+        });
+      }
+    } catch {}
+
     return NextResponse.json({
       status: "success",
       message: "Product updated successfully",
@@ -107,9 +123,28 @@ export async function DELETE(
       );
     }
 
+    const existingProduct = await prisma.products.findUnique({
+      where: { id: prodId },
+      select: { id: true, product_name: true, product_code: true },
+    });
+
     await prisma.products.delete({
       where: { id: prodId },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      if (authUser) {
+        await recordActivity({
+          req,
+          userId: authUser.id,
+          action: "DELETE",
+          module: "Products",
+          entityId: String(prodId),
+          description: `Deleted product "${existingProduct?.product_name || prodId}" (${existingProduct?.product_code || "-"})`,
+        });
+      }
+    } catch {}
 
     return NextResponse.json({
       status: "success",

@@ -317,9 +317,15 @@ export async function POST(req: NextRequest) {
         {
           userId,
           action: "CREATE",
-          entityType: "PURCHASE",
+          entityType: "Purchases",
           entityId: String(newPurchase.id),
-          newValues: { purchase_id: purchaseCode, total: totalBillAmount, paid: paidNum, supplier_id },
+          newValues: {
+            description: `Recorded purchase inward "${purchaseCode}" for ৳ ${totalBillAmount.toLocaleString()} (Paid: ৳ ${paidNum}, Due: ৳ ${dueNum.toLocaleString()})`,
+            purchase_id: purchaseCode,
+            total: totalBillAmount,
+            paid: paidNum,
+            supplier_id,
+          },
         },
         tx
       );

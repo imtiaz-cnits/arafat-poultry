@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +81,18 @@ export async function POST(req: NextRequest) {
         });
       }
     });
+
+    try {
+      if (user) {
+        await recordActivity({
+          req,
+          userId: user.id,
+          action: "UPDATE",
+          module: "Products",
+          description: `Bulk updated prices for ${productsToUpdate.length} products (${pct > 0 ? `+${pct}` : pct}%, target: ${target_field})`,
+        });
+      }
+    } catch {}
 
     return NextResponse.json({
       status: "success",

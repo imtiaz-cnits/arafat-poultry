@@ -13,11 +13,12 @@ import {
   RefreshCw,
   X,
   CheckCheck,
+  History,
 } from "lucide-react";
 
 interface NotificationItem {
   id: string;
-  type: "stock" | "sale" | "due";
+  type: "stock" | "sale" | "due" | "log";
   title: string;
   description: string;
   badge: string;
@@ -31,17 +32,19 @@ interface NotificationData {
   lowStockCount: number;
   dueCount: number;
   salesCount: number;
+  logCount?: number;
   items: NotificationItem[];
 }
 
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "stock" | "due" | "sale">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "stock" | "due" | "sale" | "log">("all");
   const [data, setData] = useState<NotificationData>({
     totalCount: 0,
     lowStockCount: 0,
     dueCount: 0,
     salesCount: 0,
+    logCount: 0,
     items: [],
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -126,6 +129,8 @@ export function NotificationDropdown() {
         return <DollarSign className="w-4 h-4 text-rose-500 shrink-0" />;
       case "sale":
         return <ShoppingBag className="w-4 h-4 text-emerald-500 shrink-0" />;
+      case "log":
+        return <History className="w-4 h-4 text-sky-500 shrink-0" />;
       default:
         return <Clock className="w-4 h-4 text-slate-500 shrink-0" />;
     }
@@ -244,6 +249,16 @@ export function NotificationDropdown() {
             >
               Sales ({data.salesCount})
             </button>
+            <button
+              onClick={() => setActiveTab("log")}
+              className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                activeTab === "log"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
+              }`}
+            >
+              Logs ({data.logCount || 0})
+            </button>
           </div>
 
           {/* List of Notification Items */}
@@ -301,20 +316,28 @@ export function NotificationDropdown() {
           </div>
 
           {/* Quick Footer Links */}
-          <div className="p-2.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-2 text-center text-[11px] font-bold">
+          <div className="p-2.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 grid grid-cols-3 gap-1.5 text-center text-[11px] font-bold">
             <Link
               href="/inventory"
               onClick={() => setIsOpen(false)}
-              className="py-1.5 px-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-rose-700 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs"
+              className="py-1.5 px-1 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs truncate"
             >
-              Inventory Stock
+              স্টক ইনভেন্টরি
             </Link>
             <Link
               href="/invoices"
               onClick={() => setIsOpen(false)}
-              className="py-1.5 px-2 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white transition-colors shadow-2xs"
+              className="py-1.5 px-1 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs truncate"
             >
-              All Invoices
+              মেমো তালিকা
+            </Link>
+            <Link
+              href="/user-logs"
+              onClick={() => setIsOpen(false)}
+              className="py-1.5 px-1 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white transition-colors shadow-2xs flex items-center justify-center gap-1 truncate"
+            >
+              <History className="w-3 h-3 shrink-0" />
+              <span>ইউজার লগ</span>
             </Link>
           </div>
         </div>

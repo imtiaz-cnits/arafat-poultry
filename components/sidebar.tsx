@@ -27,6 +27,7 @@ import {
   Fish,
   Scale,
   Activity,
+  History,
 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 
@@ -133,6 +134,7 @@ export const NAV_ITEMS: NavItem[] = [
     children: [
       { label: "ইউজার ও রোল", href: "/users", icon: Users },
       { label: "প্রোফাইল", href: "/profile", icon: User },
+      { label: "ইউজার লগ", href: "/user-logs", icon: History },
     ],
   },
 ];
@@ -150,6 +152,30 @@ export function Sidebar({
   isCollapsed = false,
 }: SidebarProps) {
   const pathname = usePathname();
+
+  // User Role & Permissions State (Identical initial state on SSR & hydration to prevent mismatch)
+  const [userRole, setUserRole] = useState<string>("admin");
+  const [userPermissions, setUserPermissions] = useState<Record<string, boolean> | null>(null);
+
+  useEffect(() => {
+    const loadUser = () => {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const u = JSON.parse(stored);
+          if (u.role) setUserRole(u.role);
+          if (u.permissions) setUserPermissions(u.permissions);
+        }
+      } catch { }
+    };
+    loadUser();
+    window.addEventListener("user-updated", loadUser);
+    window.addEventListener("storage", loadUser);
+    return () => {
+      window.removeEventListener("user-updated", loadUser);
+      window.removeEventListener("storage", loadUser);
+    };
+  }, []);
 
   // Find active parent ID dynamically from current pathname
   const activeParentId = useMemo(() => {
@@ -186,21 +212,6 @@ export function Sidebar({
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const triggerRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
-  // User Role & Permissions State
-  const [userRole, setUserRole] = useState<string>("admin");
-  const [userPermissions, setUserPermissions] = useState<Record<string, boolean> | null>(null);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        const u = JSON.parse(stored);
-        if (u.role) setUserRole(u.role);
-        if (u.permissions) setUserPermissions(u.permissions);
-      }
-    } catch { }
-  }, []);
-
   const hasAccess = (item: NavItem) => {
     if (userRole === "admin" || userRole === "super_admin") return true;
     if (!userPermissions) return true;
@@ -226,6 +237,14 @@ export function Sidebar({
   };
 
   const hasSubAccess = (childHref: string) => {
+    // Only super_admin can see /users (settings_users)
+    if (childHref === "/users") {
+      return userRole === "super_admin";
+    }
+    // Only super_admin and admin can see /user-logs (settings_logs)
+    if (childHref === "/user-logs") {
+      return userRole === "super_admin" || userRole === "admin";
+    }
     if (userRole === "admin" || userRole === "super_admin") return true;
     if (!userPermissions) return true;
     const hrefMap: Record<string, string> = {
@@ -238,6 +257,7 @@ export function Sidebar({
       "/reports/daily-ledger": "reports_ledger",
       "/users": "settings_users",
       "/profile": "settings_profile",
+      "/user-logs": "settings_logs",
     };
     const key = hrefMap[childHref];
     if (key && userPermissions[key] === false) return false;
@@ -555,7 +575,7 @@ export function Sidebar({
         )}
 
         {/* ============================================================ */}
-        {/* SIDEBAR FOOTER: Settings Menu Only (No version text)         */}
+        {/* SIDEBAR FOOTER: Settings Menu with Drilldown                 */}
         {/* ============================================================ */}
         <div
           data-flyout-container
@@ -569,38 +589,22 @@ export function Sidebar({
             onMouseLeave={() => handleTriggerLeave("settings")}
             className="relative"
           >
-            {settingsItem.children && settingsItem.children.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => handleTriggerClick("settings")}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${activeParentId === "settings" || pathname === "/users" || pathname === "/profile"
-                  ? "bg-white/15 text-white font-bold border-l-[3px] border-white shadow-xs"
-                  : "text-emerald-100 hover:bg-white/10 hover:text-white"
-                  } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full text-start"}`}
-              >
-                <Settings className={`shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4 opacity-90"}`} />
-                {!isCollapsed && <span className="truncate">{settingsItem.label}</span>}
-                {!isCollapsed && (
-                  <span className="ml-auto w-5 h-5 rounded-md bg-white/10 flex items-center justify-center text-white/70">
-                    <ChevronRight className="w-3 h-3" />
-                  </span>
-                )}
-              </button>
-            ) : (
-              <Link
-                href={settingsItem.href || "/users"}
-                onClick={() => {
-                  if (isOpen) onClose();
-                }}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${isActive(settingsItem.href)
-                  ? "bg-white text-emerald-950 shadow-md font-bold"
-                  : "text-emerald-100 hover:bg-white/10 hover:text-white"
-                  } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full"}`}
-              >
-                <Settings className={`shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4 opacity-90"}`} />
-                {!isCollapsed && <span>{settingsItem.label}</span>}
-              </Link>
-            )}
+            <button
+              type="button"
+              onClick={() => handleTriggerClick("settings")}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold transition-all text-xs cursor-pointer ${activeParentId === "settings" || pathname === "/users" || pathname === "/profile" || pathname === "/user-logs"
+                ? "bg-white/15 text-white font-bold border-l-[3px] border-white shadow-xs"
+                : "text-emerald-100 hover:bg-white/10 hover:text-white"
+                } ${isCollapsed ? "justify-center w-10 h-10 mx-auto px-0" : "w-full text-start"}`}
+            >
+              <Settings className={`shrink-0 ${isCollapsed ? "w-5 h-5" : "w-4 h-4 opacity-90"}`} />
+              {!isCollapsed && <span className="truncate">সেটিংস</span>}
+              {!isCollapsed && (
+                <span className="ml-auto w-5 h-5 rounded-md bg-white/10 flex items-center justify-center text-white/70">
+                  <ChevronRight className="w-3 h-3" />
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </aside>
@@ -625,7 +629,6 @@ export function Sidebar({
           {/* Caret Pointer Arrow pointing back to icon */}
           <div className="absolute -left-1.5 top-3.5 w-3 h-3 bg-[#14532d] dark:bg-[#0a2312] border-l border-b border-emerald-500/35 rotate-45 pointer-events-none" />
 
-          {/* If item has children: Render Full Submenu List */}
           {activeFlyoutItem.children && activeFlyoutItem.children.length > 0 ? (
             <>
               {/* Flyout Header */}

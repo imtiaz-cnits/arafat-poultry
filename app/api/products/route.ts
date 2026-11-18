@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -174,6 +175,17 @@ export async function POST(req: NextRequest) {
         user_id: BigInt(userId),
       },
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "CREATE",
+        module: "Products",
+        entityId: String(newProduct.id),
+        description: `Created product "${product_name.trim()}" (Code: ${finalCodes[0]}, Stock: ${quantity || 0}, Buy: ৳ ${cost_price || 0}, Sell: ৳ ${sell_price || 0})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

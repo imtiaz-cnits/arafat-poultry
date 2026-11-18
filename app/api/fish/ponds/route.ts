@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { createPond } from "@/lib/fish-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,17 @@ export async function POST(req: NextRequest) {
       note,
       userId: authResult.user.id,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "CREATE",
+        module: "Fish Farming",
+        entityId: String(pond.id),
+        description: `Created fish pond "${pond.pond_name}" (${pond.pond_code}, Area: ${area_decimal || 0} decimal, Depth: ${water_depth_feet || 5} ft)`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

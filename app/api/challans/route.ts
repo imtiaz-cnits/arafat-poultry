@@ -6,6 +6,7 @@ import {
   generateChallanNumber,
   lockProductsAscending,
 } from "@/lib/challan-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -330,6 +331,17 @@ export async function POST(req: NextRequest) {
 
       return newChallan;
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "CREATE",
+        module: "Challans",
+        entityId: String(result.id),
+        description: `Generated delivery challan "${result.challan_no}" for order #${order_id}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

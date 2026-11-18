@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -69,8 +70,19 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return { collection, newDue };
+      return { collection, newDue, supplierName: supplier.name || supplier.company };
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "DUE_COLLECTION",
+        module: "Suppliers",
+        entityId: String(result.collection.id),
+        description: `Paid supplier due ৳ ${paidNum.toLocaleString()} to "${result.supplierName}". Remaining Payable: ৳ ${result.newDue.toLocaleString()}. Method: ${payment_method || "Cash"}.`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

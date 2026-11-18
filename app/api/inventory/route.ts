@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { recordStockMovement, StockMovementType } from "@/lib/stock-service";
 import { convertEggUnits, convertFeedBagsToKg } from "@/lib/unit-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -245,6 +246,17 @@ export async function POST(req: NextRequest) {
 
       return { product, delta, newQty: targetQty };
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "ADJUST",
+        module: "Inventory & Stock",
+        entityId: String(result.product.id),
+        description: `Manual stock adjustment for "${result.product.product_name}": New quantity ${result.newQty} (Change: ${result.delta > 0 ? `+${result.delta}` : result.delta}, Reason: ${reason || "Adjustment"})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { recordGrowthSample } from "@/lib/fish-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,16 @@ export async function POST(req: NextRequest) {
       note,
       userId: authResult.user.id,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "UPDATE",
+        module: "Fish Farming",
+        description: `Recorded fish growth sampling: ${sample_weight_kg} kg across ${sample_count} fish in Batch #${batch_id} (Avg: ${result.avgWeightG}g)`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { recordPaymentVoucher } from "@/lib/accounting-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,16 @@ export async function POST(req: NextRequest) {
       note,
       userId: authResult.user.id,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "PAYMENT",
+        module: "Accounting",
+        description: `Payment voucher (${result.voucherNo || "Voucher"}): ৳ ${Number(amount).toLocaleString()} via ${payment_method} (${note || voucher_type || "Payment"})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

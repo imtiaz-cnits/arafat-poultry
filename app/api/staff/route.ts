@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { requireAuth } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -102,6 +103,17 @@ export async function POST(req: NextRequest) {
         otp: "0",
       },
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "CREATE",
+        module: "Staff & Employees",
+        entityId: String(newStaff.id),
+        description: `Created staff member "${newStaff.name}" (Role: ${newStaff.role}, Mobile: ${newStaff.mobile})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

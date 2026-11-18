@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +56,18 @@ export async function PUT(
       },
     });
 
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "UPDATE",
+        module: "Units",
+        entityId: String(updated.id),
+        description: `Updated unit "${updated.unit_name}"`,
+      });
+    } catch {}
+
     return NextResponse.json({
       status: "success",
       message: "Unit updated successfully",
@@ -91,9 +105,26 @@ export async function DELETE(
       );
     }
 
+    const existingUnit = await prisma.units.findUnique({
+      where: { id: unitId },
+      select: { id: true, unit_name: true },
+    });
+
     await prisma.units.delete({
       where: { id: unitId },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Units",
+        entityId: String(unitId),
+        description: `Deleted unit "${existingUnit?.unit_name || unitId}"`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

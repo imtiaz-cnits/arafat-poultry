@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -375,6 +376,16 @@ export async function POST(req: NextRequest) {
         return { totalReturnAmount };
       });
 
+      try {
+        await recordActivity({
+          req,
+          userId,
+          action: "RETURN",
+          module: "Purchases",
+          description: `Processed purchase return for ৳ ${result.totalReturnAmount.toLocaleString()} to supplier`,
+        });
+      } catch {}
+
       return NextResponse.json({
         status: "success",
         message: "Purchase return processed and stock deducted successfully!",
@@ -513,6 +524,17 @@ export async function POST(req: NextRequest) {
 
         return { totalReturnAmount, totalDueToReduce };
       });
+
+      try {
+        await recordActivity({
+          req,
+          userId,
+          action: "RETURN",
+          module: "POS / Sales",
+          entityId: String(order_id),
+          description: `Processed customer sales return for invoice "${order.order_no}": ৳ ${result.totalReturnAmount.toLocaleString()} returned, ৳ ${result.totalDueToReduce.toLocaleString()} due adjusted.`,
+        });
+      } catch {}
 
       return NextResponse.json({
         status: "success",

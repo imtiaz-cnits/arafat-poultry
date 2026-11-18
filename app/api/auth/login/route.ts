@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyPassword, signToken } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,6 +51,15 @@ export async function POST(req: NextRequest) {
     });
 
     const permissions = user.permissions ? JSON.parse(user.permissions) : null;
+
+    // Record login activity in audit logs
+    await recordActivity({
+      req,
+      userId: user.id,
+      action: "LOGIN",
+      module: "Auth & Sessions",
+      description: `User "${user.name}" (${user.email || user.mobile}) logged in successfully with role "${user.role}"`,
+    });
 
     const response = NextResponse.json({
       status: "success",

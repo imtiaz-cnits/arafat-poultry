@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,16 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: existing ? "UPDATE" : "CREATE",
+        module: "Accounting",
+        description: `Set opening cash balance of ৳ ${parseFloat(String(amount || 0)).toLocaleString()} for date ${savedRecord.date.toISOString().split("T")[0]}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

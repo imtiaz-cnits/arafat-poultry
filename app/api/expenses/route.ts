@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { recordFinancialTransaction, getAccountByPaymentMethod } from "@/lib/financial-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +173,17 @@ export async function POST(req: NextRequest) {
 
       return newExpense;
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "CREATE",
+        module: "Expenses",
+        entityId: String(result.id),
+        description: `Recorded expense of ৳ ${amountNum.toLocaleString()} (${expense_details || "General Expense"}) via ${payment_method || "Cash"}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

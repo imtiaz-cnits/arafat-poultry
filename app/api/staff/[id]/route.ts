@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { requireAuth } from "@/lib/auth";
 import { isProtectedSuperAdmin, isSuperAdminRole, SUPER_ADMIN_EMAIL } from "@/lib/roles";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,17 @@ export async function PUT(
       where: { id: staffId },
       data: dataToUpdate,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "UPDATE",
+        module: "Staff & Employees",
+        entityId: String(updated.id),
+        description: `Updated staff member "${updated.name}" (${updated.email || updated.mobile}, Role: ${updated.role})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",
@@ -134,6 +146,17 @@ export async function DELETE(
     await prisma.users.delete({
       where: { id: staffId },
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "DELETE",
+        module: "Staff & Employees",
+        entityId: String(staffId),
+        description: `Deleted staff member "${targetStaff.email || staffId}"`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

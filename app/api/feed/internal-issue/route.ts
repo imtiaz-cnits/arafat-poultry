@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { recordInternalFeedIssue, getFeedStockAndProfitability } from "@/lib/feed-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -96,6 +97,17 @@ export async function POST(req: NextRequest) {
       userId: authResult.user.id,
     });
 
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "ISSUE",
+        module: "Feed Management",
+        entityId: result.issueCode,
+        description: `Issued ${result.bagsIssued} bags of feed (${result.totalKg} kg, cost: ৳ ${result.totalCostAllocated.toLocaleString()}) to ${result.destinationName}`,
+      });
+    } catch {}
+
     return NextResponse.json({
       status: "success",
       message: "Internal feed issue recorded successfully. Transferred to destination.",
@@ -171,6 +183,17 @@ export async function DELETE(req: NextRequest) {
         where: { id: BigInt(id) },
       });
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "CANCEL",
+        module: "Feed Management",
+        entityId: String(id),
+        description: `Cancelled internal feed issue #${id} and restored ${issue.bags} bags to stock`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { recordMortality } from "@/lib/fish-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,16 @@ export async function POST(req: NextRequest) {
       date: date ? new Date(date) : new Date(),
       userId: authResult.user.id,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "ADJUST",
+        module: "Fish Farming",
+        description: `Recorded fish mortality of ${mortality_count} fish in Batch #${batch_id} (Reason: ${reason || "N/A"})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

@@ -1,6 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  try {
+    const authUser = await getAuthUser(req);
+    if (authUser) {
+      await recordActivity({
+        req,
+        userId: authUser.id,
+        action: "LOGOUT",
+        module: "Auth & Sessions",
+        description: `User "${authUser.name}" (${authUser.email || authUser.mobile}) logged out`,
+      });
+    }
+  } catch {}
+
   const response = NextResponse.json({
     status: "success",
     message: "Logged out successfully",
@@ -17,6 +32,6 @@ export async function POST() {
   return response;
 }
 
-export async function GET() {
-  return POST();
+export async function GET(req: NextRequest) {
+  return POST(req);
 }

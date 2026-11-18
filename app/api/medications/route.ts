@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -204,6 +205,18 @@ export async function POST(req: NextRequest) {
     currentList.unshift(newRecord);
     await saveSchedules(currentList);
 
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "CREATE",
+        module: "Medication & Vaccine",
+        entityId: String(newId),
+        description: `Created medicine schedule "${newRecord.medicine_name}" for ${newRecord.target_name} (${newRecord.dosage})`,
+      });
+    } catch {}
+
     return NextResponse.json({
       status: "success",
       message: "ওষুধ ও ভ্যাকসিন শিডিউল সফলভাবে সংরক্ষিত হয়েছে",
@@ -229,6 +242,18 @@ export async function DELETE(req: NextRequest) {
     let currentList = await getStoredSchedules();
     currentList = currentList.filter((x: any) => Number(x.id) !== id);
     await saveSchedules(currentList);
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Medication & Vaccine",
+        entityId: String(id),
+        description: `Deleted medicine/vaccine schedule #${id}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

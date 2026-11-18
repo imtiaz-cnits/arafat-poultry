@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,17 @@ export async function POST(req: NextRequest) {
         user_id: BigInt(userId),
       },
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "CREATE",
+        module: "Categories",
+        entityId: String(category.id),
+        description: `Created category "${category.category_name}"`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -160,6 +162,18 @@ export async function DELETE(
         where: { id: purchaseId },
       });
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Purchases",
+        entityId: String(purchaseId),
+        description: `Deleted purchase inward "${purchase.purchase_id}" (Reverted inventory & supplier due: ৳ ${purchase.due_amount || 0})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

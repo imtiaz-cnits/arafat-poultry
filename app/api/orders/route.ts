@@ -264,13 +264,20 @@ export async function POST(req: NextRequest) {
       }
 
       // 9. Record Audit Log
+      const orderDueAmount = Math.max(0, totalOrderValue - paidNum);
       await logAudit(
         {
           userId,
           action: "CREATE",
-          entityType: "ORDER",
+          entityType: "POS / Sales",
           entityId: String(newOrder.id),
-          newValues: { order_no: orderNumber, total: totalOrderValue, paid: paidNum, customer_id },
+          newValues: {
+            description: `Created sales invoice "${orderNumber}" for ৳ ${totalOrderValue.toLocaleString()} (Paid: ৳ ${paidNum}, Due: ৳ ${orderDueAmount})`,
+            order_no: orderNumber,
+            total: totalOrderValue,
+            paid: paidNum,
+            customer_id,
+          },
         },
         tx
       );

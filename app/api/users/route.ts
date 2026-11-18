@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser, hashPassword } from "@/lib/auth";
 import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
+import { recordActivity } from "@/lib/audit-service";
+
+export const dynamic = "force-dynamic";
 
 // GET: All Users (Ordered descending by ID as per PROJECT_RULES)
 export async function GET(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isAdminRole(authUser.role)) {
-      return NextResponse.json({ status: "fail", message: "Unauthorized" }, { status: 403 });
+    if (!authUser || !isSuperAdminRole(authUser.role)) {
+      return NextResponse.json({ status: "fail", message: "অননুমোদিত: ইউজার তালিকা শুধুমাত্র সুপার অ্যাডমিন দেখতে পারবেন" }, { status: 403 });
     }
 
     const users = await prisma.users.findMany({
@@ -48,8 +51,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isAdminRole(authUser.role)) {
-      return NextResponse.json({ status: "fail", message: "Unauthorized" }, { status: 403 });
+    if (!authUser || !isSuperAdminRole(authUser.role)) {
+      return NextResponse.json({ status: "fail", message: "অননুমোদিত: ইউজার তালিকা শুধুমাত্র সুপার অ্যাডমিন দেখতে পারবেন" }, { status: 403 });
     }
 
     const body = await req.json();
@@ -62,12 +65,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (isSuperAdminRole(role)) {
+    if (role === "super_admin") {
       return NextResponse.json(
-        { status: "fail", message: "Super Admin role is reserved exclusively for dev@arafatpoultry.com" },
+        { status: "fail", message: "সুপার অ্যাডমিন পদবী শুধুমাত্র dev@arafatpoultry.com এর জন্য সংরক্ষিত" },
         { status: 400 }
       );
     }
+
 
     // Check duplicate
     if (email) {
@@ -94,6 +98,15 @@ export async function POST(req: NextRequest) {
         otp: "000000",
         permissions: permissions ? JSON.stringify(permissions) : null,
       },
+    });
+
+    await recordActivity({
+      req,
+      userId: authUser.id,
+      action: "CREATE",
+      module: "Users & Roles",
+      entityId: newUser.id,
+      description: `Created new user account for "${newUser.name}" (${newUser.email || newUser.mobile}) with role "${newUser.role}"`,
     });
 
     return NextResponse.json({

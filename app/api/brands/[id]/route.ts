@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export async function PUT(
   req: NextRequest,
@@ -18,6 +20,18 @@ export async function PUT(
         status: status || undefined,
       },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "UPDATE",
+        module: "Brands",
+        entityId: String(updated.id),
+        description: `Updated brand "${updated.name}"`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",
@@ -59,9 +73,26 @@ export async function DELETE(
       );
     }
 
+    const existingBrand = await prisma.brands.findUnique({
+      where: { id: brandId },
+      select: { id: true, name: true },
+    });
+
     await prisma.brands.delete({
       where: { id: brandId },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Brands",
+        entityId: String(brandId),
+        description: `Deleted brand "${existingBrand?.name || brandId}"`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

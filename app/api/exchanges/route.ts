@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { recordPartyTransaction } from "@/lib/party-ledger-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +131,17 @@ export async function POST(req: NextRequest) {
         ledgerResult,
       };
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId,
+        action: "ADJUST",
+        module: "POS / Sales",
+        entityId: result.refNo,
+        description: `Feed & Egg Multi-Settlement (${result.refNo}) with ${partyType}: Total settlement ৳ ${Number(totalSettlement || 0).toLocaleString()} (Remaining: ৳ ${Number(netRemaining || 0).toLocaleString()})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

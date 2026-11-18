@@ -5,6 +5,7 @@ import {
   createPoultryFlock,
   recordFlockPurchase,
 } from "@/lib/poultry-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +73,16 @@ export async function POST(req: NextRequest) {
         userId: authResult.user.id,
       });
 
+      try {
+        await recordActivity({
+          req,
+          userId: authResult.user.id,
+          action: "CREATE",
+          module: "Poultry & Sheds",
+          description: `Created & purchased poultry flock for shed "${shed_name}" (${breed}, ${initial_chicks_count || 0} birds, Unit Price: ৳ ${unit_price || 0})`,
+        });
+      } catch {}
+
       return NextResponse.json({
         status: "success",
         message: "নতুন মুরগির ক্রয় ও শেড স্টক সফলভাবে সংরক্ষিত হয়েছে",
@@ -88,6 +99,16 @@ export async function POST(req: NextRequest) {
       note,
       userId: authResult.user.id,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "CREATE",
+        module: "Poultry & Sheds",
+        description: `Created poultry shed flock "${shed_name}" (${breed}, ${initial_chicks_count || 0} birds)`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

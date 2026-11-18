@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser, hashPassword, verifyPassword } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -78,8 +79,15 @@ export async function PUT(req: NextRequest) {
       updateData.img_url = img_url;
     }
 
-    // Password change workflow
+    // Password change workflow (Only super_admin can change password)
     if (new_password && new_password.trim() !== "") {
+      if (userInDb.role !== "super_admin") {
+        return NextResponse.json(
+          { status: "fail", message: "পাসওয়ার্ড পরিবর্তনের অনুমতি শুধুমাত্র সুপার অ্যাডমিনের রয়েছে।" },
+          { status: 403 }
+        );
+      }
+
       if (new_password.length < 4) {
         return NextResponse.json(
           { status: "fail", message: "New password must be at least 4 characters" },
@@ -113,6 +121,17 @@ export async function PUT(req: NextRequest) {
         img_url: true,
       },
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authUser.id,
+        action: "UPDATE",
+        module: "User Management",
+        entityId: String(updated.id),
+        description: `User "${updated.name}" updated profile details (Role: ${updated.role})${updateData.password ? " and changed password" : ""}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

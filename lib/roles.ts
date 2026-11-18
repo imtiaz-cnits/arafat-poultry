@@ -27,7 +27,7 @@ export function isProtectedSuperAdmin(user?: {
 } | null): boolean {
   if (!user) return false;
   const email = (user.email || "").trim().toLowerCase();
-  return email === SUPER_ADMIN_EMAIL || isSuperAdminRole(user.role);
+  return email === SUPER_ADMIN_EMAIL;
 }
 
 export const SYSTEM_ROLE_OPTIONS: {
@@ -100,6 +100,7 @@ export const SIDEBAR_MODULES: {
     submenus: [
       { key: "settings_users", label: "ইউজার ও রোল (Users & Roles)", desc: "ব্যবহারকারী তৈরি ও পারমিশন নিয়ন্ত্রণ" },
       { key: "settings_profile", label: "প্রোফাইল (Profile)", desc: "ব্যবহারকারীর নিজস্ব প্রোফাইল ও পাসওয়ার্ড" },
+      { key: "settings_logs", label: "ইউজার হিস্ট্রি লগ (User Logs)", desc: "সিস্টেম ও ব্যবহারকারী অ্যাক্টিভিটি হিস্ট্রি লগ" },
     ],
   },
 ];
@@ -127,6 +128,7 @@ export const DEFAULT_PERMISSIONS: Record<string, boolean> = {
   settings: true,
   settings_users: true,
   settings_profile: true,
+  settings_logs: true,
 };
 
 export const ROLE_PRESETS: Record<SystemRole, Record<string, boolean>> = {
@@ -151,8 +153,9 @@ export const ROLE_PRESETS: Record<SystemRole, Record<string, boolean>> = {
     reports_sales: true,
     reports_ledger: true,
     settings: true,
-    settings_users: true,
+    settings_users: false,
     settings_profile: true,
+    settings_logs: true,
   },
   manager: {
     dashboard: true,
@@ -177,6 +180,7 @@ export const ROLE_PRESETS: Record<SystemRole, Record<string, boolean>> = {
     settings: true,
     settings_users: false,
     settings_profile: true,
+    settings_logs: false,
   },
   staff: {
     dashboard: true,
@@ -201,5 +205,6 @@ export const ROLE_PRESETS: Record<SystemRole, Record<string, boolean>> = {
     settings: false,
     settings_users: false,
     settings_profile: true,
+    settings_logs: false,
   },
 };

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -33,9 +32,8 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400;500;600;700;800&family=Valley+Sans:ital,wght@0,300..800;1,300..800&display=swap"
           rel="stylesheet"
         />
-        <Script
+        <script
           id="theme-initializer"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               try {
@@ -52,6 +50,7 @@ export default function RootLayout({
               } catch (e) {}
             `,
           }}
+          suppressHydrationWarning
         />
       </head>
       <body className="min-h-screen flex flex-col justify-between antialiased">

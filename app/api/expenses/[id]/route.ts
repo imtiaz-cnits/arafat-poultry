@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,18 @@ export async function PUT(
         date: date !== undefined ? date : undefined,
       },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "UPDATE",
+        module: "Expenses",
+        entityId: String(updated.id),
+        description: `Updated expense #${updated.id}: ৳ ${parseFloat(String(updated.expense_amount)).toLocaleString()} (${updated.expense_details || "Expense"})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",
@@ -68,6 +82,18 @@ export async function DELETE(
         await tx.expenses.delete({ where: { id: expenseId } });
       }
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Expenses",
+        entityId: String(expenseId),
+        description: `Deleted expense record #${expenseId}`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

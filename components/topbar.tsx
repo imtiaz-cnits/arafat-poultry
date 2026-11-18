@@ -32,8 +32,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
   const [userDropdown, setUserDropdown] = useState(false);
   const [userName, setUserName] = useState("Admin");
   const [userRole, setUserRole] = useState("admin");
-
-  
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   // Live Date and Time State across all pages
   const [currentDateTime, setCurrentDateTime] = useState("");
@@ -51,18 +50,51 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
     window.addEventListener("theme-change", handleThemeChange);
 
     // Load user info from localStorage if available
-    try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        if (parsed.name) setUserName(parsed.name);
-        if (parsed.role) setUserRole(parsed.role);
+    const loadUserData = () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          if (parsed.name) setUserName(parsed.name);
+          if (parsed.role) setUserRole(parsed.role);
+          if (parsed.img_url) {
+            setUserAvatar(parsed.img_url);
+          } else {
+            setUserAvatar(null);
+          }
+        }
+      } catch {
+        // ignore
       }
+    };
 
-      
-    } catch {
-      // ignore
-    }
+    loadUserData();
+
+    // Fetch fresh profile from API to ensure avatar and details are up-to-date
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    fetch("/api/users/profile", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.status === "success" && data.data) {
+          if (data.data.name) setUserName(data.data.name);
+          if (data.data.role) setUserRole(data.data.role);
+          if (data.data.img_url) {
+            setUserAvatar(data.data.img_url);
+          } else {
+            setUserAvatar(null);
+          }
+          try {
+            const cur = JSON.parse(localStorage.getItem("user") || "{}");
+            localStorage.setItem("user", JSON.stringify({ ...cur, ...data.data }));
+          } catch {}
+        }
+      })
+      .catch(() => {});
+
+    window.addEventListener("user-updated", loadUserData);
+    window.addEventListener("storage", loadUserData);
 
     // Live clock ticker
     const updateClock = () => {
@@ -99,7 +131,8 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
 
     return () => {
       window.removeEventListener("theme-change", handleThemeChange);
-      
+      window.removeEventListener("user-updated", loadUserData);
+      window.removeEventListener("storage", loadUserData);
       clearInterval(interval);
     };
   }, []);
@@ -211,11 +244,23 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
             onClick={() => setUserDropdown(!userDropdown)}
             className="flex items-center gap-2 pl-2 pr-2.5 py-1 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-slate-50 dark:bg-slate-800/80 hover:border-emerald-600 transition-all cursor-pointer"
           >
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#166534] to-[#0284c7] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
-              {userName.charAt(0).toUpperCase()}
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-gradient-to-br from-[#166534] to-[#0284c7] text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
+              {userAvatar && userAvatar.trim() !== "" ? (
+                <Image
+                  src={userAvatar}
+                  alt={userName}
+                  width={28}
+                  height={28}
+                  unoptimized
+                  onError={() => setUserAvatar(null)}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                userName.charAt(0).toUpperCase()
+              )}
             </div>
             <div className="hidden md:block text-left text-xs">
-              <p className="font-bold text-slate-800 dark:text-white leading-none">
+              <p className="font-bold text-slate-800 dark:text-white leading-none truncate max-w-[120px]">
                 {userName}
               </p>
               <p className="text-[10px] text-slate-400 capitalize mt-0.5">{userRole}</p>
@@ -228,9 +273,26 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
               onClick={() => setUserDropdown(false)}
               className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-slate-900 border-[1.5px] border-[#cbd5e1] dark:border-[#334155] shadow-xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1"
             >
-              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                <p className="text-xs font-bold text-slate-800 dark:text-white">{userName}</p>
-                <p className="text-[11px] text-slate-400 capitalize">{userRole}</p>
+              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-br from-[#166534] to-[#0284c7] text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
+                  {userAvatar && userAvatar.trim() !== "" ? (
+                    <Image
+                      src={userAvatar}
+                      alt={userName}
+                      width={32}
+                      height={32}
+                      unoptimized
+                      onError={() => setUserAvatar(null)}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    userName.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{userName}</p>
+                  <p className="text-[11px] text-slate-400 capitalize">{userRole}</p>
+                </div>
               </div>
 
               <Link

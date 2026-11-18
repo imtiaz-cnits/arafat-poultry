@@ -61,7 +61,11 @@ export default function ProfilePage() {
   async function fetchProfile() {
     try {
       setLoading(true);
-      const res = await fetch("/api/users/profile");
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const res = await fetch("/api/users/profile", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        cache: "no-store",
+      });
       const data = await res.json().catch(() => null);
 
       if (res.ok && data?.status === "success" && data.data) {
@@ -106,8 +110,10 @@ export default function ProfilePage() {
       const formData = new FormData();
       formData.append("avatar", file);
 
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       const res = await fetch("/api/users/profile/avatar", {
         method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 
@@ -118,6 +124,14 @@ export default function ProfilePage() {
         setAvatarPreview(data.img_url);
         if (profile) {
           setProfile({ ...profile, img_url: data.img_url });
+        }
+        try {
+          const cur = JSON.parse(localStorage.getItem("user") || "{}");
+          cur.img_url = data.img_url;
+          localStorage.setItem("user", JSON.stringify(cur));
+          window.dispatchEvent(new Event("user-updated"));
+        } catch {
+          // ignore
         }
       } else {
         toast.error(data?.message || "Failed to upload profile photo");
@@ -150,6 +164,10 @@ export default function ProfilePage() {
     }
 
     if (newPassword) {
+      if (profile?.role !== "super_admin") {
+        setErrorMsg("পাসওয়ার্ড পরিবর্তনের অনুমতি শুধুমাত্র সুপার অ্যাডমিনের রয়েছে");
+        return;
+      }
       if (newPassword.length < 4) {
         setErrorMsg("New password must be at least 4 characters long");
         return;
@@ -162,9 +180,13 @@ export default function ProfilePage() {
 
     try {
       setSaving(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
       const res = await fetch("/api/users/profile", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           name: fullName.trim(),
           mobile: mobileNumber.trim(),
@@ -180,6 +202,14 @@ export default function ProfilePage() {
         setProfile(data.data);
         setNewPassword("");
         setConfirmPassword("");
+        try {
+          const cur = JSON.parse(localStorage.getItem("user") || "{}");
+          const merged = { ...cur, ...data.data };
+          localStorage.setItem("user", JSON.stringify(merged));
+          window.dispatchEvent(new Event("user-updated"));
+        } catch {
+          // ignore
+        }
       } else {
         setErrorMsg(data?.message || "Failed to update profile");
       }
@@ -427,64 +457,80 @@ export default function ProfilePage() {
             </div>
 
             {/* 2. Security & Password Card */}
-            <div className="bg-white dark:bg-[#0f172a] rounded-[20px] p-5 sm:p-6 border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
-              <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
-                <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white m-0">
-                  Security & Password
-                </h4>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type={showNew ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
-                      className="w-full h-[42px] pl-10 pr-10 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNew(!showNew)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+            {profile?.role === "super_admin" ? (
+              <div className="bg-white dark:bg-[#0f172a] rounded-[20px] p-5 sm:p-6 border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
+                <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-100 dark:border-slate-800">
+                  <div className="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                    <Lock className="w-4 h-4" />
                   </div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white m-0">
+                    Security & Password
+                  </h4>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type={showConfirm ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm new password"
-                      className="w-full h-[42px] pl-10 pr-10 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      New Password
+                    </label>
+                    <div className="relative">
+                      <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                      <input
+                        type={showNew ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        className="w-full h-[42px] pl-10 pr-10 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNew(!showNew)}
+                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="w-full h-[42px] pl-10 pr-10 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm(!showConfirm)}
+                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-amber-50/70 dark:bg-amber-950/30 rounded-[20px] p-5 sm:p-6 border border-amber-200 dark:border-amber-800/50 shadow-xs flex items-start gap-3.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 m-0">
+                    পাসওয়ার্ড নিরাপত্তা নীতি (Security Policy)
+                  </h4>
+                  <p className="text-xs text-amber-700 dark:text-amber-300/90 leading-relaxed m-0">
+                    অ্যাডমিন, ম্যানেজার ও স্টাফ প্রোফাইল থেকে শুধুমাত্র নাম, মোবাইল নম্বর ও প্রোফাইল ছবি পরিবর্তন করার অনুমতি রয়েছে। পাসওয়ার্ড পরিবর্তনের প্রয়োজন হলে অনুগ্রহ করে সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* 3. Action Buttons matching MARSS Screenshot */}
             <div className="flex items-center justify-end gap-3 pt-2">

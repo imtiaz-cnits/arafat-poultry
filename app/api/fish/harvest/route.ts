@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { recordHarvest } from "@/lib/fish-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,16 @@ export async function POST(req: NextRequest) {
       note,
       userId: authResult.user.id,
     });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "HARVEST",
+        module: "Fish Farming",
+        description: `Recorded fish harvest: ${total_weight_kg} kg (${fish_count} fish) from Batch #${batch_id} into inventory`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

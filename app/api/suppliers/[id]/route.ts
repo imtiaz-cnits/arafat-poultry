@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -131,6 +133,18 @@ export async function PUT(
       },
     });
 
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "UPDATE",
+        module: "Suppliers",
+        entityId: String(updated.id),
+        description: `Updated supplier "${updated.name}" (${updated.company || "-"}, Mobile: ${updated.mobile}, Payable: ৳ ${updated.purchase_payable_amount || 0})`,
+      });
+    } catch {}
+
     return NextResponse.json({
       status: "success",
       message: "Supplier updated successfully",
@@ -197,9 +211,26 @@ export async function DELETE(
       );
     }
 
+    const existingSupp = await prisma.suppliers.findUnique({
+      where: { id: supplierId },
+      select: { id: true, name: true, company: true, mobile: true, supplier_id: true },
+    });
+
     await prisma.suppliers.delete({
       where: { id: supplierId },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Suppliers",
+        entityId: String(supplierId),
+        description: `Deleted supplier "${existingSupp?.name || supplierId}" (${existingSupp?.company || "-"}, ${existingSupp?.supplier_id || "-"}, Mobile: ${existingSupp?.mobile || "-"})`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",

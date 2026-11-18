@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,16 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      return { newCustomerDue };
+      return { newCustomerDue, customerName: customer.customer_name, customerCode: customer.customer_id };
+    });
+
+    await recordActivity({
+      req,
+      userId,
+      action: "DUE_COLLECTION",
+      module: "Customers & Dues",
+      entityId: String(customer_id),
+      description: `Collected customer due: ৳ ${paidNum.toLocaleString()} from "${result.customerName}" (${result.customerCode}). Remaining Due: ৳ ${result.newCustomerDue}. Method: ${payment_method || "Cash"}.`,
     });
 
     return NextResponse.json({

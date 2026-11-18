@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,18 @@ export async function PUT(
         status: status !== undefined ? status : undefined,
       },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "UPDATE",
+        module: "Expenses",
+        entityId: String(updated.id),
+        description: `Updated expense category "${updated.type_name}"`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",
@@ -59,9 +73,26 @@ export async function DELETE(
       );
     }
 
+    const existingType = await prisma.expense_types.findUnique({
+      where: { id: typeId },
+      select: { id: true, type_name: true },
+    });
+
     await prisma.expense_types.delete({
       where: { id: typeId },
     });
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "DELETE",
+        module: "Expenses",
+        entityId: String(typeId),
+        description: `Deleted expense category "${existingType?.type_name || typeId}"`,
+      });
+    } catch {}
 
     return NextResponse.json({
       status: "success",
