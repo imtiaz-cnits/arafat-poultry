@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { exportReportToPdf } from "@/lib/pdf-export";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast , PageSkeleton } from "@/components/ui";
 
 interface BusinessUnitProfit {
   unit_code: string;
@@ -300,6 +300,12 @@ export default function ConsolidatedAccountingPage() {
       setSubmittingVoucher(false);
     }
   };
+
+  if (loading && !pnlData) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div>

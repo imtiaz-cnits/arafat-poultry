@@ -25,7 +25,7 @@ import {
   Printer,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { Pagination } from "@/components/ui";
+import { Pagination , PageSkeleton } from "@/components/ui";
 import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
 
 interface FeedProduct {
@@ -261,6 +261,12 @@ export default function FeedTradingPage() {
     const start = (stocksPage - 1) * stocksPageSize;
     return prods.slice(start, start + stocksPageSize);
   }, [data?.feed_products, stocksPage, stocksPageSize]);
+
+  if (loading && !data) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="no-print space-y-6">

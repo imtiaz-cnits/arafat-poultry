@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { formatBdCurrency } from "@/lib/utils";
+import { formatBdCurrency, formatBdDate } from "@/lib/utils";
+import { DashboardSkeleton } from "@/components/ui/table-skeleton";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomDatePicker } from "@/components/ui/date-picker";
 import {
@@ -66,17 +67,17 @@ interface FinancialDistribution {
 }
 
 const PERIOD_OPTIONS = [
-  { label: "Today", value: "today" },
-  { label: "Last Week", value: "week" },
-  { label: "Last Month", value: "month" },
-  { label: "Date Wise", value: "custom" },
+  { label: "আজ", value: "today" },
+  { label: "গত ৭ দিন", value: "week" },
+  { label: "গত ৩০ দিন", value: "month" },
+  { label: "তারিখ অনুযায়ী", value: "custom" },
 ];
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState("today");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<SummaryData>({
     income: 0,
     cashCollection: 0,
@@ -151,6 +152,10 @@ export default function DashboardPage() {
     }
   }, [period, fetchStats, fromDate, toDate]);
 
+  if (loading && summary.totalOrders === 0 && summary.totalProducts === 0) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* 1. Header Card (Matching Reference Layout) */}
@@ -162,10 +167,10 @@ export default function DashboardPage() {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight leading-none m-0">
-              Overview Dashboard
+              ওভারভিউ ড্যাশবোর্ড (Overview Dashboard)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Real-time sales, collections, expenses, dues &amp; business metrics
+              রিয়েল-টাইম বিক্রয়, আদায়, খরচ, বকেয়া এবং সার্বিক ব্যবসায়িক হিসাব
             </p>
           </div>
         </div>
@@ -183,7 +188,7 @@ export default function DashboardPage() {
                   fetchStats(val, "", "");
                 }
               }}
-              placeholder="Select Period"
+              placeholder="সময়কাল নির্বাচন"
             />
           </div>
 
@@ -197,11 +202,11 @@ export default function DashboardPage() {
                     setFromDate(val);
                     fetchStats("custom", val, toDate);
                   }}
-                  placeholder="From Date"
+                  placeholder="শুরুর তারিখ"
                   allowClear
                 />
               </div>
-              <span className="text-xs text-slate-400 font-medium px-0.5">to</span>
+              <span className="text-xs text-slate-400 font-medium px-0.5">হতে</span>
               <div className="w-[130px] sm:w-[140px]">
                 <CustomDatePicker
                   value={toDate}
@@ -209,7 +214,7 @@ export default function DashboardPage() {
                     setToDate(val);
                     fetchStats("custom", fromDate, val);
                   }}
-                  placeholder="To Date"
+                  placeholder="শেষ তারিখ"
                   allowClear
                 />
               </div>
@@ -233,7 +238,7 @@ export default function DashboardPage() {
             className="h-[38px] px-3.5 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-emerald-600 hover:text-emerald-700 font-semibold text-xs flex items-center gap-1.5 transition-all shadow-xs shrink-0"
           >
             <PlusCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Products</span>
+            <span>পণ্যসমূহ</span>
           </Link>
         </div>
       </div>
@@ -246,7 +251,7 @@ export default function DashboardPage() {
           <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                INCOME
+                মোট আয়
               </span>
               <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
                 <Receipt className="w-4 h-4" />
@@ -257,7 +262,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-1.5 mt-2 text-[11px] text-sky-600 dark:text-sky-400 font-bold">
               <TrendingUp className="w-3.5 h-3.5" />
-              <span>Total Sales Revenue</span>
+              <span>মোট বিক্রয় আয়</span>
             </div>
           </div>
 
@@ -265,7 +270,7 @@ export default function DashboardPage() {
           <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                CASH COLLECTION
+                নগদ আদায়
               </span>
               <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center">
                 <Wallet className="w-4 h-4" />
@@ -276,7 +281,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-1.5 mt-2 text-[11px] text-teal-600 dark:text-teal-400 font-bold">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>Paid at Counter &amp; Dues</span>
+              <span>কাউন্টার ও বকেয়া আদায়</span>
             </div>
           </div>
 
@@ -284,7 +289,7 @@ export default function DashboardPage() {
           <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                EXPENSE
+                মোট খরচ
               </span>
               <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <Clock className="w-4 h-4" />
@@ -295,7 +300,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-1.5 mt-2 text-[11px] text-amber-600 dark:text-amber-400 font-bold">
               <AlertCircle className="w-3.5 h-3.5" />
-              <span>Operating Expenses</span>
+              <span>পরিচালন ও খামার ব্যয়</span>
             </div>
           </div>
 
@@ -304,7 +309,7 @@ export default function DashboardPage() {
             <div className="card bg-white dark:bg-slate-900 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] p-4 sm:p-5 shadow-xs">
               <div className="flex items-center justify-between text-slate-400 mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  PROFIT
+                  নিট লাভ
                 </span>
                 <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4" />
@@ -315,7 +320,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-1.5 mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
                 <TrendingUp className="w-3.5 h-3.5" />
-                <span>Net Business Profit</span>
+                <span>ব্যবসায়িক নিট লাভ</span>
               </div>
             </div>
           )}
@@ -330,7 +335,7 @@ export default function DashboardPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-                RECEIVABLE DUE
+                কাস্টমার বকেয়া (পাওনা)
               </p>
               <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
                 {formatBdCurrency(summary.receivableDue)}
@@ -345,7 +350,7 @@ export default function DashboardPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-                PAYABLE DUE
+                সরবরাহকারী বকেয়া (দেনা)
               </p>
               <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
                 {formatBdCurrency(summary.payableDue)}
@@ -360,7 +365,7 @@ export default function DashboardPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-                RETURN
+                পণ্য ফেরত
               </p>
               <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
                 {formatBdCurrency(summary.returnAmount)}
@@ -375,7 +380,7 @@ export default function DashboardPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 truncate">
-                DISCOUNT
+                ছাড় / ডিসকাউন্ট
               </p>
               <p className="text-sm sm:text-base font-black text-slate-800 dark:text-white leading-tight truncate">
                 {formatBdCurrency(summary.discountAmount)}
@@ -399,10 +404,10 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-800 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors leading-tight">
-                  Total Products
+                  মোট পণ্য
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Active Catalog Items
+                  সক্রিয় পণ্য তালিকা
                 </p>
               </div>
             </div>
@@ -422,10 +427,10 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-800 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors leading-tight">
-                  Total Customers
+                  মোট কাস্টমার
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Registered Client Profiles
+                  নিবন্ধিত কাস্টমার তালিকা
                 </p>
               </div>
             </div>
@@ -445,10 +450,10 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-800 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors leading-tight">
-                  Total Suppliers
+                  মোট সরবরাহকারী
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Verified Brand Vendors
+                  নিবন্ধিত মহাজন / ডিলার
                 </p>
               </div>
             </div>
@@ -469,10 +474,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-800 dark:text-white leading-none m-0">
-                Recent Invoices (Latest First)
+                সাম্প্রতিক ইনভয়েস ও মেমো (সর্বশেষ তালিকা)
               </h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Real-time transactions ordered descending by ID
+                রিয়েল-টাইম বিক্রয় লেনদেন হিসাব
               </p>
             </div>
           </div>
@@ -481,7 +486,7 @@ export default function DashboardPage() {
             href="/invoices"
             className="text-xs font-bold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 flex items-center gap-1"
           >
-            <span>View All Invoices</span>
+            <span>সকল ইনভয়েস দেখুন</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -550,7 +555,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="p-[10px] text-center text-slate-400 whitespace-nowrap">
-                        {new Date(order.created_at).toLocaleDateString("en-GB")}
+                        {formatBdDate(order.created_at)}
                       </td>
                     </tr>
                   );
@@ -618,7 +623,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 5. Dynamic Charts Section (Sales & Profit Trend + Financial Distribution) */}
+      {/* 5. Dynamic Charts Section (Sales & Profit Trend + আর্থিক বিন্যাস ও বণ্টন) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Chart: Sales & Profit Trend (Last 15 Days) */}
         <div className="lg:col-span-2 rounded-2xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
@@ -628,16 +633,16 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                    Sales &amp; Profit Trend (Last 15 Days Sales &amp; Net Profit)
+                    বিক্রয় ও লাভ বিশ্লেষণ (গত ১৫ দিনের বিক্রয় ও নিট লাভ)
                   </h2>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Daily sales revenue vs actual net profit
+                  দৈনিক বিক্রয় রাজস্ব বনাম প্রকৃত ব্যবসায়িক নিট লাভ
                 </p>
               </div>
               <span className="whitespace-nowrap inline-flex items-center shrink-0 self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40">
                 <span className="whitespace-nowrap inline-flex items-center shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Analytics
+                লাইভ অ্যানালিটিক্স
               </span>
             </div>
 
@@ -850,7 +855,7 @@ export default function DashboardPage() {
                 </h2>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Breakdown of collections, dues &amp; profit
+                আদায়, বকেয়া ও খরচের শতকরা হার
               </p>
             </div>
 
@@ -1040,13 +1045,13 @@ export default function DashboardPage() {
                       ) : (
                         <div className="animate-in fade-in duration-150">
                           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                            Total Volume
+                            মোট ভলিউম
                           </span>
                           <span className="block text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
                             {formatBdCurrency(total)}
                           </span>
                           <span className="block text-[10px] font-medium text-slate-400 mt-0.5">
-                            Hover slices for data
+                            বিস্তারিত দেখতে স্লাইসে হোভার করুন
                           </span>
                         </div>
                       )}
@@ -1070,7 +1075,7 @@ export default function DashboardPage() {
               }`}
             >
               <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2.5 h-2.5 rounded-full bg-[#7c3aed] shrink-0" />
-              <span>Monthly Collection</span>
+              <span>মাসিক আদায়</span>
             </button>
             <button
               type="button"
@@ -1083,7 +1088,7 @@ export default function DashboardPage() {
               }`}
             >
               <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2.5 h-2.5 rounded-full bg-[#ef4444] shrink-0" />
-              <span>Customer Dues</span>
+              <span>কাস্টমার বকেয়া</span>
             </button>
             <button
               type="button"
@@ -1096,7 +1101,7 @@ export default function DashboardPage() {
               }`}
             >
               <span className="whitespace-nowrap inline-flex items-center shrink-0 w-2.5 h-2.5 rounded-full bg-[#f59e0b] shrink-0" />
-              <span>Monthly Expenses</span>
+              <span>মাসিক খরচ</span>
             </button>
           </div>
         </div>

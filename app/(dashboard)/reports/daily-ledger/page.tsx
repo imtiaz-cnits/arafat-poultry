@@ -16,7 +16,7 @@ import {
 import { exportReportToPdf } from "@/lib/pdf-export";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker } from "@/components/ui/date-picker";
-import { Pagination } from "@/components/ui";
+import { Pagination , PageSkeleton } from "@/components/ui";
 
 interface LedgerItem {
   id: string;
@@ -133,6 +133,12 @@ export default function DailyLedgerPage() {
   const startIndex = (currentPage - 1) * pageSize;
   const displayedLedger = filteredLedger.slice(startIndex, startIndex + pageSize);
 
+  if (loading && ledger.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div>
       {/* Print-Only Styles and Dedicated Report Template */}
@@ -156,8 +162,12 @@ export default function DailyLedgerPage() {
             display: none !important;
           }
           .print-only {
-            display: block !important;
-            padding: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-height: calc(297mm - 22mm) !important;
+            box-sizing: border-box !important;
+            padding: 4px !important;
             margin: 0 !important;
           }
           .print-table {
@@ -189,10 +199,10 @@ export default function DailyLedgerPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Daily Cashbook Ledger (দৈনিক জমা-খরচ খাতা)
+              দৈনিক জমা-খরচ খাতা (Daily Cashbook Ledger)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Chronological cash inflows & outflows with real-time running balance
+              তারিখভিত্তিক নগদ জমা ও খরচের পূর্ণাঙ্গ খতিয়ান এবং রিয়েল-টাইম ব্যালেন্স
             </p>
           </div>
         </div>
@@ -202,7 +212,7 @@ export default function DailyLedgerPage() {
           className="h-[38px] px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto border border-[#cbd5e1] dark:border-[#334155]"
         >
           <Printer className="w-4 h-4" />
-          <span>Print Cashbook</span>
+          <span>ক্যাশবুক প্রিন্ট করুন</span>
         </button>
       </div>
 
@@ -210,7 +220,7 @@ export default function DailyLedgerPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Opening Cash Float</span>
+            <span>প্রারম্ভিক ক্যাশ ব্যালেন্স (Opening Float)</span>
             <Coins className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
@@ -221,7 +231,7 @@ export default function DailyLedgerPage() {
 
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Total Cash Inflow (জমা)</span>
+            <span>মোট নগদ জমা (Cash Inflow)</span>
             <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
@@ -234,7 +244,7 @@ export default function DailyLedgerPage() {
 
         <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-            <span>Total Cash Outflow (খরচ)</span>
+            <span>মোট নগদ খরচ (Cash Outflow)</span>
             <ArrowUpRight className="w-4 h-4 text-rose-600" />
           </div>
           <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
@@ -468,21 +478,21 @@ export default function DailyLedgerPage() {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">
-                ARAFAT POULTRY &amp; FISHERIES
+                আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজ
               </h1>
               <p className="text-[11px] text-slate-600 font-medium m-0">
-                Quality Products. Trusted Service.
+                গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা
               </p>
               <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
-                Daily Cashbook Ledger (দৈনিক জমা-খরচ খাতা)
+                দৈনিক জমা-খরচ খাতা
               </h2>
             </div>
             <div className="text-right text-[10px] text-slate-600">
               <p suppressHydrationWarning>
-                Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                প্রিন্ট তারিখ: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
               </p>
-              <p>Period: <strong className="text-slate-900">{startDate} to {endDate}</strong></p>
-              <p>Entries: <strong className="text-slate-900">{filteredLedger.length}</strong></p>
+              <p>সময়কাল: <strong className="text-slate-900">{startDate} to {endDate}</strong></p>
+              <p>মোট এন্ট্রি: <strong className="text-slate-900">{filteredLedger.length}</strong></p>
             </div>
           </div>
         </div>
@@ -525,7 +535,7 @@ export default function DailyLedgerPage() {
           <tfoot>
             <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
               <td colSpan={4} className="text-right font-bold p-[10px]">
-                Ledger Totals:
+                লেজার সর্বমোট:
               </td>
               <td className="text-right font-black text-emerald-800 p-[10px]">
                 +{formatBdCurrency(summary?.total_inflow || 0)}
@@ -540,19 +550,24 @@ export default function DailyLedgerPage() {
           </tfoot>
         </table>
 
-        {/* Signatures */}
-        <div className="flex justify-between items-end mt-12 pt-6 text-[10px] text-slate-600">
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Prepared By</span>
+        {/* Signatures & Universal Copyright */}
+        <div className="mt-auto pt-6 text-[10px] text-slate-800 break-inside-avoid">
+          <div className="flex justify-between items-end pb-3">
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">প্রস্তুতকারী</span>
+            </div>
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">ক্যাশিয়ার</span>
+            </div>
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">অনুমোদনকারী</span>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Cashier</span>
-          </div>
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Authorized Signature</span>
+          <div className="text-center text-[9px] text-slate-500 pt-2 border-t border-slate-300 mt-2">
+            © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
           </div>
         </div>
       </div>

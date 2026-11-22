@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/ui/table-skeleton";
 
 import { useEffect, useState } from "react";
 import {
@@ -110,6 +111,12 @@ export default function IncomeExpensePage() {
     }
   };
 
+  if (loading && !summary) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div>
       {/* Print-Only Styles and Dedicated Report Template */}
@@ -133,8 +140,12 @@ export default function IncomeExpensePage() {
             display: none !important;
           }
           .print-only {
-            display: block !important;
-            padding: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-height: calc(297mm - 22mm) !important;
+            box-sizing: border-box !important;
+            padding: 4px !important;
             margin: 0 !important;
           }
           .print-table {
@@ -168,10 +179,10 @@ export default function IncomeExpensePage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Income & Expense Statement (প্রাপ্তি-পরিশোধ বিবরণী)
+              আয় ও ব্যয় বিবরণী (Income & Expense Statement)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Complete receipts & payments accounting with categorized breakdown
+              প্রাপ্তি ও পরিশোধ হিসাব এবং ক্যাটাগরিভিত্তিক ব্যয়ের পূর্ণাঙ্গ বিবরণী
             </p>
           </div>
         </div>
@@ -181,7 +192,7 @@ export default function IncomeExpensePage() {
           className="h-[38px] px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto border border-[#cbd5e1] dark:border-[#334155]"
         >
           <Printer className="w-4 h-4" />
-          <span>Print Statement</span>
+          <span>স্টেটমেন্ট প্রিন্ট করুন</span>
         </button>
       </div>
 
@@ -190,7 +201,7 @@ export default function IncomeExpensePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-              <span>Opening Balance</span>
+              <span>প্রারম্ভিক ব্যালেন্স (Opening Balance)</span>
               <Coins className="w-4 h-4 text-amber-600" />
             </div>
             <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">
@@ -201,7 +212,7 @@ export default function IncomeExpensePage() {
 
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-              <span>Total Receipts (জমা)</span>
+              <span>মোট জমা / প্রাপ্তি (Total Receipts)</span>
               <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
@@ -212,7 +223,7 @@ export default function IncomeExpensePage() {
 
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold">
-              <span>Total Payments (খরচ)</span>
+              <span>মোট খরচ / পরিশোধ (Total Payments)</span>
               <ArrowUpRight className="w-4 h-4 text-rose-600" />
             </div>
             <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
@@ -406,21 +417,21 @@ export default function IncomeExpensePage() {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-lg font-black tracking-tight text-slate-900 m-0">
-                ARAFAT POULTRY &amp; FISHERIES
+                আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজ
               </h1>
               <p className="text-[11px] text-slate-600 font-medium m-0">
-                Quality Products. Trusted Service.
+                গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা
               </p>
               <h2 className="text-xs font-bold text-slate-800 mt-1 uppercase tracking-wider">
-                Income & Expense Statement (প্রাপ্তি ও পরিশোধ বিবরণী)
+                প্রাপ্তি ও পরিশোধ বিবরণী
               </h2>
             </div>
             <div className="text-right text-[10px] text-slate-600">
               <p suppressHydrationWarning>
-                Printed: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                প্রিন্ট তারিখ: {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
               </p>
-              <p>Period: <strong className="text-slate-900">{startDate} to {endDate}</strong></p>
-              <p>Currency: <strong className="text-slate-900">BDT (৳)</strong></p>
+              <p>সময়কাল: <strong className="text-slate-900">{startDate} to {endDate}</strong></p>
+              <p>মুদ্রা: <strong className="text-slate-900">BDT (৳)</strong></p>
             </div>
           </div>
         </div>
@@ -436,61 +447,66 @@ export default function IncomeExpensePage() {
           </thead>
           <tbody>
             <tr>
-              <td>Opening Cash Balance (প্রারম্ভিক নগদ স্থিতি)</td>
+              <td>প্রারম্ভিক নগদ স্থিতি</td>
               <td className="text-right font-bold text-amber-700">{formatBdCurrency(summary?.opening_balance || 0)}</td>
               <td>Initial balance</td>
             </tr>
             <tr className="bg-emerald-50">
-              <td className="font-bold text-emerald-900">(+) Sales Cash Collections (বিক্রয় নগদ আদায়)</td>
+              <td className="font-bold text-emerald-900">(+) বিক্রয় নগদ আদায়</td>
               <td className="text-right font-black text-emerald-900">{formatBdCurrency(summary?.sales_collection || 0)}</td>
               <td>Direct / POS sales collection</td>
             </tr>
             <tr className="bg-emerald-50">
-              <td className="font-bold text-emerald-900">(+) Customer Due Collections (বকেয়া আদায়)</td>
+              <td className="font-bold text-emerald-900">(+) বকেয়া আদায়</td>
               <td className="text-right font-black text-emerald-900">{formatBdCurrency(summary?.due_collection || 0)}</td>
               <td>Customer arrears collected</td>
             </tr>
             <tr className="bg-slate-100 font-black">
-              <td>Total Receipts Inflow (মোট নগদ প্রাপ্তি)</td>
+              <td>মোট নগদ প্রাপ্তি</td>
               <td className="text-right font-black text-emerald-900">{formatBdCurrency(summary?.total_inflow || 0)}</td>
               <td>Total Cash Inflow</td>
             </tr>
             <tr>
-              <td className="text-red-700">(-) Operating Overhead Expenses (পরিচালন ও খামার ব্যয়)</td>
+              <td className="text-red-700">(-) পরিচালন ও খামার ব্যয়</td>
               <td className="text-right font-bold text-red-700">{formatBdCurrency(expenses.reduce((a, b) => a + b.total_amount, 0))}</td>
               <td>Expenses across categories</td>
             </tr>
             <tr>
-              <td className="text-red-700">(-) Supplier Payable Payments (সাপ্লায়ার বাকি পরিশোধ)</td>
+              <td className="text-red-700">(-) সরবরাহকারী বকেয়া পরিশোধ</td>
               <td className="text-right font-bold text-red-700">{formatBdCurrency(suppliers.reduce((a, b) => a + b.total_paid, 0))}</td>
               <td>Payments to feed/flock suppliers</td>
             </tr>
             <tr className="bg-slate-100 font-black">
-              <td>Total Payments Outflow (মোট নগদ পরিশোধ)</td>
+              <td>মোট নগদ পরিশোধ</td>
               <td className="text-right font-black text-red-700">{formatBdCurrency(summary?.total_outflow || 0)}</td>
               <td>Total Cash Outflow</td>
             </tr>
             <tr className="bg-slate-200 font-black text-xs">
-              <td>Closing Cash Balance (সমাপনী নগদ স্থিতি)</td>
+              <td>সমাপনী নগদ স্থিতি</td>
               <td className="text-right font-black">{formatBdCurrency(summary?.closing_balance || 0)}</td>
               <td>Net: {formatBdCurrency(summary?.net_cash_flow || 0)}</td>
             </tr>
           </tbody>
         </table>
 
-        {/* Signatures */}
-        <div className="flex justify-between items-end mt-12 pt-6 text-[10px] text-slate-600">
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Prepared By</span>
+        {/* Signatures & Universal Copyright */}
+        <div className="mt-auto pt-6 text-[10px] text-slate-800 break-inside-avoid">
+          <div className="flex justify-between items-end pb-3">
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">প্রস্তুতকারী</span>
+            </div>
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">স্টোর ম্যানেজার</span>
+            </div>
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">অনুমোদনকারী</span>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Store Manager</span>
-          </div>
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Authorized Signature</span>
+          <div className="text-center text-[9px] text-slate-500 pt-2 border-t border-slate-300 mt-2">
+            © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
           </div>
         </div>
       </div>

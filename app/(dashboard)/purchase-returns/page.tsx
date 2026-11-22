@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomSelect, Pagination } from "@/components/ui";
+import { CustomSelect, Pagination , PageSkeleton } from "@/components/ui";
 import { CustomDatePicker } from "@/components/ui/date-picker";
 import { formatBoxAndPcs, formatTileOrItemQty, parseBoxAndPcs } from "@/lib/tiles-calculator";
 import { useToast } from "@/components/ui/toast";
@@ -368,6 +368,10 @@ function PurchaseReturnsManagementContent() {
 
   const startIndex = (currentPage - 1) * pageSize;
   const displayedHistory = filteredHistory.slice(startIndex, startIndex + pageSize);
+
+  if (loading && returnsList.length === 0) {
+    return <PageSkeleton />;
+  }
 
   const isAllEligibleSelected =
     loadedRecord &&
@@ -1364,7 +1368,7 @@ function PurchaseReturnsManagementContent() {
                     </span>
                   </div>
                   <div className="grid grid-cols-3 px-5 py-2.5 bg-slate-50 dark:bg-slate-800/50">
-                    <span className="font-semibold text-slate-500 dark:text-slate-400">Due Adjustment:</span>
+                    <span className="font-semibold text-slate-500 dark:text-slate-400">বকেয়া সমন্বয়:</span>
                     <span className="col-span-2 font-bold text-emerald-600 dark:text-emerald-400">
                       {formatBdCurrency(selectedReturnForQuickView.due_amount)}
                     </span>
@@ -1542,13 +1546,13 @@ function PurchaseReturnsManagementContent() {
                   ARAFAT POULTRY &amp; FISHERIES
                 </h1>
                 <p className="text-xs font-semibold text-slate-600 mt-0.5">
-                  Quality Products. Trusted Service.
+                  গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা
                 </p>
                 <p className="text-[11px] text-slate-500">
                   Poultry Feed, Egg Sales &amp; Fish Farming | Mobile: 01975-703216, 01715-842083
                 </p>
                 <div className="inline-block mt-2 px-3 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-xs uppercase tracking-wider rounded">
-                  Supplier Purchase Return Voucher
+                  সরবরাহকারী ক্রয় ফেরত ভাউচার
                 </div>
               </div>
 
@@ -1556,19 +1560,19 @@ function PurchaseReturnsManagementContent() {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <div className="text-slate-500">
-                    Return No:{" "}
+                    ফেরত ভাউচার নং:{" "}
                     <strong className="text-slate-900 font-mono">
                       #RET{String(selectedReturnForPrint.id).padStart(5, "0")}
                     </strong>
                   </div>
                   <div className="text-slate-500">
-                    Purchase Memo No:{" "}
+                    ক্রয় মেমো নং:{" "}
                     <strong className="text-slate-900 font-mono">
                       {selectedReturnForPrint.record_no}
                     </strong>
                   </div>
                   <div className="text-slate-500">
-                    Return Date:{" "}
+                    ফেরতের তারিখ:{" "}
                     <strong className="text-slate-900">
                       {selectedReturnForPrint.date}
                     </strong>
@@ -1577,14 +1581,14 @@ function PurchaseReturnsManagementContent() {
 
                 <div className="text-right">
                   <div className="text-slate-500">
-                    Supplier:{" "}
+                    সরবরাহকারী:{" "}
                     <strong className="text-slate-900">
                       {selectedReturnForPrint.party_name}
                     </strong>
                   </div>
                   {selectedReturnForPrint.party_mobile && (
                     <div className="text-slate-500">
-                      Mobile:{" "}
+                      মোবাইল:{" "}
                       <strong className="text-slate-900 font-mono">
                         {selectedReturnForPrint.party_mobile}
                       </strong>
@@ -1597,12 +1601,12 @@ function PurchaseReturnsManagementContent() {
               <div className="border border-slate-300 rounded-lg overflow-hidden">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-slate-100 border-b border-slate-300 font-bold uppercase text-slate-700">
-                      <th className="text-center w-[40px] p-[10px]">SL</th>
-                      <th className="p-[10px]">Item Description</th>
+                    <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
+                      <th className="text-center w-[40px] p-[10px]">ক্র: নং</th>
+                      <th className="p-[10px]">পণ্যের বিবরণ</th>
                       <th className="text-center w-[100px] p-[10px]">পরিমাণ</th>
-                      <th className="text-right w-[110px] p-[10px]">Rate</th>
-                      <th className="text-right w-[120px] pr-3 p-[10px]">Adjusted Amount</th>
+                      <th className="text-right w-[110px] p-[10px]">দর (৳)</th>
+                      <th className="text-right w-[120px] pr-3 p-[10px]">সমন্বয়কৃত টাকা (৳)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
@@ -1635,13 +1639,13 @@ function PurchaseReturnsManagementContent() {
                   <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-300">
                     <tr>
                       <td colSpan={2} className="text-right uppercase text-[11px] text-slate-600 p-[10px]">
-                        Total Returned Quantity:
+                        মোট ফেরত পরিমাণ:
                       </td>
                       <td className="text-center whitespace-nowrap p-[10px]">
                         {formatTileOrItemQty(selectedReturnForPrint.quantity, selectedReturnForPrint)}
                       </td>
                       <td className="text-right uppercase text-[11px] text-slate-600 p-[10px]">
-                        Total Adjusted:
+                        মোট সমন্বয়:
                       </td>
                       <td className="text-right pr-3 text-rose-800 font-black p-[10px]">
                         {formatBdCurrency(selectedReturnForPrint.amount)}
@@ -1650,7 +1654,7 @@ function PurchaseReturnsManagementContent() {
                     {selectedReturnForPrint.due_amount > 0 && (
                       <tr>
                         <td colSpan={4} className="text-right text-emerald-700 text-[11px] p-[10px]">
-                          Due Adjustment:
+                          বকেয়া সমন্বয়:
                         </td>
                         <td className="text-right pr-3 text-emerald-700 font-bold p-[10px]">
                           {formatBdCurrency(selectedReturnForPrint.due_amount)}
@@ -1665,18 +1669,18 @@ function PurchaseReturnsManagementContent() {
               <div className="pt-12 grid grid-cols-2 gap-8 text-xs">
                 <div className="text-center">
                   <div className="border-t border-slate-400 pt-1.5 font-semibold text-slate-700">
-                    Supplier Signature
+                    সরবরাহকারীর স্বাক্ষর
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="border-t border-slate-400 pt-1.5 font-semibold text-slate-700">
-                    Authorized Signature
+                    অনুমোদনকারীর স্বাক্ষর
                   </div>
                 </div>
               </div>
 
               <div className="text-center text-[10px] text-slate-400 pt-2 border-t border-dashed border-slate-200">
-                Software By: CodeNext IT | Arafat Poultry &amp; Fisheries POS System
+                © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
               </div>
             </div>
           </div>
@@ -1688,14 +1692,7 @@ function PurchaseReturnsManagementContent() {
 
 export default function PurchaseReturnsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 text-center text-slate-400 text-sm">
-          <Loader2 className="w-5 h-5 animate-spin inline mr-2 text-rose-600" />
-          Loading Purchase Returns...
-        </div>
-      }
-    >
+    <Suspense fallback={<PageSkeleton />}>
       <PurchaseReturnsManagementContent />
     </Suspense>
   );

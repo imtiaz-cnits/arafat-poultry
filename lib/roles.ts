@@ -1,6 +1,13 @@
 export type SystemRole = "admin" | "manager" | "staff";
 
 export const SUPER_ADMIN_EMAIL = "dev@arafatpoultry.com";
+export const DEV_EMAILS = ["dev@runatraders.com"];
+
+export function isDevUser(email?: string | null): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  return DEV_EMAILS.includes(normalized);
+}
 
 export const ALLOWED_SYSTEM_ROLES: readonly SystemRole[] = [
   "admin",
@@ -26,8 +33,11 @@ export function isProtectedSuperAdmin(user?: {
   role?: string | null;
 } | null): boolean {
   if (!user) return false;
-  const email = (user.email || "").trim().toLowerCase();
-  return email === SUPER_ADMIN_EMAIL;
+  return (
+    isDevUser(user.email) ||
+    isSuperAdminRole(user.role) ||
+    user.email === SUPER_ADMIN_EMAIL
+  );
 }
 
 export const SYSTEM_ROLE_OPTIONS: {

@@ -17,7 +17,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination , PageSkeleton } from "@/components/ui";
 
 interface EggCollection {
   id: number;
@@ -203,6 +203,12 @@ export default function StockEggsPage() {
       setSubmitting(false);
     }
   };
+
+  if (loading && !data) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

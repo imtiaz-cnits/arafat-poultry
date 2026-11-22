@@ -15,7 +15,7 @@ import {
   Plus,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { useToast, Pagination } from "@/components/ui";
+import { useToast, Pagination , PageSkeleton } from "@/components/ui";
 
 interface PondStockItem {
   id: number;
@@ -162,6 +162,12 @@ export default function StockFishPage() {
       ponaCount += count;
     }
   });
+
+  if (loading && batches.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

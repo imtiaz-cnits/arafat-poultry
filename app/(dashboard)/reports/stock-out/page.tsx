@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { exportReportToPdf } from "@/lib/pdf-export";
 import { formatBdCurrency } from "@/lib/utils";
-import { Pagination } from "@/components/ui";
+import { Pagination , PageSkeleton } from "@/components/ui";
 
 interface ProductItem {
   id: number;
@@ -101,6 +101,12 @@ export default function StockOutReportPage() {
 
   const startIndex = (currentPage - 1) * pageSize;
   const displayedProducts = products.slice(startIndex, startIndex + pageSize);
+
+  if (loading && products.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div>
@@ -201,35 +207,35 @@ export default function StockOutReportPage() {
 
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-amber-200 dark:border-amber-900/50 shadow-xs">
             <div className="flex items-center justify-between text-amber-600 text-xs font-bold">
-              <span>Low Stock Warning (≤ 5 pcs)</span>
+              <span>স্বল্প স্টক সতর্কতা (≤ ৫ টি)</span>
               <AlertTriangle className="w-4 h-4" />
             </div>
             <div className="text-xl font-black text-amber-600 mt-1">
               {summary.low_stock_count} Items
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Reorder recommended</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">পুনরায় অর্ডার সুপারিশকৃত</div>
           </div>
 
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 text-xs font-bold">
-              <span>Healthy Inventory</span>
+              <span>পর্যাপ্ত স্টক মজুদ</span>
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-xl font-black text-emerald-600 mt-1">
               {summary.healthy_stock_count} Items
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">Sufficient stock available</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">পর্যাপ্ত মজুদ রয়েছে</div>
           </div>
 
           <div className="bg-white dark:bg-[#0f172a] p-3.5 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
             <div className="flex items-center justify-between text-slate-500 text-xs font-bold">
-              <span>Estimated Restock Cost</span>
+              <span>সম্ভাব্য পুনঃমজুদ খরচ</span>
               <TrendingUp className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="text-xl font-black text-slate-900 dark:text-white mt-1">
               {formatBdCurrency(summary.estimated_restock_cost)}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5">To replenish critical items</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">জরুরি পণ্য মজুদের জন্য</div>
           </div>
         </div>
       )}
@@ -239,7 +245,7 @@ export default function StockOutReportPage() {
         <div className="bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
           <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
             <Flame className="w-4 h-4 text-amber-500" />
-            <span>Top Fast Moving Products (Customer Demand Leaderboard)</span>
+            <span>সর্বাধিক বিক্রিত দ্রুতগামী পণ্য (গ্রাহক চাহিদা র‍্যাংকিং)</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
@@ -287,7 +293,7 @@ export default function StockOutReportPage() {
                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             }`}
           >
-            All Critical (≤ 5)
+            সকল ঝুঁকিপূর্ণ (≤ ৫)
           </button>
           <button
             onClick={() => setActiveTab("out_of_stock")}
@@ -297,7 +303,7 @@ export default function StockOutReportPage() {
                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             }`}
           >
-            Out of Stock (0)
+            স্টক শেষ (০)
           </button>
           <button
             onClick={() => setActiveTab("low_stock")}
@@ -307,7 +313,7 @@ export default function StockOutReportPage() {
                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             }`}
           >
-            Low Stock (1-5)
+            স্বল্প স্টক (১-৫)
           </button>
           <button
             onClick={() => setActiveTab("all")}
@@ -317,14 +323,14 @@ export default function StockOutReportPage() {
                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             }`}
           >
-            All Catalog
+            সকল পণ্য
           </button>
         </div>
 
         <div className="relative flex-1 max-w-xs">
           <input
             type="text"
-            placeholder="Search product name, category..."
+            placeholder="পণ্যের নাম বা ক্যাটাগরি দিয়ে খুঁজুন..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full h-[38px] pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"

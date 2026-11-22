@@ -16,7 +16,8 @@ import {
   Receipt,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomSelect, Pagination } from "@/components/ui";
+import { CustomSelect, Pagination, TableSkeleton , PageSkeleton } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 
 interface Supplier {
   id: number;
@@ -29,6 +30,7 @@ interface Supplier {
 }
 
 export default function SupplierDuesPage() {
+  const { toast } = useToast();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -102,10 +104,10 @@ export default function SupplierDuesPage() {
         setCurrentPage(1);
         loadSuppliers();
       } else {
-        alert(data?.message || `Payment failed (Server error: ${res.status})`);
+        toast.error(data?.message || "পরিশোধ ব্যর্থ হয়েছে");
       }
     } catch (err: any) {
-      alert(err?.message || "Communication error");
+      toast.error(err?.message || "সার্ভার যোগাযোগ ত্রুটি");
     } finally {
       setSaving(false);
     }
@@ -123,6 +125,12 @@ export default function SupplierDuesPage() {
 
   const totalDueAmount = suppliers.reduce((sum, s) => sum + s.purchase_payable_amount, 0);
 
+  if (loading && suppliers.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -133,17 +141,17 @@ export default function SupplierDuesPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Supplier Due Pay Register
+              সরবরাহকারী প্রদেয় বকেয়া রেজিস্টার
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Clear outstanding payable balances with vendors & suppliers
+              সরবরাহকারীদের প্রদেয় বকেয়া এবং বিল পরিশোধের হিসাব
             </p>
           </div>
         </div>
 
         <div className="h-[42px] px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-center gap-2.5">
           <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase">
-            Total Outstanding Payable:
+            মোট প্রদেয় বকেয়া:
           </span>
           <span className="text-sm font-black text-rose-800 dark:text-rose-300">
             {formatBdCurrency(totalDueAmount)}
@@ -156,7 +164,7 @@ export default function SupplierDuesPage() {
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder="Search vendor or mobile..."
+            placeholder="সাপ্লায়ার বা মোবাইল দিয়ে খুঁজুন..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -249,7 +257,7 @@ export default function SupplierDuesPage() {
                         className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs mx-auto"
                       >
                         <Wallet className="w-3.5 h-3.5" />
-                        <span className="whitespace-nowrap">Pay Due</span>
+                        <span className="whitespace-nowrap">বকেয়া পরিশোধ</span>
                       </button>
                     </td>
                   </tr>
@@ -312,18 +320,18 @@ export default function SupplierDuesPage() {
 
               <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-[#1e293b] p-2 rounded-xl">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Phone:</span>
+                  <span className="text-[10px] text-slate-400 block">মোবাইল:</span>
                   <span className="font-bold">{s.mobile}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block">Payable Due:</span>
+                  <span className="text-[10px] text-slate-400 block">প্রদেয় বকেয়া:</span>
                   <span className="font-black text-rose-600 dark:text-rose-400">
                     {formatBdCurrency(s.purchase_payable_amount)}
                   </span>
                 </div>
                 {s.address && (
                   <div className="col-span-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">Address:</span>
+                    <span className="text-[10px] text-slate-400 block">ঠিকানা:</span>
                     <span className="text-slate-700 dark:text-slate-300 truncate block">
                       {s.address}
                     </span>
@@ -338,7 +346,7 @@ export default function SupplierDuesPage() {
                   className="h-[32px] w-full text-center px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
                 >
                   <Wallet className="w-3.5 h-3.5" />
-                  <span>Pay Due</span>
+                  <span>বকেয়া পরিশোধ</span>
                 </button>
               </div>
             </div>
@@ -369,7 +377,7 @@ export default function SupplierDuesPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  Pay Supplier Due
+                  সরবরাহকারীর বকেয়া পরিশোধ
                 </h3>
               </div>
               <button
@@ -385,13 +393,13 @@ export default function SupplierDuesPage() {
             <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               <div className="bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Supplier:</span>
+                  <span className="text-slate-500">সরবরাহকারী:</span>
                   <strong className="font-bold text-slate-800 dark:text-white">
                     {selectedSupplier.name} ({selectedSupplier.company})
                   </strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Current Payable Due:</span>
+                  <span className="text-slate-500">বর্তমান প্রদেয় বকেয়া:</span>
                   <strong className="font-bold text-rose-600">
                     {formatBdCurrency(selectedSupplier.purchase_payable_amount)}
                   </strong>
@@ -400,7 +408,7 @@ export default function SupplierDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Paid Amount (৳) <span className="text-red-500">*</span>
+                  পরিশোধের পরিমাণ (৳) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -415,7 +423,7 @@ export default function SupplierDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Discount / Concession (৳)
+                  ছাড় / সমন্বয় (৳)
                 </label>
                 <input
                   type="number"
@@ -431,7 +439,7 @@ export default function SupplierDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Payment Method
+                  পেমেন্ট পদ্ধতি
                 </label>
                 <CustomSelect
                   value={paymentData.payment_method}
@@ -439,24 +447,24 @@ export default function SupplierDuesPage() {
                     setPaymentData({ ...paymentData, payment_method: val })
                   }
                   options={[
-                    { value: "Cash", label: "Cash" },
-                    { value: "Bank", label: "Bank Transfer" },
-                    { value: "bKash", label: "bKash" },
-                    { value: "Nagad", label: "Nagad" },
-                    { value: "Rocket", label: "Rocket" },
-                    { value: "Card", label: "Card" },
+                    { value: "Cash", label: "নগদ (Cash)" },
+                    { value: "Bank", label: "ব্যাংক (Bank Transfer)" },
+                    { value: "bKash", label: "বিকাশ (bKash)" },
+                    { value: "Nagad", label: "নগদ (Nagad)" },
+                    { value: "Rocket", label: "রকেট (Rocket)" },
+                    { value: "Card", label: "কার্ড (Card)" },
                   ]}
-                  placeholder="Select Payment Method"
+                  placeholder="পেমেন্ট পদ্ধতি নির্বাচন করুন"
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Transaction / Cheque No. (Optional)
+                  ট্রানজেকশন / চেক নং (ঐচ্ছিক)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. CHQ-984214"
+                  placeholder="যেমন: CHQ-984214"
                   value={paymentData.transaction_id}
                   onChange={(e) =>
                     setPaymentData({ ...paymentData, transaction_id: e.target.value })
@@ -475,7 +483,7 @@ export default function SupplierDuesPage() {
                   disabled={saving}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -483,7 +491,7 @@ export default function SupplierDuesPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Confirm Payment</span>
+                  <span>পরিশোধ সম্পন্ন করুন</span>
                 </button>
               </div>
             </form>

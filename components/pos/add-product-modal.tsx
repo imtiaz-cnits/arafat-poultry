@@ -21,42 +21,83 @@ export function AddProductModal({
 
   // Form State
   const [productName, setProductName] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("102"); // Default Poultry Eggs
-  const [unitId, setUnitId] = useState<string>("103"); // Default Piece
+  const [categoryId, setCategoryId] = useState<string>("2"); // Default Poultry Eggs
+  const [unitId, setUnitId] = useState<string>("3"); // Default Piece
+  const [brandId, setBrandId] = useState<string>("1"); // Default Kazi Farms
   const [sellPrice, setSellPrice] = useState<string>("");
   const [costPrice, setCostPrice] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("100");
   const [productCode, setProductCode] = useState<string>("");
 
   // Categories for Farm
-  const categoryOptions: SelectOption[] = [
-    { value: "102", label: "ডিম (Poultry Eggs)" },
-    { value: "103", label: "মাছ (Fisheries & Aqua)" },
-    { value: "104", label: "মুরগি / বাচ্চা (Poultry / Chicks)" },
-    { value: "101", label: "ফিড (Poultry Feed)" },
-  ];
+  const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([
+    { value: "2", label: "ডিম (Poultry Eggs)" },
+    { value: "1", label: "ফিড (Poultry Feed)" },
+    { value: "3", label: "মাছ (Fisheries)" },
+    { value: "4", label: "মুরগি ও বাচ্চা (Poultry / Chicks)" },
+  ]);
 
   // Units
-  const unitOptions: SelectOption[] = [
-    { value: "103", label: "পিস (Piece)" },
-    { value: "106", label: "হালি (Hali)" },
-    { value: "104", label: "ডজন (Dozen)" },
-    { value: "105", label: "খাঁচা / কেস (Tray)" },
-    { value: "102", label: "কেজি (Kg)" },
-    { value: "107", label: "গ্রাম (Gram)" },
-    { value: "101", label: "বস্তা (Bag)" },
-  ];
+  const [unitOptions, setUnitOptions] = useState<SelectOption[]>([
+    { value: "3", label: "পিস (Piece)" },
+    { value: "4", label: "হালি (Hali)" },
+    { value: "5", label: "খাঁচা / ট্রে (Tray)" },
+    { value: "2", label: "কেজি (Kg)" },
+    { value: "1", label: "বস্তা (Bag)" },
+  ]);
+
+  // Fetch dynamic categories and units if available
+  useEffect(() => {
+    async function loadMeta() {
+      try {
+        const [catRes, unitRes] = await Promise.all([
+          fetch("/api/categories").catch(() => null),
+          fetch("/api/units").catch(() => null),
+        ]);
+
+        if (catRes && catRes.ok) {
+          const catJson = await catRes.json();
+          if (catJson.status === "success" && Array.isArray(catJson.data) && catJson.data.length > 0) {
+            setCategoryOptions(
+              catJson.data.map((c: any) => ({
+                value: String(c.id),
+                label: c.category_name,
+              }))
+            );
+          }
+        }
+
+        if (unitRes && unitRes.ok) {
+          const unitJson = await unitRes.json();
+          if (unitJson.status === "success" && Array.isArray(unitJson.data) && unitJson.data.length > 0) {
+            setUnitOptions(
+              unitJson.data.map((u: any) => ({
+                value: String(u.id),
+                label: u.unit_name,
+              }))
+            );
+          }
+        }
+      } catch {
+        // Fallback options already set
+      }
+    }
+
+    if (isOpen) {
+      loadMeta();
+    }
+  }, [isOpen]);
 
   // Auto-switch default unit when category changes
   useEffect(() => {
-    if (categoryId === "102") {
-      setUnitId("103"); // Piece for eggs
-    } else if (categoryId === "103") {
-      setUnitId("102"); // Kg for fish
-    } else if (categoryId === "104") {
-      setUnitId("103"); // Piece for chicken
-    } else if (categoryId === "101") {
-      setUnitId("101"); // Bag for feed
+    if (categoryId === "2") {
+      setUnitId("3"); // Piece for eggs
+    } else if (categoryId === "3") {
+      setUnitId("2"); // Kg for fish
+    } else if (categoryId === "4") {
+      setUnitId("3"); // Piece for chicken
+    } else if (categoryId === "1") {
+      setUnitId("1"); // Bag for feed
     }
   }, [categoryId]);
 
@@ -93,7 +134,7 @@ export function AddProductModal({
         product_name: productName.trim(),
         category_id: categoryId,
         unit_id: unitId,
-        brand_id: 101, // Default Kazi Farms Group
+        brand_id: brandId || "1",
         sell_price: parseFloat(sellPrice) || 0,
         cost_price: parseFloat(costPrice) || 0,
         quantity: parseFloat(quantity) || 0,
@@ -138,164 +179,153 @@ export function AddProductModal({
                 নতুন পণ্য যুক্ত করুন (Add Product)
               </h2>
               <p className="text-[11px] text-emerald-100 font-medium">
-                ডিম, মাছ, মুরগি ও অন্যান্য ফার্ম পণ্যের প্রোফাইল
+                পোল্ট্রি, ডিম, মাছ বা ফিড পণ্য সরাসরি ইনভেন্টরিতে অন্তর্ভুক্ত করুন
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-xs"
+            className="w-7 h-7 rounded-full bg-[#dc2626] hover:bg-[#b91c1c] text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-90"
             title="বন্ধ করুন"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* MODAL BODY (Form) */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4">
-            {/* Product Name */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              পণ্যের নাম (Product Name) <span className="text-red-500">*</span>
+        {/* MODAL BODY */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+          {/* Product Name */}
+          <div className="space-y-1">
+            <label className="font-bold text-slate-700 dark:text-slate-300 block">
+              পণ্যের নাম <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               required
+              placeholder="যেমন: লেয়ার লাল ডিম (গ্রেড এ), ব্রয়লার ফিড ৫০ কেজি"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
-              placeholder="উদা: সোনালী মুরগি (মাঝারি), কাতলা মাছ (বড়)..."
-              className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all"
+              className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all text-xs"
             />
           </div>
 
           {/* Category & Unit Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Category */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                ক্যাটাগরি (Category) <span className="text-red-500">*</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                ক্যাটাগরি <span className="text-rose-500">*</span>
               </label>
               <CustomSelect
                 options={categoryOptions}
                 value={categoryId}
                 onChange={(val) => setCategoryId(String(val))}
-                className="text-xs"
-                matchTriggerWidth={true}
+                placeholder="ক্যাটাগরি নির্বাচন করুন"
               />
             </div>
 
-            {/* Unit */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                একক (Unit) <span className="text-red-500">*</span>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                পরিমাপের একক (Unit) <span className="text-rose-500">*</span>
               </label>
               <CustomSelect
                 options={unitOptions}
                 value={unitId}
                 onChange={(val) => setUnitId(String(val))}
-                className="text-xs"
-                matchTriggerWidth={true}
+                placeholder="একক নির্বাচন করুন"
               />
             </div>
           </div>
 
-          {/* Sell Price & Cost Price Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Sell Price */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                বিক্রয় মূল্য (Sell Price ৳) <span className="text-red-500">*</span>
+          {/* Pricing Row: Selling Price & Cost Price */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                বিক্রয় মূল্য (৳) <span className="text-rose-500">*</span>
               </label>
               <input
                 type="number"
                 step="any"
                 min="0"
                 required
+                placeholder="0.00"
                 value={sellPrice}
                 onChange={(e) => setSellPrice(e.target.value)}
-                placeholder="0.00"
-                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all"
+                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-black text-emerald-700 dark:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all text-xs"
               />
             </div>
 
-            {/* Cost Price */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                ক্রয় মূল্য / উৎপাদন খরচ (Cost Price ৳)
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                ক্রয় দর (৳)
               </label>
               <input
                 type="number"
                 step="any"
                 min="0"
+                placeholder="0.00"
                 value={costPrice}
                 onChange={(e) => setCostPrice(e.target.value)}
-                placeholder="0.00"
-                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all"
+                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all text-xs"
               />
             </div>
           </div>
 
-          {/* Quantity & Product Code Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Initial Stock */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                প্রাথমিক স্টক পরিমাণ (Initial Stock)
+          {/* Opening Stock & Product Code */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                প্রারম্ভিক স্টক পরিমাণ
               </label>
               <input
                 type="number"
                 step="any"
                 min="0"
+                placeholder="100"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="100"
-                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all"
+                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all text-xs"
               />
             </div>
 
-            {/* Product Code / Barcode (Optional) */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                বারকোড / SKU (Barcode / SKU - ঐচ্ছিক)
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300 block">
+                বারকোড / পণ্য কোড (ঐচ্ছিক)
               </label>
               <input
                 type="text"
+                placeholder="খালি রাখলে স্বয়ংক্রিয় তৈরি হবে"
                 value={productCode}
                 onChange={(e) => setProductCode(e.target.value)}
-                placeholder="অটো তৈরি হবে বা কোড লিখুন"
-                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs font-mono text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 transition-all"
+                className="w-full h-[42px] px-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all"
               />
             </div>
           </div>
 
-          </div>
-
-          {/* STICKY FOOTER: Flush with bottom edges */}
-          <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-[#cbd5e1] dark:border-[#334155] flex items-center justify-end gap-2.5 z-10">
+          {/* Action Buttons */}
+          <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
-              disabled={loading}
               onClick={onClose}
-              className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-xs font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+              disabled={loading}
+              className="h-[40px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
             >
-              বাতিল (Cancel)
+              বাতিল
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="h-[38px] px-5 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+              className="h-[40px] px-5 rounded-xl bg-[#166534] hover:bg-[#14532d] text-white font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>সংরক্ষণ হচ্ছে...</span>
                 </>
               ) : (
                 <>
                   <Plus className="w-4 h-4 stroke-[2.5]" />
-                  <span>পণ্য সংরক্ষণ করুন (Save)</span>
+                  <span>পণ্য সংরক্ষণ করুন</span>
                 </>
               )}
             </button>
@@ -305,4 +335,3 @@ export function AddProductModal({
     </div>
   );
 }
-

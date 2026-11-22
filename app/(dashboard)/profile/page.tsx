@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/ui/table-skeleton";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -241,6 +242,12 @@ export default function ProfilePage() {
           : profile?.role === "accountant"
             ? "Accountant"
             : "Store User";
+
+  if (loading && !profile) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4 font-sans pb-8">

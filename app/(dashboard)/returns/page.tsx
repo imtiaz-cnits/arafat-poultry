@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomSelect, Pagination } from "@/components/ui";
+import { CustomSelect, Pagination , PageSkeleton } from "@/components/ui";
 import { CustomDatePicker } from "@/components/ui/date-picker";
 import { formatBoxAndPcs, formatTileOrItemQty, parseBoxAndPcs } from "@/lib/tiles-calculator";
 import { useToast } from "@/components/ui/toast";
@@ -411,6 +411,10 @@ function ReturnsManagementContent() {
   const startIndex = (currentPage - 1) * pageSize;
   const displayedHistory = filteredHistory.slice(startIndex, startIndex + pageSize);
 
+  if (loading && returnsList.length === 0) {
+    return <PageSkeleton />;
+  }
+
   const isAllEligibleSelected =
     loadedRecord &&
     loadedRecord.items.filter((i) => i.returnable_quantity > 0).length > 0 &&
@@ -428,7 +432,7 @@ function ReturnsManagementContent() {
           </div>
           <div>
             <h1 className="text-base sm:text-xl font-bold text-slate-800 dark:text-white tracking-tight leading-tight m-0">
-              Sales Return Management
+              পণ্য ফেরত ব্যবস্থাপনা (Returns Management)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
               Arafat Poultry &amp; Fisheries - Customer Sales Return &amp; Refund Processing
@@ -444,7 +448,7 @@ function ReturnsManagementContent() {
             className="h-[38px] px-4 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] active:scale-[0.98] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>New Sales Return</span>
+            <span>নতুন পণ্য ফেরত</span>
           </button>
         </div>
       </div>
@@ -458,14 +462,14 @@ function ReturnsManagementContent() {
           <Search className="w-4 h-4 text-emerald-700" />
           <span>
             {activeTab === "purchase"
-              ? "Quick Purchase Memo Search & Process Return"
-              : "Quick Invoice Search & Process Return"}
+              ? "ক্রয় মেমো খুঁজুন ও ফেরত প্রক্রিয়া করুন"
+              : "বিক্রয় ইনভয়েস খুঁজুন ও ফেরত প্রক্রিয়া করুন"}
           </span>
         </h4>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-2.5">
           {activeTab === "purchase"
-            ? "Search purchase memo number or supplier to process return to supplier:"
-            : "Search invoice number to process sales return:"}
+            ? "সরবরাহকারীকে ফেরত প্রদানের জন্য ক্রয় মেমো নম্বর অথবা সরবরাহকারী দিয়ে অনুসন্ধান করুন:"
+            : "বিক্রয় পণ্য ফেরতের জন্য ইনভয়েস / মেমো নম্বর দিয়ে অনুসন্ধান করুন:"}
         </p>
 
         <form onSubmit={handleQuickSearchSubmit} className="flex flex-row items-stretch gap-2.5">
@@ -476,8 +480,8 @@ function ReturnsManagementContent() {
               onChange={(e) => setQuickSearchInput(e.target.value)}
               placeholder={
                 activeTab === "purchase"
-                  ? "Enter purchase memo number (e.g. #PurID00001 or 1)..."
-                  : "Enter invoice number (e.g. #InvID00001 or ORD-20261014-6701)..."
+                  ? "ক্রয় মেমো নম্বর লিখুন (যেমন: 1 বা PUR-001)..."
+                  : "ইনভয়েস নম্বর লিখুন (যেমন: 1 বা ORD-001)..."
               }
               className="w-full bg-transparent border-none outline-none text-xs text-slate-800 dark:text-white placeholder:text-slate-400"
             />
@@ -488,7 +492,7 @@ function ReturnsManagementContent() {
             className="inline-flex items-center justify-center gap-1.5 px-4 h-[38px] rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] active:scale-[0.98] text-white text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer"
           >
             <ArrowRight className="w-3.5 h-3.5" />
-            <span>Search & Return</span>
+            <span>খুঁজুন ও ফেরত দিন</span>
           </button>
         </form>
       </div>
@@ -500,7 +504,7 @@ function ReturnsManagementContent() {
           <div className="flex items-center gap-2">
             <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-white tracking-tight m-0 flex items-center gap-2">
               <Clock className="w-4 h-4 text-rose-600" />
-              <span>{activeTab === "purchase" ? "Purchase Return History" : "Sales Return History"}</span>
+              <span>{activeTab === "purchase" ? "ক্রয় ফেরত হিস্ট্রি" : "বিক্রয় ফেরত হিস্ট্রি"}</span>
             </h3>
             <span className="whitespace-nowrap inline-flex items-center shrink-0 font-bold text-rose-700 dark:text-rose-300 px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/50 text-xs">
               {filteredHistory.length} Records
@@ -564,15 +568,15 @@ function ReturnsManagementContent() {
                 <th className="text-center w-[45px] p-[10px]">ক্র: নং</th>
                 <th className="w-[120px] whitespace-nowrap p-[10px]">ফেরতের তারিখ</th>
                 <th className="min-w-[170px] whitespace-nowrap p-[10px]">
-                  {activeTab === "purchase" ? "Purchase Memo No" : "Invoice No"}
+                  {activeTab === "purchase" ? "ক্রয় মেমো নং" : "ইনভয়েস নং"}
                 </th>
                 <th className="p-[10px]">
-                  {activeTab === "purchase" ? "Supplier Name" : "Customer Name"}
+                  {activeTab === "purchase" ? "সরবরাহকারী" : "কাস্টমার"}
                 </th>
                 <th className="p-[10px]">ফেরতকৃত পণ্য</th>
                 <th className="text-center w-[110px] p-[10px]">পরিমাণ</th>
                 <th className="text-right w-[150px] p-[10px]">
-                  {activeTab === "purchase" ? "Adjusted Amount" : "Refund Amount"}
+                  {activeTab === "purchase" ? "সমন্বয়কৃত টাকা" : "ফেরতকৃত টাকা"}
                 </th>
                 <th className="text-center w-[120px] whitespace-nowrap p-[10px]">অ্যাকশন</th>
               </tr>
@@ -922,7 +926,7 @@ function ReturnsManagementContent() {
                   <RotateCcw className="w-4 h-4" />
                 </div>
                 <h3 className="text-base font-bold text-white tracking-tight m-0">
-                  {activeTab === "purchase" ? "Purchase Return Processing" : "Sales Return Processing"}
+                  {activeTab === "purchase" ? "ক্রয় পণ্য ফেরত সমন্বয়" : "বিক্রয় পণ্য ফেরত প্রক্রিয়াকরণ"}
                 </h3>
               </div>
               <button
@@ -939,7 +943,7 @@ function ReturnsManagementContent() {
               {/* Inner Search Box */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-3.5 space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {activeTab === "purchase" ? "Search Purchase Memo Number" : "Search Invoice Number"}
+                  {activeTab === "purchase" ? "ক্রয় মেমো নম্বর দিয়ে খুঁজুন" : "ইনভয়েস নম্বর দিয়ে খুঁজুন"}
                 </label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-[38px] flex items-center px-3 bg-white dark:bg-slate-700/60 rounded-xl border border-[#cbd5e1] dark:border-[#334155] focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-600/20 shadow-xs">
@@ -983,13 +987,13 @@ function ReturnsManagementContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-800 dark:text-slate-100">
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        {activeTab === "purchase" ? "Purchase Memo No:" : "Invoice / Order No:"}
+                        {activeTab === "purchase" ? "ক্রয় মেমো নং:" : "ইনভয়েস নং:"}
                       </span>
                       <h4 className="font-mono font-bold text-sm text-rose-700 dark:text-rose-400 mt-0.5">
                         {activeTab === "purchase" ? loadedRecord.purchase_no : loadedRecord.order_no}
                       </h4>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-2">
-                        {activeTab === "purchase" ? "Supplier Name:" : "Customer Name:"}
+                        {activeTab === "purchase" ? "সরবরাহকারীর নাম:" : "কাস্টমারের নাম:"}
                       </span>
                       <span className="font-bold text-slate-800 dark:text-white block">
                         {activeTab === "purchase"
@@ -1423,7 +1427,7 @@ function ReturnsManagementContent() {
                     </span>
                   </div>
                   <div className="grid grid-cols-3 px-5 py-2.5 bg-slate-50 dark:bg-slate-800/50">
-                    <span className="font-semibold text-slate-500 dark:text-slate-400">Due Adjustment:</span>
+                    <span className="font-semibold text-slate-500 dark:text-slate-400">বকেয়া সমন্বয়:</span>
                     <span className="col-span-2 font-bold text-emerald-600 dark:text-emerald-400">
                       {formatBdCurrency(selectedReturnForQuickView.due_amount)}
                     </span>
@@ -1625,15 +1629,15 @@ function ReturnsManagementContent() {
                   ARAFAT POULTRY &amp; FISHERIES
                 </h1>
                 <p className="text-xs font-semibold text-slate-600 mt-0.5">
-                  Quality Products. Trusted Service.
+                  গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা
                 </p>
                 <p className="text-[11px] text-slate-500">
                   Poultry Feed, Egg Sales &amp; Fish Farming | Mobile: 01975-703216, 01715-842083
                 </p>
                 <div className="inline-block mt-2 px-3 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-xs uppercase tracking-wider rounded">
                   {selectedReturnForPrint.type === "purchase"
-                    ? "Supplier Purchase Return Voucher"
-                    : "Customer Sales Return Voucher"}
+                    ? "সরবরাহকারী ক্রয় ফেরত ভাউচার"
+                    : "কাস্টমার বিক্রয় ফেরত ভাউচার"}
                 </div>
               </div>
 
@@ -1641,19 +1645,19 @@ function ReturnsManagementContent() {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <div className="text-slate-500">
-                    Return No:{" "}
+                    ফেরত ভাউচার নং:{" "}
                     <strong className="text-slate-900 font-mono">
                       #RET{String(selectedReturnForPrint.id).padStart(5, "0")}
                     </strong>
                   </div>
                   <div className="text-slate-500">
-                    {selectedReturnForPrint.type === "purchase" ? "Purchase Memo No: " : "Original Invoice: "}
+                    {selectedReturnForPrint.type === "purchase" ? "ক্রয় মেমো নং: " : "মূল ইনভয়েস নং: "}
                     <strong className="text-slate-900 font-mono">
                       {selectedReturnForPrint.record_no}
                     </strong>
                   </div>
                   <div className="text-slate-500">
-                    Return Date:{" "}
+                    ফেরতের তারিখ:{" "}
                     <strong className="text-slate-900">
                       {selectedReturnForPrint.date}
                     </strong>
@@ -1662,14 +1666,14 @@ function ReturnsManagementContent() {
 
                 <div className="text-right">
                   <div className="text-slate-500">
-                    {selectedReturnForPrint.type === "purchase" ? "Supplier: " : "Customer: "}
+                    {selectedReturnForPrint.type === "purchase" ? "সরবরাহকারী: " : "গ্রাহক: "}
                     <strong className="text-slate-900">
                       {selectedReturnForPrint.party_name}
                     </strong>
                   </div>
                   {selectedReturnForPrint.party_mobile && (
                     <div className="text-slate-500">
-                      Mobile:{" "}
+                      মোবাইল:{" "}
                       <strong className="text-slate-900 font-mono">
                         {selectedReturnForPrint.party_mobile}
                       </strong>
@@ -1682,13 +1686,13 @@ function ReturnsManagementContent() {
               <div className="border border-slate-300 rounded-lg overflow-hidden">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-slate-100 border-b border-slate-300 font-bold uppercase text-slate-700">
-                      <th className="text-center w-[40px] p-[10px]">SL</th>
-                      <th className="p-[10px]">Item Description</th>
+                    <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
+                      <th className="text-center w-[40px] p-[10px]">ক্র: নং</th>
+                      <th className="p-[10px]">পণ্যের বিবরণ</th>
                       <th className="text-center w-[100px] p-[10px]">পরিমাণ</th>
-                      <th className="text-right w-[110px] p-[10px]">Rate</th>
+                      <th className="text-right w-[110px] p-[10px]">দর (৳)</th>
                       <th className="text-right w-[120px] pr-3 p-[10px]">
-                        {selectedReturnForPrint.type === "purchase" ? "Adjusted Amount" : "Refund Amount"}
+                        {selectedReturnForPrint.type === "purchase" ? "সমন্বয়কৃত টাকা (৳)" : "ফেরত মূল্য (৳)"}
                       </th>
                     </tr>
                   </thead>
@@ -1722,13 +1726,13 @@ function ReturnsManagementContent() {
                   <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-300">
                     <tr>
                       <td colSpan={2} className="text-right uppercase text-[11px] text-slate-600 p-[10px]">
-                        Total Returned Quantity:
+                        মোট ফেরত পরিমাণ:
                       </td>
                       <td className="text-center whitespace-nowrap p-[10px]">
                         {formatTileOrItemQty(selectedReturnForPrint.quantity, selectedReturnForPrint)}
                       </td>
                       <td className="text-right uppercase text-[11px] text-slate-600 p-[10px]">
-                        Total Amount:
+                        মোট মূল্য:
                       </td>
                       <td className="text-right pr-3 text-rose-800 font-black p-[10px]">
                         {formatBdCurrency(selectedReturnForPrint.amount)}
@@ -1737,7 +1741,7 @@ function ReturnsManagementContent() {
                     {selectedReturnForPrint.due_amount > 0 && (
                       <tr>
                         <td colSpan={4} className="text-right text-emerald-700 text-[11px] p-[10px]">
-                          Due Adjustment:
+                          বকেয়া সমন্বয়:
                         </td>
                         <td className="text-right pr-3 text-emerald-700 font-bold p-[10px]">
                           {formatBdCurrency(selectedReturnForPrint.due_amount)}
@@ -1752,18 +1756,18 @@ function ReturnsManagementContent() {
               <div className="pt-12 grid grid-cols-2 gap-8 text-xs">
                 <div className="text-center">
                   <div className="border-t border-slate-400 pt-1.5 font-semibold text-slate-700">
-                    {selectedReturnForPrint.type === "purchase" ? "Supplier Signature" : "Customer Signature"}
+                    {selectedReturnForPrint.type === "purchase" ? "সরবরাহকারীর স্বাক্ষর" : "গ্রাহকের স্বাক্ষর"}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="border-t border-slate-400 pt-1.5 font-semibold text-slate-700">
-                    Authorized Signature
+                    অনুমোদনকারীর স্বাক্ষর
                   </div>
                 </div>
               </div>
 
               <div className="text-center text-[10px] text-slate-400 pt-2 border-t border-dashed border-slate-200">
-                Software By: CodeNext IT | Arafat Poultry &amp; Fisheries POS System
+                © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
               </div>
             </div>
           </div>
@@ -1775,7 +1779,7 @@ function ReturnsManagementContent() {
 
 export default function ReturnsManagementPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading returns...</div>}>
+    <Suspense fallback={<PageSkeleton />}>
       <ReturnsManagementContent />
     </Suspense>
   );

@@ -132,9 +132,51 @@ export async function POST(req: NextRequest) {
       status,
     } = body;
 
-    if (!product_name || !brand_id || !category_id) {
+    if (!product_name) {
       return NextResponse.json(
-        { status: "fail", message: "Product name, brand, and category are required" },
+        { status: "fail", message: "পণ্যের নাম আবশ্যক" },
+        { status: 400 }
+      );
+    }
+
+    // Robust verification and fallback for brand_id and category_id
+    let finalBrandId = brand_id ? BigInt(brand_id) : null;
+    let finalCategoryId = category_id ? BigInt(category_id) : null;
+    let finalUnitId = unit_id ? BigInt(unit_id) : null;
+
+    if (finalBrandId) {
+      const bExists = await prisma.brands.findUnique({ where: { id: finalBrandId } });
+      if (!bExists) {
+        const firstB = await prisma.brands.findFirst();
+        finalBrandId = firstB ? firstB.id : null;
+      }
+    } else {
+      const firstB = await prisma.brands.findFirst();
+      finalBrandId = firstB ? firstB.id : null;
+    }
+
+    if (finalCategoryId) {
+      const cExists = await prisma.categories.findUnique({ where: { id: finalCategoryId } });
+      if (!cExists) {
+        const firstC = await prisma.categories.findFirst();
+        finalCategoryId = firstC ? firstC.id : null;
+      }
+    } else {
+      const firstC = await prisma.categories.findFirst();
+      finalCategoryId = firstC ? firstC.id : null;
+    }
+
+    if (finalUnitId) {
+      const uExists = await prisma.units.findUnique({ where: { id: finalUnitId } });
+      if (!uExists) {
+        const firstU = await prisma.units.findFirst();
+        finalUnitId = firstU ? firstU.id : null;
+      }
+    }
+
+    if (!finalBrandId || !finalCategoryId) {
+      return NextResponse.json(
+        { status: "fail", message: "ব্র্যান্ড ও ক্যাটাগরি আবশ্যক" },
         { status: 400 }
       );
     }
@@ -166,10 +208,10 @@ export async function POST(req: NextRequest) {
         pcs_per_box: pcs_per_box ? String(pcs_per_box).trim() : null,
         grade: grade ? String(grade).trim() : null,
         surface_finish: surface_finish ? String(surface_finish).trim() : null,
-        brand_id: BigInt(brand_id),
-        category_id: BigInt(category_id),
+        brand_id: finalBrandId,
+        category_id: finalCategoryId,
         sub_category_id: sub_category_id ? BigInt(sub_category_id) : null,
-        unit_id: unit_id ? BigInt(unit_id) : null,
+        unit_id: finalUnitId,
         img_url: img_url || null,
         status: status || "active",
         user_id: BigInt(userId),

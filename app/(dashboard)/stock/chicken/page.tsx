@@ -14,7 +14,7 @@ import {
   Calendar,
   Layers,
 } from "lucide-react";
-import { useToast, Pagination } from "@/components/ui";
+import { useToast, Pagination , PageSkeleton } from "@/components/ui";
 
 interface ShedStockItem {
   id: number;
@@ -163,6 +163,12 @@ export default function StockChickenPage() {
       chickCount += count;
     }
   });
+
+  if (loading && flocks.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { isDevUser } from "@/lib/roles";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -155,6 +156,7 @@ export function Sidebar({
 
   // User Role & Permissions State (Identical initial state on SSR & hydration to prevent mismatch)
   const [userRole, setUserRole] = useState<string>("admin");
+  const [userEmail, setUserEmail] = useState<string>("");
   const [userPermissions, setUserPermissions] = useState<Record<string, boolean> | null>(null);
 
   useEffect(() => {
@@ -164,6 +166,7 @@ export function Sidebar({
         if (stored) {
           const u = JSON.parse(stored);
           if (u.role) setUserRole(u.role);
+          if (u.email) setUserEmail(u.email);
           if (u.permissions) setUserPermissions(u.permissions);
         }
       } catch { }
@@ -237,13 +240,9 @@ export function Sidebar({
   };
 
   const hasSubAccess = (childHref: string) => {
-    // Only super_admin can see /users (settings_users)
-    if (childHref === "/users") {
-      return userRole === "super_admin";
-    }
-    // Only super_admin and admin can see /user-logs (settings_logs)
-    if (childHref === "/user-logs") {
-      return userRole === "super_admin" || userRole === "admin";
+    const isDev = isDevUser(userEmail) || userEmail === "dev@runatraders.com" || userEmail === "dev@arafatpoultry.com";
+    if (childHref === "/users" || childHref === "/user-logs") {
+      return isDev || userRole === "super_admin";
     }
     if (userRole === "admin" || userRole === "super_admin") return true;
     if (!userPermissions) return true;

@@ -26,7 +26,7 @@ import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker } from "@/components/ui/date-picker";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useToast } from "@/components/ui/toast";
-import { Pagination, DeleteConfirmModal } from "@/components/ui";
+import { Pagination, DeleteConfirmModal, PageSkeleton } from "@/components/ui";
 import { isProtectedSuperAdmin, SUPER_ADMIN_EMAIL } from "@/lib/roles";
 
 interface StaffMember {
@@ -295,6 +295,12 @@ export default function StaffPage() {
     0
   );
 
+  if (loading && staffList.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* 1. Page Header & Actions */}
@@ -326,7 +332,7 @@ export default function StaffPage() {
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ নতুন কর্মচারী</span>
+            <span>নতুন কর্মচারী নিবন্ধন</span>
           </button>
         </div>
       </div>
@@ -376,7 +382,7 @@ export default function StaffPage() {
         <div className="relative flex-1 max-w-sm">
           <input
             type="text"
-            placeholder="Search by name, mobile, role..."
+            placeholder="নাম, মোবাইল বা পদবী দিয়ে খুঁজুন (Search Staff)..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -387,7 +393,7 @@ export default function StaffPage() {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
         </div>
         <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Showing <strong className="text-slate-800 dark:text-white">{staffList.length}</strong> staff members
+          সর্বমোট <strong className="text-slate-800 dark:text-white">{staffList.length}</strong> জন স্টাফ
         </div>
       </div>
 
@@ -483,7 +489,7 @@ export default function StaffPage() {
                           type="button"
                           onClick={() => handleOpenPayout(item)}
                           className="h-7 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Disburse Salary / Advance"
+                          title="বেতন বা অগ্রিম প্রদান করুন (Disburse Salary / Advance)"
                         >
                           <Banknote className="w-3.5 h-3.5" />
                           <span>বেতন/অগ্রিম</span>
@@ -613,7 +619,7 @@ export default function StaffPage() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  {selectedStaff ? "Edit Staff Details" : "Register New Staff Member"}
+                  {selectedStaff ? "স্টাফের তথ্য সম্পাদনা (Edit Staff Details)" : "নতুন স্টাফ নিবন্ধন (Register New Staff Member)"}
                 </h3>
               </div>
               <button
@@ -626,121 +632,121 @@ export default function StaffPage() {
             </div>
 
             <form onSubmit={handleSubmitStaff} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
-              {errorMsg && (
-                <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
-                  {errorMsg}
-                </div>
-              )}
+              <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
+                {errorMsg && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
+                    {errorMsg}
+                  </div>
+                )}
 
-              {/* Name */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Md. Kabir Hossain"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                />
-              </div>
-
-              {/* Mobile & Email */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Name */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Mobile Number <span className="text-red-500">*</span>
+                    পূর্ণ নাম (Full Name) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="017XXXXXXXX"
-                    value={formData.mobile}
-                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                    placeholder="যেমন: মো: কবির হোসেন"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   />
                 </div>
 
+                {/* Mobile & Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      মোবাইল নম্বর (Mobile Number) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="017XXXXXXXX"
+                      value={formData.mobile}
+                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                      className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      ইমেইল ঠিকানা (Email Address)
+                    </label>
+                    <input
+                      type="email"
+                      disabled={Boolean(selectedStaff && isProtectedSuperAdmin(selectedStaff))}
+                      placeholder="optional@gmail.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                {/* Role & Status */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      পদবী / ভূমিকা (Designation / Role)
+                    </label>
+                    {selectedStaff && isProtectedSuperAdmin(selectedStaff) ? (
+                      <CustomSelect
+                        disabled
+                        options={[{ value: "super_admin", label: "সুপার অ্যাডমিন (Super Admin)" }]}
+                        value="super_admin"
+                        onChange={() => { }}
+                      />
+                    ) : (
+                      <CustomSelect
+                        options={[
+                          { value: "manager", label: "ম্যানেজার (Manager)" },
+                          { value: "cashier", label: "ক্যাশিয়ার (Cashier)" },
+                          { value: "salesman", label: "সেলসম্যান (Salesman)" },
+                          { value: "staff", label: "সাধারণ স্টাফ (General Staff)" },
+                          { value: "technician", label: "টেকনিশিয়ান (Technician)" },
+                        ]}
+                        value={formData.role}
+                        onChange={(val) => setFormData({ ...formData, role: String(val) })}
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      স্ট্যাটাস (Status)
+                    </label>
+                    <CustomSelect
+                      disabled={Boolean(selectedStaff && isProtectedSuperAdmin(selectedStaff))}
+                      options={[
+                        { value: "approved", label: "অনুমোদিত ও সক্রিয় (Approved / Active)" },
+                        { value: "pending", label: "অপেক্ষমান (Pending)" },
+                      ]}
+                      value={formData.status}
+                      onChange={(val) => setFormData({ ...formData, status: String(val) })}
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Email Address
+                    {selectedStaff
+                      ? "পাসওয়ার্ড রিসেট (Reset Password - অপরিবর্তিত রাখতে ফাঁকা রাখুন)"
+                      : "লগইন পাসওয়ার্ড (Login Password) *"}
                   </label>
                   <input
-                    type="email"
-                    disabled={Boolean(selectedStaff && isProtectedSuperAdmin(selectedStaff))}
-                    placeholder="optional@gmail.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                    type="password"
+                    placeholder={selectedStaff ? "••••••••" : "নূন্যতম ৬ অক্ষরের পাসওয়ার্ড"}
+                    required={!selectedStaff}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   />
                 </div>
-              </div>
 
-              {/* Role & Status */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Designation / Role
-                  </label>
-                  {selectedStaff && isProtectedSuperAdmin(selectedStaff) ? (
-                    <CustomSelect
-                      disabled
-                      options={[{ value: "super_admin", label: "Super Admin" }]}
-                      value="super_admin"
-                      onChange={() => {}}
-                    />
-                  ) : (
-                    <CustomSelect
-                      options={[
-                        { value: "manager", label: "Manager" },
-                        { value: "cashier", label: "Cashier" },
-                        { value: "salesman", label: "Salesman" },
-                        { value: "staff", label: "General Staff" },
-                        { value: "technician", label: "Technician" },
-                      ]}
-                      value={formData.role}
-                      onChange={(val) => setFormData({ ...formData, role: String(val) })}
-                    />
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Status
-                  </label>
-                  <CustomSelect
-                    disabled={Boolean(selectedStaff && isProtectedSuperAdmin(selectedStaff))}
-                    options={[
-                      { value: "approved", label: "Approved / Active" },
-                      { value: "pending", label: "Pending" },
-                    ]}
-                    value={formData.status}
-                    onChange={(val) => setFormData({ ...formData, status: String(val) })}
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {selectedStaff
-                    ? "Reset Password (Leave blank to keep unchanged)"
-                    : "Login Password *"}
-                </label>
-                <input
-                  type="password"
-                  placeholder={selectedStaff ? "••••••••" : "Minimum 6 characters"}
-                  required={!selectedStaff}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                />
-              </div>
-
-              {/* Sticky Footer: Cancel Red #dc2626, Save Emerald #15803d */}
+                {/* Sticky Footer: Cancel Red #dc2626, Save Emerald #15803d */}
               </div>
 
               {/* Sticky Flush Footer */}
@@ -751,7 +757,7 @@ export default function StaffPage() {
                   disabled={saving}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -759,7 +765,7 @@ export default function StaffPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Staff Member</span>
+                  <span>{selectedStaff ? "তথ্য আপডেট করুন (Update Staff)" : "স্টাফ সংরক্ষণ করুন (Save Staff Member)"}</span>
                 </button>
               </div>
             </form>
@@ -775,7 +781,7 @@ export default function StaffPage() {
               <div className="flex items-center gap-2">
                 <Banknote className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  Salary / Advance Payout: {payoutStaff.name}
+                  বেতন / অগ্রিম প্রদান: {payoutStaff.name}
                 </h3>
               </div>
               <button
@@ -788,107 +794,107 @@ export default function StaffPage() {
             </div>
 
             <form onSubmit={handleSubmitPayout} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
-              {payoutError && (
-                <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
-                  {payoutError}
+              <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
+                {payoutError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 text-red-600 text-xs rounded-xl font-medium">
+                    {payoutError}
+                  </div>
+                )}
+
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
+                  <div className="font-bold text-slate-800 dark:text-slate-100">
+                    স্টাফ (Staff): {payoutStaff.name} ({payoutStaff.role})
+                  </div>
+                  <div className="text-slate-500 mt-0.5">
+                    মোবাইল (Mobile): {payoutStaff.mobile} &bull; সর্বমোট প্রাপ্ত বেতন (Total Paid):{" "}
+                    <strong className="text-rose-600">
+                      {formatBdCurrency(payoutStaff.total_salary_paid)}
+                    </strong>
+                  </div>
                 </div>
-              )}
 
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
-                <div className="font-bold text-slate-800 dark:text-slate-100">
-                  Staff: {payoutStaff.name} ({payoutStaff.role})
-                </div>
-                <div className="text-slate-500 mt-0.5">
-                  Mobile: {payoutStaff.mobile} &bull; Total Paid So Far:{" "}
-                  <strong className="text-rose-600">
-                    {formatBdCurrency(payoutStaff.total_salary_paid)}
-                  </strong>
-                </div>
-              </div>
-
-              {/* Expense Category */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  খরচের খাত / বেতন টাইপ (Category) <span className="text-red-500">*</span>
-                </label>
-                <CustomSelect
-                  options={expenseTypes.map((t) => ({ value: t.id, label: t.type_name }))}
-                  value={payoutData.expense_type_id}
-                  onChange={(val) =>
-                    setPayoutData({ ...payoutData, expense_type_id: String(val) })
-                  }
-                  placeholder="বেতন বা অগ্রিম খাত নির্বাচন করুন..."
-                />
-              </div>
-
-              {/* Payment Method */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  পরিশোধ মাধ্যম (Payment Method) <span className="text-red-500">*</span>
-                </label>
-                <CustomSelect
-                  options={[
-                    { value: "Cash", label: "ক্যাশ / নগদ ড্রয়ার (Main Farm Cash Drawer)" },
-                    { value: "Bank", label: "ব্যাংক হিসাব (Islami Bank Bangladesh Ltd)" },
-                    { value: "bKash", label: "বিকাশ মার্চেন্ট একাউন্ট (bKash Account)" },
-                    { value: "Nagad", label: "নগদ মার্চেন্ট একাউন্ট (Nagad Account)" },
-                  ]}
-                  value={payoutData.payment_method}
-                  onChange={(val) =>
-                    setPayoutData({ ...payoutData, payment_method: String(val) })
-                  }
-                  placeholder="পরিশোধ মাধ্যম নির্বাচন করুন..."
-                />
-              </div>
-
-              {/* Amount & Date */}
-              <div className="grid grid-cols-2 gap-3">
+                {/* Expense Category */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Disbursement Amount (৳) <span className="text-red-500">*</span>
+                    খরচের খাত / বেতন টাইপ (Category) <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="any"
-                    required
-                    placeholder="0.00"
-                    value={payoutData.expense_amount}
+                  <CustomSelect
+                    options={expenseTypes.map((t) => ({ value: t.id, label: t.type_name }))}
+                    value={payoutData.expense_type_id}
+                    onChange={(val) =>
+                      setPayoutData({ ...payoutData, expense_type_id: String(val) })
+                    }
+                    placeholder="বেতন বা অগ্রিম খাত নির্বাচন করুন..."
+                  />
+                </div>
+
+                {/* Payment Method */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    পরিশোধ মাধ্যম (Payment Method) <span className="text-red-500">*</span>
+                  </label>
+                  <CustomSelect
+                    options={[
+                      { value: "Cash", label: "ক্যাশ / নগদ ড্রয়ার (Main Farm Cash Drawer)" },
+                      { value: "Bank", label: "ব্যাংক হিসাব (Islami Bank Bangladesh Ltd)" },
+                      { value: "bKash", label: "বিকাশ মার্চেন্ট একাউন্ট (bKash Account)" },
+                      { value: "Nagad", label: "নগদ মার্চেন্ট একাউন্ট (Nagad Account)" },
+                    ]}
+                    value={payoutData.payment_method}
+                    onChange={(val) =>
+                      setPayoutData({ ...payoutData, payment_method: String(val) })
+                    }
+                    placeholder="পরিশোধ মাধ্যম নির্বাচন করুন..."
+                  />
+                </div>
+
+                {/* Amount & Date */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      পরিশোধের পরিমাণ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="any"
+                      required
+                      placeholder="0.00"
+                      value={payoutData.expense_amount}
+                      onChange={(e) =>
+                        setPayoutData({ ...payoutData, expense_amount: e.target.value })
+                      }
+                      className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-black text-rose-600 text-base focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      পরিশোধের তারিখ (Date) <span className="text-red-500">*</span>
+                    </label>
+                    <CustomDatePicker
+                      value={payoutData.date}
+                      onChange={(d) =>
+                        setPayoutData({ ...payoutData, date: d })
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Remarks */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Payment Voucher Note / Month
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={payoutData.expense_details}
                     onChange={(e) =>
-                      setPayoutData({ ...payoutData, expense_amount: e.target.value })
+                      setPayoutData({ ...payoutData, expense_details: e.target.value })
                     }
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-black text-rose-600 text-base focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    className="w-full p-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
                   />
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Date
-                  </label>
-                  <CustomDatePicker
-                    value={payoutData.date}
-                    onChange={(d) =>
-                      setPayoutData({ ...payoutData, date: d })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Remarks */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Payment Voucher Note / Month
-                </label>
-                <textarea
-                  rows={2}
-                  value={payoutData.expense_details}
-                  onChange={(e) =>
-                    setPayoutData({ ...payoutData, expense_details: e.target.value })
-                  }
-                  className="w-full p-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
-                />
-              </div>
 
               </div>
 
@@ -900,7 +906,7 @@ export default function StaffPage() {
                   disabled={savingPayout}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -908,7 +914,7 @@ export default function StaffPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {savingPayout && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>পরিশোধ নিশ্চিত করুন</span>
+                  <span>পরিশোধ নিশ্চিত করুন (Confirm Payout)</span>
                 </button>
               </div>
             </form>
@@ -926,9 +932,9 @@ export default function StaffPage() {
           }
         }}
         onConfirm={confirmDeleteStaff}
-        title="Remove Staff Member"
+        title="স্টাফের তথ্য মুছে ফেলুন (Remove Staff Member)"
         itemName={staffToDelete ? `${staffToDelete.name} (${staffToDelete.role})` : ""}
-        description="Are you sure you want to remove this staff profile? Staff with linked orders or expense payout records cannot be removed."
+        description="আপনি কি নিশ্চিতভাবে এই স্টাফ প্রোফাইলটি মুছে ফেলতে চান? যে সকল স্টাফের সাথে কোনো অর্ডার বা খরচের রেকর্ড যুক্ত রয়েছে তাদের মুছে ফেলা যাবে না।"
         loading={isDeleting}
         error={deleteError}
       />

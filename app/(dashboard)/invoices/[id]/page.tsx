@@ -1,10 +1,12 @@
 "use client";
+import { PageSkeleton } from "@/components/ui/table-skeleton";
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
+import { numberToBanglaWords } from "@/lib/utils";
 import { formatBdCurrency } from "@/lib/utils";
 
 interface InvoiceDetail {
@@ -167,6 +169,12 @@ export default function InvoiceBillPage({
   const prevDue = invoice.previous_due_amount || 0;
   const grandTotalDue = todayDue + prevDue;
 
+  if (loading && !invoice) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="font-sans">
       {/* 1. TOP ACTION BAR (Hidden when printing) */}
@@ -177,7 +185,7 @@ export default function InvoiceBillPage({
           className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-[#475569] hover:bg-[#334155] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Invoice List</span>
+          <span>ইনভয়েস তালিকায় ফিরুন</span>
         </button>
         <button
           type="button"
@@ -185,14 +193,14 @@ export default function InvoiceBillPage({
           className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-[#15803d] hover:bg-[#166534] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all cursor-pointer"
         >
           <Printer className="w-4 h-4" />
-          <span>Print Bill</span>
+          <span>বিল প্রিন্ট করুন</span>
         </button>
       </div>
 
       {/* 2. INVOICE SHEET PAPER (Full width) */}
       <div
         id="invoicePrintSheet"
-        className="invoice-paper bg-white text-black p-4 sm:p-8 border border-slate-300 w-full shadow-md relative flex flex-col justify-between overflow-hidden"
+        className="invoice-paper bg-white text-black p-4 sm:p-8 border border-slate-300 w-full min-h-[297mm] shadow-md relative flex flex-col justify-between overflow-hidden"
         style={{
           fontFamily: "'Valley Sans', Arial, sans-serif",
           boxSizing: "border-box",
@@ -216,65 +224,60 @@ export default function InvoiceBillPage({
             {/* Middle "Bill" Badge */}
             <div className="self-center">
               <span className="px-4 sm:px-5 py-0.5 sm:py-1 print:py-1 rounded bg-[#166534] text-white font-bold text-xs sm:text-sm print:text-sm tracking-wider uppercase shadow-xs">
-                বিক্রয় মেমো (SALES MEMO)
+                বিক্রয় মেমো
               </span>
             </div>
 
             {/* Office Info */}
             <div className="text-center sm:text-right print:text-right text-[11px] text-slate-800 leading-tight max-w-[240px]">
-              <div><strong>Business:</strong> Arafat Poultry &amp; Fisheries</div>
-              <div>Quality Products. Trusted Service.</div>
-              <div><strong>Mobile:</strong> 01975-703216, 01715-842083</div>
-              <div><strong>E-mail:</strong> info@arafatpoultry.com</div>
+              <div><strong>প্রতিষ্ঠান:</strong> আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজ</div>
+              <div>গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা</div>
+              <div><strong>মোবাইল:</strong> 01975-703216, 01715-842083</div>
+              <div><strong>ইমেইল:</strong> info@arafatpoultry.com</div>
             </div>
           </div>
 
           {/* Form Metadata Rows (Two-Column Dotted Grid matching MARSS) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-x-6 gap-y-1.5 sm:gap-y-1 print:gap-y-1 my-3 text-[12px] text-black">
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Bill No:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">বিল নং:</span>
               <span className="flex-1 border-b border-dotted border-black font-bold font-mono pl-1">
                 #{invoice.order_no}
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Bill Date:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">বিলের তারিখ:</span>
               <span className="flex-1 border-b border-dotted border-black font-semibold pl-1">
                 {formatDate(invoice.invoice_date || invoice.created_at)}
               </span>
             </div>
 
-            <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Challan No:</span>
-              <span className="flex-1 border-b border-dotted border-black font-semibold pl-1">
-                {invoice.challan?.challan_no || "Cash In Hand"}
-              </span>
-            </div>
+            
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Delivery Date:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">ডেলিভারির তারিখ:</span>
               <span className="flex-1 border-b border-dotted border-black font-semibold pl-1">
                 {formatDate(invoice.challan?.challan_date || invoice.invoice_date || invoice.created_at)}
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Name of Customer:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">কাস্টমারের নাম:</span>
               <span className="flex-1 border-b border-dotted border-black font-bold pl-1 truncate">
                 {invoice.customer?.customer_name || "General Customer"}
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Mob:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">মোবাইল:</span>
               <span className="flex-1 border-b border-dotted border-black font-bold font-mono pl-1">
                 {invoice.customer?.mobile || "N/A"}
               </span>
             </div>
 
             <div className="col-span-1 sm:col-span-2 print:col-span-2 flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Address:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">ঠিকানা:</span>
               <span className="flex-1 border-b border-dotted border-black pl-1 truncate">
                 {invoice.customer?.address_details || "N/A"}
               </span>
@@ -286,11 +289,11 @@ export default function InvoiceBillPage({
             <table className="w-full text-left border-collapse border border-black text-[12px] min-w-[500px] sm:min-w-0 print:min-w-0">
               <thead>
                 <tr className="bg-slate-50 text-black font-bold text-center border-b border-black">
-                  <th className="border border-black py-1 px-2 w-[50px]">Sl.No.</th>
-                  <th className="border border-black py-1 px-3 text-left">Description</th>
-                  <th className="border border-black py-1 px-2 w-[110px] text-right">Rate</th>
-                  <th className="border border-black py-1 px-2 w-[70px] text-center">Qty.</th>
-                  <th className="border border-black py-1 px-3 w-[120px] text-right">Amount</th>
+                  <th className="border border-black py-1 px-2 w-[50px]">ক্র: নং</th>
+                  <th className="border border-black py-1 px-3 text-left">পণ্যের বিবরণ</th>
+                  <th className="border border-black py-1 px-2 w-[110px] text-right">দর (৳)</th>
+                  <th className="border border-black py-1 px-2 w-[70px] text-center">পরিমাণ</th>
+                  <th className="border border-black py-1 px-3 w-[120px] text-right">মোট টাকা</th>
                 </tr>
               </thead>
               <tbody>
@@ -321,33 +324,15 @@ export default function InvoiceBillPage({
               </tbody>
             </table>
           </div>
-        </div>
 
-        {/* 3. BOTTOM SUMMARY SECTION */}
-        <div className="sheet-bottom-content mt-auto pt-2">
-          <div className="flex flex-col sm:flex-row print:flex-row items-start sm:items-end print:items-end justify-between gap-4 mb-6">
-            {/* In Words */}
-            <div className="w-full sm:w-[58%] print:w-[58%] text-[12px]">
-              <div className="flex items-end">
-                <span className="font-semibold whitespace-nowrap mr-1">In Words:</span>
-                <span className="flex-1 border-b border-dotted border-black font-bold pl-1 italic">
-                  {numberToWords(netAmount)} Taka Only
-                </span>
-              </div>
-              {invoice.order_note && (
-                <div className="mt-2 text-[11px] text-slate-700">
-                  <strong>Note:</strong> {invoice.order_note}
-                </div>
-              )}
-            </div>
-
-            {/* Totals Table matching screenshot 5 */}
-            <div className="w-full sm:w-[40%] print:w-[40%]">
+          {/* Totals Table directly beneath items table */}
+          <div className="flex justify-end mt-1 mb-2">
+            <div className="w-full sm:w-[42%] print:w-[42%]">
               <table className="w-full border-collapse border border-black text-[12px]">
                 <tbody>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50 w-1/2">
-                      Total Bill
+                      মোট বিল:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold w-1/2">
                       {totalBill.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -355,7 +340,7 @@ export default function InvoiceBillPage({
                   </tr>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50">
-                      Net Amount
+                      নীট প্রদেয়:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold">
                       {netAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -363,7 +348,7 @@ export default function InvoiceBillPage({
                   </tr>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50">
-                      Paid Amount
+                      পরিশোধিত টাকা:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold text-emerald-800">
                       {paidAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -371,7 +356,7 @@ export default function InvoiceBillPage({
                   </tr>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50">
-                      Today Due
+                      আজকের বকেয়া:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold text-rose-700">
                       {todayDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -379,7 +364,7 @@ export default function InvoiceBillPage({
                   </tr>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50">
-                      Previous Due
+                      পূর্বের বকেয়া:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold">
                       {prevDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -387,7 +372,7 @@ export default function InvoiceBillPage({
                   </tr>
                   <tr>
                     <td className="border border-black py-1 px-2 font-black bg-slate-100">
-                      Total Due
+                      সর্বমোট বকেয়া:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-black text-rose-800 text-[13px]">
                       {grandTotalDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -397,27 +382,47 @@ export default function InvoiceBillPage({
               </table>
             </div>
           </div>
+        </div>
+
+        {/* 3. BOTTOM SUMMARY SECTION */}
+        <div className="sheet-bottom-content mt-auto pt-4 print:mt-auto break-inside-avoid">
+          {/* In Words */}
+          <div className="w-full text-[12px] mb-4">
+            <div className="flex items-end">
+              <span className="font-semibold whitespace-nowrap mr-1">কথায়:</span>
+              <span className="flex-1 border-b border-dotted border-black font-bold pl-1 italic">
+                {numberToBanglaWords(netAmount)} টাকা মাত্র
+              </span>
+            </div>
+            {invoice.order_note && (
+              <div className="mt-2 text-[11px] text-slate-700">
+                <strong>বিশেষ নোট:</strong> {invoice.order_note}
+              </div>
+            )}
+          </div>
 
           {/* Signatures (Strict Rule: 3 signature areas) */}
-          <div className="flex justify-between items-end pt-12 pb-3 text-[11px] font-semibold text-black gap-4">
+          <div className="flex justify-between items-end pt-8 pb-3 text-[11px] font-semibold text-black gap-4">
             <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
               প্রস্তুতকারীর স্বাক্ষর
-              <span className="block text-[9px] text-slate-500 font-normal">Prepared By</span>
             </div>
             <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
               গ্রাহকের স্বাক্ষর
-              <span className="block text-[9px] text-slate-500 font-normal">Customer&apos;s Signature</span>
             </div>
             <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
               অনুমোদনকারীর স্বাক্ষর
-              <span className="block text-[9px] text-slate-500 font-normal">Authorized By</span>
             </div>
           </div>
 
-          {/* Bottom Dual Color Accent Bar matching MARSS screenshot 5 */}
-          <div className="flex h-3 w-[calc(100%+2rem)] sm:w-[calc(100%+4rem)] -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 mt-4">
+          {/* Bottom Dual Color Accent Bar */}
+          <div className="flex h-2.5 w-[calc(100%+2rem)] sm:w-[calc(100%+4rem)] -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 mt-3">
             <div className="w-1/2 bg-[#dc2626]"></div>
             <div className="w-1/2 bg-[#15803d]"></div>
+          </div>
+
+          {/* Copyright Footer */}
+          <div className="text-center text-[9px] text-slate-500 pt-1 -mb-2 sm:-mb-6 print:mb-0">
+            © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
           </div>
         </div>
       </div>
@@ -447,7 +452,10 @@ export default function InvoiceBillPage({
             padding: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            min-height: auto !important;
+            min-height: calc(297mm - 20mm) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
           }
           #invoicePrintSheet table {
             width: 100% !important;

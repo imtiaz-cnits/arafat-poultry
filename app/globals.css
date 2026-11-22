@@ -378,3 +378,25 @@ textarea:focus-visible {
     scrollbar-color: #15803d transparent !important;
   }
 }
+
+/* Global Print Rules: Fixed Footer Signatures at Page Bottom & Repeating Thead */
+@media print {
+  thead {
+    display: table-header-group !important;
+  }
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .print-sheet-container {
+    min-height: 275mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+  .print-signatures-bottom {
+    margin-top: auto !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}

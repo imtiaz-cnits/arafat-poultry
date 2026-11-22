@@ -20,12 +20,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { formatBdCurrency } from "@/lib/utils";
+import { formatBdCurrency, formatBdDate } from "@/lib/utils";
 import { formatBoxAndPcs, formatTileOrItemQty } from "@/lib/tiles-calculator";
 import { CustomDatePicker } from "@/components/ui/date-picker";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useToast } from "@/components/ui/toast";
-import { Pagination, DeleteConfirmModal } from "@/components/ui";
+import { Pagination, DeleteConfirmModal, TableSkeleton , PageSkeleton } from "@/components/ui";
 import { SupplierModal } from "@/components/suppliers/supplier-modal";
 
 interface PurchaseItem {
@@ -324,6 +324,12 @@ export default function PurchasesPage() {
   const totalPurchasesCost = purchases.reduce((sum, p) => sum + p.grand_subtotal, 0);
   const totalPurchasesDue = purchases.reduce((sum, p) => sum + p.due_amount, 0);
 
+  if (loading && purchases.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* 1. Header & Summary Cards */}
@@ -334,10 +340,10 @@ export default function PurchasesPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              পণ্য ক্রয় ও ইনওয়ার্ড রেজিস্টার (Purchases & Inward)
+              পণ্য ক্রয় ও ইনওয়ার্ড রেজিস্টার
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Record incoming stock, supplier purchase invoices, and costs
+              পোল্ট্রি ও মৎস্য পণ্য ক্রয়, সরবরাহকারী চালান এবং ইনওয়ার্ড স্টক হিসাব
             </p>
           </div>
         </div>
@@ -416,12 +422,7 @@ export default function PurchasesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
-                <tr>
-                  <td colSpan={9} className="p-[10px] py-10 text-center text-slate-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-                    <span>লোড হচ্ছে...</span>
-                  </td>
-                </tr>
+                <tr><td colSpan={9} className="p-0"><TableSkeleton rows={6} columns={9} /></td></tr>
               ) : filteredPurchases.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="p-[10px] py-10 text-center text-slate-400 font-bold">
@@ -443,7 +444,7 @@ export default function PurchasesPage() {
                       </div>
                       <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                         <Calendar className="w-3 h-3" />
-                        <span>{p.date || "N/A"}</span>
+                        <span>{formatBdDate(p.date)}</span>
                       </div>
                     </td>
                     <td className="p-[10px]">
@@ -540,7 +541,7 @@ export default function PurchasesPage() {
                   {p.supplier?.name} ({p.supplier?.company})
                 </p>
               </div>
-              <span className="text-[10px] text-slate-400">{p.date}</span>
+              <span className="text-[10px] text-slate-400">{formatBdDate(p.date)}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-[#1e293b] p-2 rounded-xl">
@@ -551,7 +552,7 @@ export default function PurchasesPage() {
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-400 block">Due Amount:</span>
+                <span className="text-[10px] text-slate-400 block">বকেয়া টাকা:</span>
                 <span
                   className={`font-black ${p.due_amount > 0 ? "text-rose-600" : "text-emerald-600"
                     }`}
@@ -610,7 +611,7 @@ export default function PurchasesPage() {
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  নতুন পণ্য ক্রয় ও স্টক ইন (New Purchase Inward)
+                  নতুন পণ্য ক্রয় ও স্টক ইন
                 </h3>
               </div>
               <button
@@ -633,12 +634,12 @@ export default function PurchasesPage() {
 
               {/* Meta: Supplier, Memo No, Date */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155]">
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    সরবরাহকারী / ভেন্ডর (Supplier) <span className="text-red-500">*</span>
+                    সরবরাহকারী / মহাজন (Supplier) <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex-1">
+                  <div className="flex items-center gap-1.5 w-full min-w-0">
+                    <div className="flex-1 min-w-0">
                       <CustomSelect
                         options={suppliers.map((s) => ({
                           value: s.id,
@@ -647,7 +648,7 @@ export default function PurchasesPage() {
                         }))}
                         value={selectedSupplierId}
                         onChange={(val) => setSelectedSupplierId(String(val))}
-                        placeholder="Select Supplier..."
+                        placeholder="সরবরাহকারী নির্বাচন করুন..."
                       />
                     </div>
                     <button
@@ -661,22 +662,22 @@ export default function PurchasesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Reference / Memo No
+                    রেফারেন্স / মেমো নং
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. INV-90412"
+                    placeholder="যেমন: INV-90412"
                     value={referenceNo}
                     onChange={(e) => setReferenceNo(e.target.value)}
                     className="w-full h-[40px] px-3 text-xs bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl font-mono focus:outline-none focus:ring-2 focus:ring-emerald-600"
                   />
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Purchase Date
+                    ক্রয়ের তারিখ
                   </label>
                   <CustomDatePicker
                     value={purchaseDate}
@@ -688,7 +689,7 @@ export default function PurchasesPage() {
               {/* Item Picker Row */}
               <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 space-y-2">
                 <div className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
-                  Add Product to Inward Stock
+                  ইনওয়ার্ড স্টকে পণ্য যোগ করুন
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                   <div className="sm:col-span-6">
@@ -717,14 +718,14 @@ export default function PurchasesPage() {
                         const p = products.find((x) => x.id === Number(val));
                         if (p) setTempCost(String(p.cost_price));
                       }}
-                      placeholder="Select Product to Add..."
+                      placeholder="যোগ করতে পণ্য নির্বাচন করুন..."
                     />
                   </div>
                   <div className="sm:col-span-2">
                     <input
                       type="number"
                       min="1"
-                      placeholder="Qty"
+                      placeholder="পরিমাণ"
                       value={tempQty}
                       onChange={(e) => setTempQty(e.target.value)}
                       className="w-full h-[40px] px-2 text-center text-xs font-bold bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
@@ -735,7 +736,7 @@ export default function PurchasesPage() {
                       type="number"
                       min="0"
                       step="any"
-                      placeholder="Cost Price"
+                      placeholder="ক্রয় দর"
                       value={tempCost}
                       onChange={(e) => setTempCost(e.target.value)}
                       className="w-full h-[40px] px-2 text-right text-xs font-bold text-emerald-600 bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
@@ -748,7 +749,7 @@ export default function PurchasesPage() {
                       className="w-full h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer shadow-xs"
                     >
                       <Plus className="w-4 h-4" />
-                      <span>Add Item</span>
+                      <span>যোগ করুন</span>
                     </button>
                   </div>
                 </div>
@@ -770,7 +771,7 @@ export default function PurchasesPage() {
                     {newItems.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="p-[10px] py-8 text-center text-slate-400 font-bold">
-                          কোনো আইটেম যুক্ত করা হয়নি। উপরে পণ্য সিলেক্ট করুন।
+                          কোনো আইটেম যুক্ত করা হয়নি। উপরে পণ্য যোগ করুন।
                         </td>
                       </tr>
                     ) : (
@@ -812,19 +813,19 @@ export default function PurchasesPage() {
 
               {/* Totals & Payments Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155]">
-                {/* Left: পেমেন্ট মাধ্যম (Payment Method) & Trx */}
+                {/* Left: পেমেন্ট মাধ্যম (পরিশোধের মাধ্যম) & Trx */}
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Payment Method
+                      পেমেন্ট পদ্ধতি
                     </label>
                     <CustomSelect
                       options={[
-                        { value: "Cash", label: "Cash" },
-                        { value: "Bank", label: "Bank Transfer" },
-                        { value: "bKash", label: "bKash" },
-                        { value: "Nagad", label: "Nagad" },
-                        { value: "Card", label: "Card" },
+                        { value: "Cash", label: "নগদ (Cash)" },
+                        { value: "Bank", label: "ব্যাংক (Bank Transfer)" },
+                        { value: "bKash", label: "বিকাশ (bKash)" },
+                        { value: "Nagad", label: "নগদ (Nagad)" },
+                        { value: "Card", label: "কার্ড (Card)" },
                       ]}
                       value={paymentMethod}
                       onChange={(val) => setPaymentMethod(String(val))}
@@ -833,11 +834,11 @@ export default function PurchasesPage() {
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Transaction / Cheque No
+                      ট্রানজেকশন / চেক নং
                     </label>
                     <input
                       type="text"
-                      placeholder="Optional reference"
+                      placeholder="ঐচ্ছিক রেফারেন্স / চেক নং"
                       value={transactionId}
                       onChange={(e) => setTransactionId(e.target.value)}
                       className="w-full h-[38px] px-3 text-xs bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl font-mono focus:outline-none"
@@ -848,11 +849,11 @@ export default function PurchasesPage() {
                 {/* Right: Financial Breakdown */}
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                    <span>Subtotal:</span>
+                    <span>সর্বমোট বিল:</span>
                     <strong className="font-bold">{formatBdCurrency(subTotal)}</strong>
                   </div>
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                    <span>Delivery / Freight Charge:</span>
+                    <span>ডেলিভারি / পরিবহন খরচ:</span>
                     <input
                       type="number"
                       min="0"
@@ -863,14 +864,14 @@ export default function PurchasesPage() {
                   </div>
                   <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-800">
                     <span className="font-bold text-slate-800 dark:text-white uppercase">
-                      Total Payable:
+                      মোট প্রদেয়:
                     </span>
                     <strong className="font-black text-sm text-slate-900 dark:text-white">
                       {formatBdCurrency(grandTotal)}
                     </strong>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-emerald-700">Paid Amount:</span>
+                    <span className="font-bold text-emerald-700">পরিশোধিত টাকা:</span>
                     <input
                       type="number"
                       min="0"
@@ -880,7 +881,7 @@ export default function PurchasesPage() {
                     />
                   </div>
                   <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-800">
-                    <span className="font-bold text-rose-600 uppercase">Due Amount:</span>
+                    <span className="font-bold text-rose-600 uppercase">বকেয়া টাকা:</span>
                     <strong className="font-black text-rose-600 text-sm">
                       {formatBdCurrency(due)}
                     </strong>
@@ -899,7 +900,7 @@ export default function PurchasesPage() {
                   disabled={saving}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -907,7 +908,7 @@ export default function PurchasesPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Purchase & Inward Stock</span>
+                  <span>ক্রয় ও স্টক ইন সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>
@@ -961,24 +962,24 @@ export default function PurchasesPage() {
                 <h2 className="text-lg font-black tracking-wider uppercase text-emerald-800 dark:text-emerald-400">
                   ARAFAT POULTRY &amp; FISHERIES
                 </h2>
-                <p className="text-xs text-slate-500">Quality Products. Trusted Service.</p>
+                <p className="text-xs text-slate-500">গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা</p>
                 <h3 className="text-xs font-bold uppercase tracking-wider mt-1 text-slate-700 dark:text-slate-300">
-                  GOODS RECEIVED VOUCHER (PURCHASE INWARD)
+                  পণ্য গ্রহণ ও ক্রয় ভাউচার
                 </h3>
               </div>
 
               {/* Meta */}
               <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Purchase Order:</span>
+                  <span className="text-slate-400 block text-[10px]">ক্রয় ভাউচার:</span>
                   <strong className="font-mono">{selectedPurchase.purchase_id}</strong>
-                  <span className="text-slate-400 block text-[10px] mt-1">Ref / Memo:</span>
+                  <span className="text-slate-400 block text-[10px] mt-1">রেফারেন্স / চালান:</span>
                   <span>{selectedPurchase.referance_no || "N/A"}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px]">Supplier:</span>
+                  <span className="text-slate-400 block text-[10px]">সরবরাহকারী:</span>
                   <strong>{selectedPurchase.supplier?.name}</strong>
-                  <span className="text-slate-400 block text-[10px] mt-1">Date:</span>
+                  <span className="text-slate-400 block text-[10px] mt-1">তারিখ:</span>
                   <span>{selectedPurchase.date}</span>
                 </div>
               </div>
@@ -1016,17 +1017,17 @@ export default function PurchasesPage() {
               {/* Financial Summary */}
               <div className="bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
+                  <span>সাবটোটাল:</span>
                   <strong>{formatBdCurrency(selectedPurchase.grand_subtotal)}</strong>
                 </div>
                 {selectedPurchase.delivery_charge > 0 && (
                   <div className="flex justify-between text-slate-500">
-                    <span>Delivery Charge:</span>
+                    <span>ডেলিভারি খরচ:</span>
                     <span>+{formatBdCurrency(selectedPurchase.delivery_charge)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold pt-1 border-t border-slate-200 dark:border-slate-800">
-                  <span>Grand Total:</span>
+                  <span>সর্বমোট বিল:</span>
                   <span>
                     {formatBdCurrency(
                       selectedPurchase.grand_subtotal + selectedPurchase.delivery_charge
@@ -1034,11 +1035,11 @@ export default function PurchasesPage() {
                   </span>
                 </div>
                 <div className="flex justify-between text-emerald-700 font-bold">
-                  <span>Paid:</span>
+                  <span>পরিশোধিত:</span>
                   <span>{formatBdCurrency(selectedPurchase.paid_amount)}</span>
                 </div>
                 <div className="flex justify-between text-rose-600 font-bold">
-                  <span>Due Balance:</span>
+                  <span>বকেয়া:</span>
                   <span>{formatBdCurrency(selectedPurchase.due_amount)}</span>
                 </div>
               </div>

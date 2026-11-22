@@ -36,7 +36,7 @@ interface LedgerItem {
   created_at: string;
 }
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect } from "@/components/ui";
+import { CustomDatePicker, CustomSelect , PageSkeleton } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 
 interface OrderItem {
@@ -224,8 +224,15 @@ export default function CustomerProfilePage({
   const numDisc = parseFloat(discountAmount || "0");
   const modalRemainingDue = Math.max(0, currentDue - (numPay + numDisc));
 
+  if (loading && !customer) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
+      <div className="space-y-4 print:hidden">
       {/* 1. Top Section / Breadcrumb & Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0f172a] p-4 rounded-2xl border border-[#cbd5e1] dark:border-[#334155] shadow-xs">
         <div className="flex items-center gap-3">
@@ -331,7 +338,7 @@ export default function CustomerProfilePage({
         <div className="p-3.5 rounded-2xl bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] shadow-xs flex items-center justify-between">
           <div>
             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Total Invoices
+              মোট ইনভয়েস
             </div>
             <div className="text-xl font-black text-slate-800 dark:text-white mt-0.5">
               {customer.kpi.total_orders}
@@ -345,7 +352,7 @@ export default function CustomerProfilePage({
         <div className="p-3.5 rounded-2xl bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] shadow-xs flex items-center justify-between">
           <div>
             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Total Purchased
+              মোট বিক্রয় / ক্রয় মূল্য
             </div>
             <div className="text-xl font-black text-slate-800 dark:text-white mt-0.5">
               {formatBdCurrency(customer.kpi.total_order_amount)}
@@ -359,7 +366,7 @@ export default function CustomerProfilePage({
         <div className="p-3.5 rounded-2xl bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] shadow-xs flex items-center justify-between">
           <div>
             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Total Paid
+              মোট পরিশোধিত টাকা
             </div>
             <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
               {formatBdCurrency(customer.kpi.total_paid_amount)}
@@ -397,7 +404,7 @@ export default function CustomerProfilePage({
           }`}
         >
           <Receipt className="w-3.5 h-3.5" />
-          <span>Invoices ({customer.orders.length})</span>
+          <span>ইনভয়েস তালিকা ({customer.orders.length})</span>
         </button>
 
         <button
@@ -410,7 +417,7 @@ export default function CustomerProfilePage({
           }`}
         >
           <Wallet className="w-3.5 h-3.5" />
-          <span>Due Collections ({customer.customer_payment_details.length})</span>
+          <span>বকেয়া আদায় খতিয়ান ({customer.customer_payment_details.length})</span>
         </button>
 
         <button
@@ -423,7 +430,7 @@ export default function CustomerProfilePage({
           }`}
         >
           <FileSpreadsheet className="w-3.5 h-3.5" />
-          <span>লেজার স্টেটমেন্ট ({customer.party_ledger_entries?.length || 0})</span>
+          <span>খতিয়ান লেজার ({customer.party_ledger_entries?.length || 0})</span>
         </button>
 
 
@@ -690,6 +697,133 @@ export default function CustomerProfilePage({
         )}
       </div>
 
+            </div>
+
+      {/* PRINT-ONLY STATEMENT SHEET */}
+      <div id="customerPrintStatement" className="hidden print:flex flex-col justify-between min-h-[268mm] p-2 text-black bg-white">
+        <div>
+          {/* Header */}
+          <div className="flex justify-between items-start pb-3 border-b-2 border-black">
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo1.png" alt="Arafat Poultry & Fisheries" className="h-12 w-auto object-contain" />
+              <div>
+                <h2 className="text-base font-black text-black leading-tight">আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজ</h2>
+                <p className="text-[10px] text-slate-700">গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা | পাইকারি ও খুচরা বিক্রেতা</p>
+                <p className="text-[9px] text-slate-600">মোবাইল: 01975-703216, 01715-842083 | ইমেইল: info@arafatpoultry.com</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="inline-block px-3 py-1 bg-[#166534] text-white font-bold text-xs rounded">
+                কাস্টমার লেজার স্টেটমেন্ট
+              </span>
+              <p className="text-[10px] text-slate-600 mt-1">প্রিন্ট তারিখ: {new Date().toLocaleDateString("en-GB")}</p>
+            </div>
+          </div>
+
+          {/* Details (No banner box) */}
+          <div className="grid grid-cols-2 gap-4 py-3 border-b border-black text-xs my-2">
+            <div className="space-y-0.5">
+              <div><strong>কাস্টমার:</strong> {customer.customer_name}</div>
+              <div><strong>মোবাইল:</strong> {customer.mobile || "N/A"}</div>
+              <div><strong>ঠিকানা:</strong> {customer.address_details || "N/A"}</div>
+            </div>
+            <div className="space-y-0.5 text-right">
+              <div><strong>কাস্টমার আইডি:</strong> {customer.customer_id}</div>
+              <div><strong>মোট বিক্রয় মূল্য:</strong> {formatBdCurrency(customer.kpi.total_order_amount)}</div>
+              <div><strong>মোট পরিশোধ:</strong> {formatBdCurrency(customer.kpi.total_paid_amount)}</div>
+              <div className="text-rose-700 font-bold"><strong>বর্তমান মোট বকেয়া:</strong> {formatBdCurrency(customer.kpi.current_due)}</div>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="mt-3">
+            <table className="w-full text-left border-collapse border border-black text-[11px]">
+              <thead>
+                <tr className="bg-slate-100 font-bold border-b border-black text-center">
+                  <th className="border border-black p-1.5 w-10">ক্র: নং</th>
+                  <th className="border border-black p-1.5">ইনভয়েস / অর্ডার নং</th>
+                  <th className="border border-black p-1.5">তারিখ</th>
+                  <th className="border border-black p-1.5 text-right">মোট টাকা (৳)</th>
+                  <th className="border border-black p-1.5 text-right">পরিশোধিত (৳)</th>
+                  <th className="border border-black p-1.5 text-right">বকেয়া (৳)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {customer.orders.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center p-4 border border-black">কোনো অর্ডারের রেকর্ড নেই।</td>
+                  </tr>
+                ) : (
+                  customer.orders.map((o, idx) => (
+                    <tr key={o.id} className="border-b border-black">
+                      <td className="border border-black p-1.5 text-center">{idx + 1}</td>
+                      <td className="border border-black p-1.5 font-bold font-mono">{o.order_no}</td>
+                      <td className="border border-black p-1.5 text-center">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
+                      <td className="border border-black p-1.5 text-right font-mono">{formatBdCurrency(o.sub_total)}</td>
+                      <td className="border border-black p-1.5 text-right font-mono text-emerald-800">{formatBdCurrency(o.paid_amount)}</td>
+                      <td className="border border-black p-1.5 text-right font-mono text-rose-800 font-bold">{formatBdCurrency(o.due_amount)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="mt-auto pt-8 break-inside-avoid">
+          <div className="flex justify-between items-end text-[11px] font-semibold text-black gap-4 mb-3">
+            <div className="w-36 text-center border-t border-dotted border-black pt-1">
+              প্রস্তুতকারীর স্বাক্ষর
+              
+            </div>
+            <div className="w-36 text-center border-t border-dotted border-black pt-1">
+              যাচাইকারীর স্বাক্ষর
+              
+            </div>
+            <div className="w-36 text-center border-t border-dotted border-black pt-1">
+              অনুমোদনকারীর স্বাক্ষর
+              
+            </div>
+          </div>
+          <div className="text-center text-[9px] text-slate-500 pt-1 border-t border-slate-300">
+            © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
+          </div>
+        </div>
+      </div>
+
+      {/* PRINT-SPECIFIC CSS */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 10px !important;
+          }
+          header, aside, nav, footer, .dashboard-header, [data-sidebar], .no-print {
+            display: none !important;
+          }
+          body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+          }
+          #customerPrintStatement {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-height: calc(297mm - 20mm) !important;
+            width: 100% !important;
+          }
+          #customerPrintStatement table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+          }
+          #customerPrintStatement tr {
+            page-break-inside: avoid !important;
+          }
+        }
+      `}</style>
+
       {/* 6. COLLECT DUE MODAL */}
       {isCollectModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200">
@@ -702,10 +836,10 @@ export default function CustomerProfilePage({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold tracking-tight text-white m-0">
-                    Collect Customer Due
+                    কাস্টমার বকেয়া আদায়
                   </h3>
                   <p className="text-[11px] text-white/80 m-0">
-                    Record payment &amp; update customer balance
+                    বকেয়া আদায় ও কাস্টমার ব্যালেন্স সমন্বয়
                   </p>
                 </div>
               </div>
@@ -725,7 +859,7 @@ export default function CustomerProfilePage({
               <div className="p-3 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-bold block">
-                    Customer
+                    কাস্টমার
                   </span>
                   <span className="font-bold text-xs text-slate-800 dark:text-white">
                     {customer.customer_name} ({customer.customer_id})
@@ -733,7 +867,7 @@ export default function CustomerProfilePage({
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-rose-600 dark:text-rose-400 uppercase font-bold block">
-                    Current Due
+                    বর্তমান বকেয়া
                   </span>
                   <span className="font-black text-sm text-rose-700 dark:text-rose-400">
                     {formatBdCurrency(currentDue)}
@@ -744,7 +878,7 @@ export default function CustomerProfilePage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Paid / Collected Amount (৳) <span className="text-rose-600">*</span>
+                    আদায়কৃত টাকা (৳) <span className="text-rose-600">*</span>
                   </label>
                   <input
                     type="number"
@@ -752,14 +886,14 @@ export default function CustomerProfilePage({
                     required
                     value={payAmount}
                     onChange={(e) => setPayAmount(e.target.value)}
-                    placeholder="Enter amount..."
+                    placeholder="টাকার পরিমাণ লিখুন..."
                     className="w-full h-[42px] px-3 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-slate-800/90 text-xs font-bold text-slate-800 dark:text-white outline-none focus:border-emerald-600"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Discount Amount (৳)
+                    ছাড় / সমন্বয় (৳)
                   </label>
                   <input
                     type="number"
@@ -775,30 +909,30 @@ export default function CustomerProfilePage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Payment Method
+                    পেমেন্ট পদ্ধতি
                   </label>
                   <CustomSelect
                     value={paymentMethod}
                     onChange={(val) => setPaymentMethod(val)}
                     options={[
-                      { value: "Cash", label: "Cash" },
-                      { value: "Bank", label: "Bank Transfer" },
-                      { value: "bKash", label: "bKash" },
-                      { value: "Nagad", label: "Nagad" },
-                      { value: "Rocket", label: "Rocket" },
+                      { value: "Cash", label: "নগদ (Cash)" },
+                      { value: "Bank", label: "ব্যাংক (Bank Transfer)" },
+                      { value: "bKash", label: "বিকাশ (bKash)" },
+                      { value: "Nagad", label: "নগদ (Nagad)" },
+                      { value: "Rocket", label: "রকেট (Rocket)" },
                     ]}
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Transaction ID / Note
+                    ট্রানজেকশন আইডি / নোট
                   </label>
                   <input
                     type="text"
                     value={transactionId}
                     onChange={(e) => setTransactionId(e.target.value)}
-                    placeholder="Optional Trx ID..."
+                    placeholder="ঐচ্ছিক ট্রানজেকশন আইডি..."
                     className="w-full h-[42px] px-3 rounded-xl border-[1.5px] border-[#cbd5e1] dark:border-[#334155] bg-white dark:bg-slate-800/90 text-xs text-slate-800 dark:text-white outline-none focus:border-emerald-600"
                   />
                 </div>
@@ -806,7 +940,7 @@ export default function CustomerProfilePage({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Collection Date <span className="text-rose-600">*</span>
+                  আদায়ের তারিখ <span className="text-rose-600">*</span>
                 </label>
                 <CustomDatePicker
                   value={collectionDate}
@@ -818,17 +952,17 @@ export default function CustomerProfilePage({
               {/* Remaining calculation banner */}
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
                 <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                  <span>Current Due:</span>
+                  <span>বর্তমান বকেয়া:</span>
                   <span className="font-bold text-slate-800 dark:text-white">
                     {formatBdCurrency(currentDue)}
                   </span>
                 </div>
                 <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-                  <span>Total Deduction (Paid + Disc):</span>
+                  <span>মোট কর্তন (আদায় + ছাড়):</span>
                   <span>- {formatBdCurrency(numPay + numDisc)}</span>
                 </div>
                 <div className="flex justify-between text-rose-600 dark:text-rose-400 font-black pt-1 border-t border-slate-200 dark:border-slate-800">
-                  <span>Remaining Customer Due:</span>
+                  <span>অবশিষ্ট কাস্টমার বকেয়া:</span>
                   <span>{formatBdCurrency(modalRemainingDue)}</span>
                 </div>
               </div>
@@ -842,7 +976,7 @@ export default function CustomerProfilePage({
                   onClick={() => setIsCollectModalOpen(false)}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-rose-700 text-white font-bold text-xs transition-all cursor-pointer shadow-xs"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -854,7 +988,7 @@ export default function CustomerProfilePage({
                   ) : (
                     <Check className="w-4 h-4" />
                   )}
-                  <span>Save Collection</span>
+                  <span>আদায় সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>

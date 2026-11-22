@@ -84,29 +84,20 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
               <FileText className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-sm font-bold m-0 leading-tight">Cash Sales Receipt / ইনভয়েস</h3>
+              <h3 className="text-sm font-bold m-0 leading-tight">ক্যাশ বিক্রয় রসিদ</h3>
               <p className="text-[11px] text-emerald-100/80 leading-none mt-0.5">
-                Invoice No: {receiptData.order_no}
+                ইনভয়েস নং: {receiptData.order_no}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {receiptData.id && onOpenChallan && hasTiles && (
-              <button
-                onClick={() => onOpenChallan(receiptData.id!)}
-                className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
-                title="Generate Delivery Challan for Tiles"
-              >
-                <Truck className="w-3.5 h-3.5" />
-                <span>Challan</span>
-              </button>
-            )}
+            
             <button
               onClick={handlePrint}
               className="px-3.5 py-1.5 rounded-xl bg-white text-emerald-900 hover:bg-emerald-50 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Printer className="w-4 h-4" />
-              <span>Print A4</span>
+              <span>প্রিন্ট করুন</span>
             </button>
             <button
               onClick={onClose}
@@ -118,7 +109,7 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
         </div>
 
         {/* Printable Cash Receipt Container (Full Width A4 with 10px margin on print) */}
-        <div id="printable-invoice" className="flex-1 overflow-y-auto p-6 sm:p-8 font-sans text-xs text-slate-800 thermal-sheet print:p-0">
+        <div id="printable-invoice" className="flex-1 overflow-y-auto p-4 sm:p-5 pb-4 font-sans text-xs text-slate-800 thermal-sheet print:p-0 print-sheet-container flex flex-col justify-between">
           {/* Store Branding Header */}
           <div className="text-center pb-4 border-b-2 border-slate-900">
             <div className="flex justify-center mb-2">
@@ -132,13 +123,13 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
               />
             </div>
             <p className="text-xs text-slate-600 font-medium mt-1">
-              Quality Products. Trusted Service.
+              গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা
             </p>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Poultry Feed, Egg Sales &amp; Fish Farming | Wholesale &amp; Retail
+              পোল্ট্রি ফিড, ডিম ও মাছ চাষ | পাইকারি ও খুচরা বিক্রেতা
             </p>
             <div className="mt-2.5 inline-block px-3.5 py-0.5 rounded-md bg-[#166534] text-white font-bold text-[11px] tracking-wider uppercase">
-              CASH SALES RECEIPT / ক্যাশ রসিদ
+              ক্যাশ বিক্রয় রসিদ
             </div>
           </div>
 
@@ -146,7 +137,7 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
           <div className="grid grid-cols-2 gap-4 py-3 border-b border-slate-200 text-xs">
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Customer Information
+                কাস্টমার তথ্য
               </div>
               <p className="font-bold text-sm text-slate-900">{receiptData.customer.customer_name}</p>
               {receiptData.customer.mobile && (
@@ -165,23 +156,23 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
 
             <div className="space-y-1 text-right sm:text-left sm:pl-6 sm:border-l border-slate-200">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Invoice Details
+                ইনভয়েস বিবরণ
               </div>
               <div className="flex sm:justify-between justify-end gap-2">
-                <span className="text-slate-500">Invoice No:</span>
+                <span className="text-slate-500">ইনভয়েস নং:</span>
                 <strong className="font-mono font-bold text-rose-900">{receiptData.order_no}</strong>
               </div>
               <div className="flex sm:justify-between justify-end gap-2">
-                <span className="text-slate-500">Date:</span>
+                <span className="text-slate-500">তারিখ:</span>
                 <span className="font-medium">{receiptData.invoice_date}</span>
               </div>
               <div className="flex sm:justify-between justify-end gap-2">
-                <span className="text-slate-500">Payment:</span>
+                <span className="text-slate-500">পরিশোধ পদ্ধতি:</span>
                 <span className="font-bold uppercase text-slate-800">{receiptData.payment_method}</span>
               </div>
               {receiptData.cashier && (
                 <div className="flex sm:justify-between justify-end gap-2 text-slate-500 text-[11px]">
-                  <span>Served By:</span>
+                  <span>ক্যাশিয়ার:</span>
                   <span>{receiptData.cashier}</span>
                 </div>
               )}
@@ -195,7 +186,7 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
                 <thead>
                   <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px]">
                     <th className="py-2.5 px-3 w-10 text-center">#</th>
-                    <th className="py-2.5 px-3">পণ্যের বিবরণ (Description)</th>
+                    <th className="py-2.5 px-3">পণ্যের বিবরণ</th>
                     <th className="py-2.5 px-3 text-center">ক্যাটাগরি / একক</th>
                     <th className="py-2.5 px-3 text-center w-16">পরিমাণ</th>
                     <th className="py-2.5 px-3 text-right w-24">দর (৳)</th>
@@ -234,7 +225,7 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             {/* Notes / Terms */}
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-[11px]">
-              <span className="font-bold text-slate-700">শর্তাবলী / Terms:</span>
+              <span className="font-bold text-slate-700">শর্তাবলী:</span>
               <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
                 <li>যেকোনো প্রশ্ন বা তথ্যের জন্য এই রসিদ সংরক্ষণ করুন।</li>
                 <li>ডেলিভারির সময় ডিম বা মাছের পরিমাণ ও গুণমান যাচাই করে গ্রহণ করুন।</li>
@@ -250,79 +241,79 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
             {/* Calculations Box */}
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-600">
-                <span>Subtotal:</span>
+                <span>মোট বিল:</span>
                 <span className="font-mono font-bold text-slate-900">{formatBdCurrency(receiptData.sub_total)}</span>
               </div>
               {receiptData.delivery_charge > 0 && (
                 <div className="flex justify-between text-slate-600">
-                  <span>Delivery Charge:</span>
+                  <span>ডেলিভারি চার্জ:</span>
                   <span className="font-mono">+{formatBdCurrency(receiptData.delivery_charge)}</span>
                 </div>
               )}
               {receiptData.discount_amount > 0 && (
                 <div className="flex justify-between text-rose-700 font-bold">
-                  <span>Discount:</span>
+                  <span>ছাড়:</span>
                   <span className="font-mono">-{formatBdCurrency(receiptData.discount_amount)}</span>
                 </div>
               )}
               {receiptData.return_adjustment_amount > 0 && (
                 <div className="flex justify-between text-amber-800 font-bold">
-                  <span>Exchange / Adjustment:</span>
+                  <span>পণ্য বিনিময় ও সমন্বয়:</span>
                   <span className="font-mono">-{formatBdCurrency(receiptData.return_adjustment_amount)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm font-black pt-1.5 border-t border-slate-300 text-rose-950">
-                <span>Net Payable:</span>
+                <span>নীট প্রদেয়:</span>
                 <span className="font-mono text-rose-900">{formatBdCurrency(grandTotal)}</span>
               </div>
               <div className="flex justify-between text-slate-800 font-bold">
-                <span>Paid ({receiptData.payment_method}):</span>
+                <span>পরিশোধিত:</span>
                 <span className="font-mono">{formatBdCurrency(receiptData.paid_amount)}</span>
               </div>
               <div className="flex justify-between text-rose-800 font-bold">
-                <span>Current Due:</span>
+                <span>বর্তমান বকেয়া:</span>
                 <span className="font-mono">{formatBdCurrency(receiptData.due_amount)}</span>
               </div>
               {receiptData.previous_due_amount > 0 && (
                 <div className="flex justify-between text-slate-500 pt-0.5 border-t border-dashed border-slate-200 text-[11px]">
-                  <span>Previous Balance Due:</span>
+                  <span>পূর্বের বকেয়া:</span>
                   <span className="font-mono font-medium">{formatBdCurrency(receiptData.previous_due_amount)}</span>
                 </div>
               )}
               {totalDueWithPrevious > 0 && (
                 <div className="flex justify-between text-xs font-black text-rose-900 pt-1 border-t-2 border-rose-300">
-                  <span>Total Outstanding Due:</span>
+                  <span>সর্বমোট বকেয়া:</span>
                   <span className="font-mono">{formatBdCurrency(totalDueWithPrevious)}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Signature Protocols (Strict Rule: 3 signature areas) */}
-          <div className="pt-10 grid grid-cols-3 gap-4 text-center text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+          {/* Signature Protocols */}
+          <div className="pt-6 grid grid-cols-3 gap-4 text-center text-[10px] font-semibold text-slate-700 uppercase tracking-wider print-signatures-bottom mt-auto">
             <div>
               <div className="border-t border-slate-400 pt-1.5 w-full mx-auto font-bold text-slate-800">
                 বিক্রয় সহকারী / ক্যাশিয়ার
-                <span className="block text-[8px] text-slate-400 font-normal">Cashier</span>
               </div>
             </div>
             <div>
               <div className="border-t border-slate-400 pt-1.5 w-full mx-auto font-bold text-slate-800">
                 ক্রেতার স্বাক্ষর
-                <span className="block text-[8px] text-slate-400 font-normal">Customer Signature</span>
               </div>
             </div>
             <div>
               <div className="border-t border-slate-400 pt-1.5 w-full mx-auto font-bold text-slate-800">
                 অনুমোদনকারীর স্বাক্ষর
-                <span className="block text-[8px] text-slate-400 font-normal">Authorized By</span>
               </div>
             </div>
           </div>
 
-          {/* Footer Branding */}
-          <div className="text-center pt-5 text-[10px] text-slate-400 border-t border-slate-200 mt-4">
-            Thank you for shopping with Arafat Poultry &amp; Fisheries &bull; Software by: CodeNext IT
+          {/* Footer Branding & Copyright */}
+          <div className="text-center pt-3 text-[10px] text-slate-500 border-t border-slate-200 mt-2">
+            <div>আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজের সাথে থাকার জন্য ধন্যবাদ</div>
+            <div className="text-[9px] text-slate-400 mt-0.5 font-medium">
+              © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
+            </div>
           </div>
         </div>
       </div>
@@ -358,6 +349,14 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
             background: white !important;
             color: black !important;
             box-sizing: border-box !important;
+            min-height: calc(297mm - 20mm) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+          }
+          .print-signatures-bottom {
+            margin-top: auto !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>

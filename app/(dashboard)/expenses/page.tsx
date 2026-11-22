@@ -23,7 +23,7 @@ import {
 import Link from "next/link";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker } from "@/components/ui/date-picker";
-import { Pagination, DeleteConfirmModal, CustomSelect, useToast } from "@/components/ui";
+import { Pagination, DeleteConfirmModal, CustomSelect, useToast , PageSkeleton } from "@/components/ui";
 
 interface Expense {
   id: number;
@@ -263,14 +263,20 @@ export default function ExpensesPage() {
         setOpeningBalance(data.data.amount);
         setIsOpeningModalOpen(false);
       } else {
-        alert(data.message || "Failed to save opening balance");
+        toast.error(data.message || "ব্যালেন্স সংরক্ষণ ব্যর্থ হয়েছে");
       }
     } catch {
-      alert("Error saving opening balance");
+      toast.error("ব্যালেন্স সংরক্ষণে ত্রুটি");
     } finally {
       setSavingOpening(false);
     }
   };
+
+  if (loading && expenses.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">
@@ -294,11 +300,11 @@ export default function ExpensesPage() {
           <button
             onClick={() => setIsOpeningModalOpen(true)}
             className="h-[38px] px-3 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Set Daily Cash Drawer Opening Balance"
+            title="দৈনিক ক্যাশ ড্রয়ার প্রারম্ভিক ব্যালেন্স নির্ধারণ করুন (Opening Float)"
           >
             <Coins className="w-4 h-4" />
             <span>
-              Opening: {openingBalance ? formatBdCurrency(openingBalance) : "Set Float"}
+              প্রারম্ভিক ক্যাশ: {openingBalance ? formatBdCurrency(openingBalance) : "সেট করুন"}
             </span>
           </button>
 
@@ -650,7 +656,7 @@ export default function ExpensesPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  {selectedExpense ? "খরচ ভাউচার সম্পাদন (Edit Expense)" : "নতুন খরচ ভাউচার এন্ট্রি (Record Expense)"}
+                  {selectedExpense ? "খরচ ভাউচার সম্পাদনা (Edit Expense Voucher)" : "নতুন খরচ ভাউচার এন্ট্রি (Record Expense Voucher)"}
                 </h3>
               </div>
               <button
@@ -705,7 +711,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Expense Amount (৳) <span className="text-red-500">*</span>
+                    খরচের পরিমাণ (Expense Amount ৳) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -721,7 +727,7 @@ export default function ExpensesPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Expense Date
+                    খরচের তারিখ (Expense Date) <span className="text-red-500">*</span>
                   </label>
                   <CustomDatePicker
                     value={formData.date}
@@ -733,27 +739,27 @@ export default function ExpensesPage() {
               {/* Staff / Employee (Optional) */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Staff / Beneficiary (Optional - For Salary / Advances)
+                  স্টাফ / সুবিধাভোগী (Staff / Beneficiary - ঐচ্ছিক)
                 </label>
                 <CustomSelect
                   options={[
-                    { value: "", label: "None (General Shop Expense)" },
+                    { value: "", label: "কোনোটি নয় - সাধারণ দোকান খরচ (General Shop Expense)" },
                     ...staffList.map((s) => ({ value: s.id, label: `${s.name} (${s.role})` })),
                   ]}
                   value={formData.staff_id}
                   onChange={(val) => setFormData({ ...formData, staff_id: String(val) })}
-                  placeholder="Select Staff..."
+                  placeholder="স্টাফ নির্বাচন করুন (ঐচ্ছিক)..."
                 />
               </div>
 
               {/* Details / Remark */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Expense Details / Voucher Note
+                  খরচের বিবরণ / ভাউচার নোট (Expense Details / Note)
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Tea & snacks for showroom guests, electricity bill voucher #892"
+                  placeholder="যেমন: আপ্যায়ন খরচ, দোকান ভাড়া, বিদ্যুৎ বিল ভাউচার ইত্যাদি"
                   value={formData.expense_details}
                   onChange={(e) => setFormData({ ...formData, expense_details: e.target.value })}
                   className="w-full p-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 font-medium"
@@ -770,7 +776,7 @@ export default function ExpensesPage() {
                   disabled={saving}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -794,7 +800,7 @@ export default function ExpensesPage() {
               <div className="flex items-center gap-2">
                 <Coins className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  Cash Drawer Opening Balance
+                  ক্যাশ ড্রয়ার প্রারম্ভিক ব্যালেন্স (Cash Drawer Opening Balance)
                 </h3>
               </div>
               <button
@@ -809,12 +815,12 @@ export default function ExpensesPage() {
             <form onSubmit={handleSaveOpening} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <div className="p-5 space-y-4 flex-1 min-h-0 overflow-y-auto">
               <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-                Set or update the beginning cash amount held in the retail shop register drawer at the start of business day.
+                দিনের শুরুতে রিটেইল শপ বা দোকানের ক্যাশ ড্রয়ারের প্রারম্ভিক নগদ টাকার পরিমাণ নির্ধারণ বা আপডেট করুন।
               </p>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Float Date <span className="text-red-500">*</span>
+                  তারিখ (Float Date) <span className="text-red-500">*</span>
                 </label>
                 <CustomDatePicker
                   value={openingDate}
@@ -824,7 +830,7 @@ export default function ExpensesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Opening Cash Amount (৳) <span className="text-red-500">*</span>
+                  প্রারম্ভিক নগদ টাকা (Opening Cash Amount ৳) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -844,7 +850,7 @@ export default function ExpensesPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Starting float 500x5 + small change"
+                  placeholder="যেমন: প্রারম্ভিক ক্যাশ ৫০০x৫ + খুচরা টাকা"
                   value={openingNote}
                   onChange={(e) => setOpeningNote(e.target.value)}
                   className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -861,7 +867,7 @@ export default function ExpensesPage() {
                   disabled={savingOpening}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -869,7 +875,7 @@ export default function ExpensesPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {savingOpening && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Float</span>
+                  <span>ক্যাশ ব্যালেন্স সংরক্ষণ করুন (Save Float)</span>
                 </button>
               </div>
             </form>

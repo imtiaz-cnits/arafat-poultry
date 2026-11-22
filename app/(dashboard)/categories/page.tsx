@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { CustomSelect, Pagination, DeleteConfirmModal } from "@/components/ui";
+import { CustomSelect, Pagination, DeleteConfirmModal , PageSkeleton } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 
 interface CategoryItem {
@@ -136,6 +136,12 @@ export default function CategoriesPage() {
   );
   const startIndex = (currentPage - 1) * pageSize;
   const displayedCategories = filtered.slice(startIndex, startIndex + pageSize);
+
+  if (loading && categories.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

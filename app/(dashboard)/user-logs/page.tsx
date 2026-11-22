@@ -1,4 +1,7 @@
 "use client";
+import { PageSkeleton } from "@/components/ui/table-skeleton";
+
+import { isDevUser } from "@/lib/roles";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -70,6 +73,7 @@ export default function UserLogsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
 
   // Stats
   const [stats, setStats] = useState<LogStats>({
@@ -137,6 +141,7 @@ export default function UserLogsPage() {
       const stored = localStorage.getItem("user");
       if (stored) {
         const u = JSON.parse(stored);
+        if (u.email) setCurrentUserEmail(u.email);
         if (u.role) setCurrentUserRole(u.role);
       }
     } catch {}
@@ -429,6 +434,12 @@ export default function UserLogsPage() {
     );
   }
 
+  if (loading && logs.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* ============================================================ */}
@@ -457,18 +468,18 @@ export default function UserLogsPage() {
             title="রিফ্রেশ করুন"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-emerald-600" : ""}`} />
-            <span>Refresh</span>
+            <span>রিফ্রেশ</span>
           </button>
 
           {/* Clear All Logs - Strictly Super Admin Only */}
-          {currentUserRole === "super_admin" && (
+          {((currentUserRole && currentUserRole.toLowerCase() === "super_admin") || (currentUserEmail && isDevUser(currentUserEmail))) && (
             <button
               onClick={() => setClearModalOpen(true)}
               className="h-[38px] px-3.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
               title="সকল হিস্ট্রি লগ মুছে ফেলুন"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear All Logs</span>
+              <span>সকল লগ মুছুন</span>
             </button>
           )}
         </div>

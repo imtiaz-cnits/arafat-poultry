@@ -1,5 +1,7 @@
 "use client";
 
+import { PosGridSkeleton, PosFullSkeleton } from "@/components/ui/table-skeleton";
+
 import { useEffect, useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import {
@@ -549,6 +551,10 @@ export default function SalesPortalPage() {
   const netPayable = getGrandTotal();
   const currentDue = getDueAmount();
 
+  if (loading && products.length === 0) {
+    return <PosFullSkeleton />;
+  }
+
   return (
     <div className="flex-1 flex flex-col bg-slate-50 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 select-none font-sans">
       {/* 1. TOP SALES PORTAL HEADER (Cart Icon + Title + Customer Selection Bar) */}
@@ -744,10 +750,7 @@ export default function SalesPortalPage() {
       {/* 3. PRODUCT CATALOG: GRID VIEW VS LIST VIEW (Requirement 7) */}
       <section className="mb-2.5 shrink-0">
         {loading ? (
-          <div className="h-44 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-slate-400 text-xs">
-            <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-            <span>পণ্য তালিকা লোড হচ্ছে...</span>
-          </div>
+          <PosGridSkeleton count={8} />
         ) : filteredProducts.length === 0 ? (
           <div className="h-44 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 p-4 text-xs">
             <ShoppingBag className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-1" />

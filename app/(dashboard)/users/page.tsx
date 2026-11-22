@@ -26,7 +26,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { Pagination, DeleteConfirmModal, CustomSelect } from "@/components/ui";
+import { Pagination, DeleteConfirmModal, CustomSelect , PageSkeleton } from "@/components/ui";
+import { isDevUser } from "@/lib/roles";
 import {
   SIDEBAR_MODULES,
   DEFAULT_PERMISSIONS,
@@ -61,6 +62,7 @@ export default function UsersPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [error, setError] = useState("");
   const [currentUserRole, setCurrentUserRole] = useState<string>("");
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
 
   // Delete Confirm Modal State
   const [userToDelete, setUserToDelete] = useState<UserItem | null>(null);
@@ -112,6 +114,11 @@ export default function UsersPage() {
       const stored = localStorage.getItem("user");
       if (stored) {
         const parsed = JSON.parse(stored);
+        if (!isDevUser(parsed.email) && parsed.role?.toLowerCase() !== "super_admin") {
+          window.location.href = "/profile";
+          return;
+        }
+        if (parsed.email) setCurrentUserEmail(parsed.email);
         if (parsed.role) setCurrentUserRole(parsed.role);
       }
     } catch {}
@@ -340,7 +347,8 @@ export default function UsersPage() {
     }
   }
 
-  const filteredUsers = users.filter((u) => {
+  const nonDevUsers: UserItem[] = users.filter((u: UserItem) => !isDevUser(u.email));
+  const filteredUsers: UserItem[] = nonDevUsers.filter((u: UserItem) => {
     const q = search.toLowerCase();
     return (
       u.name.toLowerCase().includes(q) ||
@@ -351,15 +359,17 @@ export default function UsersPage() {
   });
 
   const startIndex = (currentPage - 1) * pageSize;
-  const displayedUsers = filteredUsers.slice(startIndex, startIndex + pageSize);
+  const displayedUsers: UserItem[] = filteredUsers.slice(startIndex, startIndex + pageSize);
 
-  const adminCount = users.filter(
-    (u) => u.role.toLowerCase() === "admin"
+  const adminCount = nonDevUsers.filter(
+    (u: UserItem) => u.role.toLowerCase() === "admin" || u.role.toLowerCase() === "super_admin"
   ).length;
-  const managerCount = users.filter((u) => u.role.toLowerCase() === "manager").length;
-  const staffCount = users.filter((u) => u.role.toLowerCase() === "staff").length;
+  const managerCount = nonDevUsers.filter((u: UserItem) => u.role.toLowerCase() === "manager").length;
+  const staffCount = nonDevUsers.filter((u: UserItem) => u.role.toLowerCase() === "staff").length;
+  const totalCount = nonDevUsers.length;
 
-  if (!loading && currentUserRole && currentUserRole.toLowerCase() !== "super_admin") {
+  const isDevCurrent = isDevUser(currentUserEmail);
+  if (!loading && currentUserRole && currentUserRole.toLowerCase() !== "super_admin" && !isDevCurrent) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4 border border-rose-200 dark:border-rose-900 shadow-sm">
@@ -381,6 +391,12 @@ export default function UsersPage() {
     );
   }
 
+  if (loading && users.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* 1. Header Section */}
@@ -399,7 +415,7 @@ export default function UsersPage() {
           </div>
         </div>
 
-        {currentUserRole && currentUserRole.toLowerCase() === "super_admin" && (
+        {(isDevCurrent || (currentUserRole && currentUserRole.toLowerCase() === "super_admin")) && (
           <button
             onClick={handleOpenAdd}
             className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto shrink-0 w-auto"
@@ -530,7 +546,7 @@ export default function UsersPage() {
               ) : (
                 displayedUsers.map((user, idx) => {
                   const r = user.role.toLowerCase();
-                  const isSuperUser = isProtectedSuperAdmin(user);
+                  const isSuperUser = user.role.toLowerCase() === "super_admin" || isProtectedSuperAdmin(user);
                   const roleLabel =
                     r === "super_admin"
                       ? "🛡️ Super Admin"
@@ -670,7 +686,7 @@ export default function UsersPage() {
                   >
                     Edit
                   </button>
-                  {!isProtectedSuperAdmin(user) && (
+                  {!isProtectedSuperAdmin(user) && user.role.toLowerCase() !== "super_admin" && (
                     <button
                       onClick={() => handleDeleteUser(user)}
                       className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold"

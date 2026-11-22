@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { Pagination } from "@/components/ui";
+import { Pagination, TableSkeleton , PageSkeleton } from "@/components/ui";
 
 interface UnitBreakdown {
   type: "EGG" | "FEED" | "FISH";
@@ -252,6 +252,12 @@ export default function InventoryPage() {
     setStatusFilter("all");
     setCurrentPage(1);
   };
+
+  if (loading && items.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

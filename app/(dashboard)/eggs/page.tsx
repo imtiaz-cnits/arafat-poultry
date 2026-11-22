@@ -28,7 +28,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { Pagination } from "@/components/ui";
+import { Pagination , PageSkeleton } from "@/components/ui";
 import { CustomDatePicker, CustomSelect, useToast } from "@/components/ui";
 
 interface Flock {
@@ -565,6 +565,12 @@ export default function EggProductionPage() {
     const start = (flockPage - 1) * flockPageSize;
     return flocks.slice(start, start + flockPageSize);
   }, [data?.flocks, flockPage, flockPageSize]);
+
+  if (loading && !data) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="no-print space-y-6">

@@ -16,7 +16,8 @@ import {
   Receipt,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomSelect, Pagination } from "@/components/ui";
+import { CustomSelect, Pagination, TableSkeleton , PageSkeleton } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 
 interface Customer {
   id: number;
@@ -28,6 +29,7 @@ interface Customer {
 }
 
 export default function CustomerDuesPage() {
+  const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -104,10 +106,10 @@ export default function CustomerDuesPage() {
         setCurrentPage(1);
         loadCustomers();
       } else {
-        alert(data.message || "Failed to collect due");
+        toast.error(data.message || "বকেয়া আদায় ব্যর্থ হয়েছে");
       }
     } catch (err) {
-      alert("Communication error");
+      toast.error("সার্ভার যোগাযোগ ত্রুটি");
     } finally {
       setSaving(false);
     }
@@ -125,6 +127,12 @@ export default function CustomerDuesPage() {
 
   const totalDueAmount = customers.reduce((sum, c) => sum + c.previous_due_amount, 0);
 
+  if (loading && customers.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -135,17 +143,17 @@ export default function CustomerDuesPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              Customer Due Collection Register
+              কাস্টমার বকেয়া আদায় খতিয়ান (Customer Dues)
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              Manage accounts receivable, recover outstanding customer balances
+              বকেয়া পাওনাদার কাস্টমারদের বকেয়া হিসাব ও নগদ/ব্যাংক আদায় রেজিস্টার
             </p>
           </div>
         </div>
 
         <div className="h-[42px] px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-center gap-2.5">
           <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase">
-            Total Customer Receivable:
+            মোট কাস্টমার বকেয়া পাওনা:
           </span>
           <span className="text-sm font-black text-rose-800 dark:text-rose-300">
             {formatBdCurrency(totalDueAmount)}
@@ -189,12 +197,7 @@ export default function CustomerDuesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="text-center text-slate-400 p-[10px]">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-                    <span>Loading customer dues...</span>
-                  </td>
-                </tr>
+                <tr><td colSpan={6} className="p-0"><TableSkeleton rows={5} columns={6} /></td></tr>
               ) : filteredCustomers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center text-slate-400 font-bold p-[10px]">
@@ -247,7 +250,7 @@ export default function CustomerDuesPage() {
                         className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs mx-auto"
                       >
                         <Wallet className="w-3.5 h-3.5" />
-                        <span className="whitespace-nowrap">Collect Due</span>
+                        <span className="whitespace-nowrap">বকেয়া আদায়</span>
                       </button>
                     </td>
                   </tr>
@@ -297,7 +300,7 @@ export default function CustomerDuesPage() {
             </div>
 
             <div className="bg-slate-50 dark:bg-[#1e293b] p-2 rounded-xl flex justify-between items-center text-xs">
-              <span className="text-slate-400 text-[10px]">Due Amount:</span>
+              <span className="text-slate-400 text-[10px]">বকেয়া টাকা:</span>
               <span className="font-black text-rose-600 text-sm">
                 {formatBdCurrency(c.previous_due_amount)}
               </span>
@@ -309,7 +312,7 @@ export default function CustomerDuesPage() {
               className="w-full h-[32px] rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1"
             >
               <Wallet className="w-3.5 h-3.5" />
-              <span>Collect Due Payment</span>
+              <span>বকেয়া আদায়</span>
             </button>
           </div>
         ))}
@@ -338,7 +341,7 @@ export default function CustomerDuesPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  কাস্টমার বকেয়া আদায় (Collect Due)
+                  কাস্টমার বকেয়া আদায়
                 </h3>
               </div>
               <button
@@ -354,13 +357,13 @@ export default function CustomerDuesPage() {
             <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
               <div className="bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Customer:</span>
+                  <span className="text-slate-500">কাস্টমার:</span>
                   <strong className="font-bold text-slate-800 dark:text-white">
                     {selectedCustomer.customer_name} ({selectedCustomer.mobile})
                   </strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Outstanding Due:</span>
+                  <span className="text-slate-500">বর্তমান বকেয়া:</span>
                   <strong className="font-bold text-rose-600">
                     {formatBdCurrency(selectedCustomer.previous_due_amount)}
                   </strong>
@@ -369,7 +372,7 @@ export default function CustomerDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  আদায়কৃত টাকা (Collected Amount ৳) <span className="text-red-500">*</span>
+                  আদায়কৃত টাকা (৳) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -386,7 +389,7 @@ export default function CustomerDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  ছাড় / সমন্বয় (Discount ৳)
+                  ছাড় / সমন্বয় (৳)
                 </label>
                 <input
                   type="number"
@@ -402,7 +405,7 @@ export default function CustomerDuesPage() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  পরিশোধের মাধ্যম (Payment Method)
+                  পেমেন্ট পদ্ধতি
                 </label>
                 <CustomSelect
                   value={collectionData.payment_method}
@@ -417,17 +420,17 @@ export default function CustomerDuesPage() {
                     { value: "Bank", label: "Bank Transfer" },
                     { value: "Card", label: "Card" },
                   ]}
-                  placeholder="Select Payment Method"
+                  placeholder="পেমেন্ট পদ্ধতি নির্বাচন করুন"
                 />
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Transaction ID / Note
+                  ট্রানজেকশন আইডি / রেফারেন্স
                 </label>
                 <input
                   type="text"
-                  placeholder="Optional reference"
+                  placeholder="ঐচ্ছিক রেফারেন্স"
                   value={collectionData.transaction_id}
                   onChange={(e) =>
                     setCollectionData({ ...collectionData, transaction_id: e.target.value })
@@ -446,7 +449,7 @@ export default function CustomerDuesPage() {
                   disabled={saving}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -454,7 +457,7 @@ export default function CustomerDuesPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Confirm Due Collection</span>
+                  <span>বকেয়া আদায় নিশ্চিত করুন</span>
                 </button>
               </div>
             </form>

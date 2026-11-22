@@ -24,8 +24,9 @@ import Link from "next/link";
 import { formatBdCurrency } from "@/lib/utils";
 import { formatBoxAndPcs, formatTileOrItemQty, formatOrderQty } from "@/lib/tiles-calculator";
 import { ThermalReceiptModal } from "@/components/pos/thermal-receipt";
-import { ChallanModal } from "@/components/challan/challan-modal";
-import { CustomSelect, Pagination } from "@/components/ui";
+
+import { CustomSelect, Pagination, TableSkeleton , PageSkeleton } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 
 interface Invoice {
   id: number;
@@ -77,6 +78,7 @@ interface Invoice {
 }
 
 export default function InvoicesPage() {
+  const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -151,10 +153,10 @@ export default function InvoicesPage() {
         setCurrentPage(1);
         loadInvoices();
       } else {
-        alert(data.message || "Failed to collect due");
+        toast.error(data.message || "বকেয়া আদায় ব্যর্থ হয়েছে");
       }
     } catch (err) {
-      alert("Communication error");
+      toast.error("সার্ভার যোগাযোগ ত্রুটি");
     } finally {
       setSubmittingDue(false);
     }
@@ -213,6 +215,12 @@ export default function InvoicesPage() {
 
   const totalSalesRevenue = invoices.reduce((sum, inv) => sum + inv.net_payable, 0);
   const totalSalesDue = invoices.reduce((sum, inv) => sum + inv.due_amount, 0);
+
+  if (loading && invoices.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">
@@ -523,28 +531,6 @@ export default function InvoicesPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-1">
-              {/* Challan Button */}
-              {Boolean(inv.has_tiles || inv.has_pending_tiles || inv.has_challan || (inv.challan_status && inv.challan_status !== "NOT_REQUIRED")) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setChallanOrderId(inv.id);
-                    setIsChallanModalOpen(true);
-                  }}
-                  className={`h-[30px] w-full px-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 ${inv.has_challan
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                      : inv.has_pending_tiles
-                        ? "bg-amber-600 text-white animate-pulse"
-                        : "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
-                    }`}
-                >
-                  <Truck className="w-3.5 h-3.5" />
-                  <span>
-                    {inv.has_challan ? "Challan" : inv.has_pending_tiles ? "Dispatch Tiles" : "Challan"}
-                  </span>
-                </button>
-              )}
-
               {/* Print Button */}
               <button
                 type="button"
@@ -596,20 +582,7 @@ export default function InvoicesPage() {
                 </h3>
               </div>
               <div className="flex items-center gap-2">
-                {Boolean(selectedInvoice.has_tiles || selectedInvoice.has_pending_tiles || selectedInvoice.has_challan || (selectedInvoice.challan_status && selectedInvoice.challan_status !== "NOT_REQUIRED")) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setChallanOrderId(selectedInvoice.id);
-                      setIsChallanModalOpen(true);
-                    }}
-                    className="h-[30px] p-3 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
-                    title="Manage Delivery Challan"
-                  >
-                    <Truck className="w-3.5 h-3.5" />
-                    <span>Challan</span>
-                  </button>
-                )}
+                
                 <button
                   type="button"
                   onClick={() => triggerThermalReceipt(selectedInvoice)}
@@ -876,18 +849,7 @@ export default function InvoicesPage() {
         />
       )}
 
-      {/* 8. DELIVERY CHALLAN MODAL */}
-      {challanOrderId && (
-        <ChallanModal
-          orderId={challanOrderId}
-          isOpen={isChallanModalOpen}
-          onClose={() => {
-            setIsChallanModalOpen(false);
-            setChallanOrderId(null);
-          }}
-          onChallanGenerated={() => loadInvoices()}
-        />
-      )}
+      
     </div>
   );
 }

@@ -1,10 +1,12 @@
 "use client";
+import { PageSkeleton } from "@/components/ui/table-skeleton";
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Printer, ArrowLeft, Loader2 } from "lucide-react";
+import { numberToBanglaWords } from "@/lib/utils";
 
 interface PurchaseDetail {
   id: number;
@@ -156,6 +158,12 @@ export default function PurchaseBillPage({
   const todayDue = purchase.due_amount;
   const totalPayable = purchase.purchase_payable_amount;
 
+  if (loading && !purchase) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className=" font-sans">
       {/* 1. TOP ACTION BAR (Hidden when printing) */}
@@ -182,7 +190,7 @@ export default function PurchaseBillPage({
       {/* 2. INVOICE SHEET PAPER (Full width) */}
       <div
         id="purchasePrintSheet"
-        className="invoice-paper bg-white text-black p-4 sm:p-8 border border-slate-300 w-full shadow-md relative flex flex-col justify-between overflow-hidden"
+        className="invoice-paper bg-white text-black p-4 sm:p-8 border border-slate-300 w-full min-h-[297mm] shadow-md relative flex flex-col justify-between overflow-hidden"
         style={{
           fontFamily: "'Valley Sans', Arial, sans-serif",
           boxSizing: "border-box",
@@ -206,65 +214,65 @@ export default function PurchaseBillPage({
             {/* Middle "Purchase Bill" Badge */}
             <div className="self-center">
               <span className="px-4 sm:px-5 py-0.5 sm:py-1 print:py-1 rounded bg-[#166534] text-white font-serif font-black text-base sm:text-lg print:text-lg tracking-wider">
-                ক্রয় মেমো (PURCHASE MEMO)
+                ক্রয় মেমো
               </span>
             </div>
 
             {/* Office Info */}
             <div className="text-center sm:text-right print:text-right text-[11px] text-slate-800 leading-tight max-w-[240px]">
-              <div><strong>Business:</strong> Arafat Poultry &amp; Fisheries</div>
-              <div>Quality Products. Trusted Service.</div>
-              <div><strong>Mobile:</strong> 01975-703216, 01715-842083</div>
-              <div><strong>E-mail:</strong> info@arafatpoultry.com</div>
+              <div><strong>প্রতিষ্ঠান:</strong> আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজ</div>
+              <div>গুণগত মানসম্মত পণ্য ও বিশ্বস্ত সেবা</div>
+              <div><strong>মোবাইল:</strong> 01975-703216, 01715-842083</div>
+              <div><strong>ইমেইল:</strong> info@arafatpoultry.com</div>
             </div>
           </div>
 
           {/* Form Metadata Rows (Two-Column Dotted Grid) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-x-6 gap-y-1.5 sm:gap-y-1 print:gap-y-1 my-3 text-[12px] text-black">
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Purchase No:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">ক্রয় ভাউচার নং:</span>
               <span className="flex-1 border-b border-dotted border-black font-bold font-mono pl-1">
                 #{purchase.purchase_id}
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Bill Date:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">বিল তারিখ:</span>
               <span className="flex-1 border-b border-dotted border-black font-semibold pl-1">
                 {formatDate(purchase.date)}
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Ref / Memo:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">রেফারেন্স / চালান নং:</span>
               <span className="flex-1 border-b border-dotted border-black font-semibold pl-1">
-                {purchase.referance_no || "Direct Inward"}
+                {purchase.referance_no || "সরাসরি ইনওয়ার্ড"}
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Purchaser:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">ক্রেতা / পরিচালনাকারী:</span>
               <span className="flex-1 border-b border-dotted border-black font-semibold pl-1">
                 {purchase.creator}
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Name of Supplier:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">সরবরাহকারীর নাম:</span>
               <span className="flex-1 border-b border-dotted border-black font-bold pl-1 truncate">
                 {purchase.supplier?.name} ({purchase.supplier?.company})
               </span>
             </div>
 
             <div className="flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Mob:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">মোবাইল:</span>
               <span className="flex-1 border-b border-dotted border-black font-bold font-mono pl-1">
                 {purchase.supplier?.mobile || "N/A"}
               </span>
             </div>
 
             <div className="col-span-1 sm:col-span-2 print:col-span-2 flex items-end">
-              <span className="font-semibold whitespace-nowrap mr-1">Address:</span>
+              <span className="font-semibold whitespace-nowrap mr-1">ঠিকানা:</span>
               <span className="flex-1 border-b border-dotted border-black pl-1 truncate">
                 {purchase.supplier?.address || "N/A"}
               </span>
@@ -272,13 +280,13 @@ export default function PurchaseBillPage({
           </div>
 
           {/* Items Table */}
-          <div className="mt-2 mb-4 overflow-x-auto">
+          <div className="mt-2 mb-2 overflow-x-auto">
             <table className="w-full text-left border-collapse border border-black text-[12px] min-w-[500px] sm:min-w-0 print:min-w-0">
               <thead>
                 <tr className="bg-slate-50 text-black font-bold text-center border-b border-black">
                   <th className="border border-black py-1 px-2 w-[50px]">ক্রমিক</th>
-                  <th className="border border-black py-1 px-3 text-left">পণ্যের বিবরণ (Description)</th>
-                  <th className="border border-black py-1 px-2 w-[110px] text-right">দর (Rate)</th>
+                  <th className="border border-black py-1 px-3 text-left">পণ্যের বিবরণ</th>
+                  <th className="border border-black py-1 px-2 w-[110px] text-right">দর (৳)</th>
                   <th className="border border-black py-1 px-2 w-[80px] text-center">পরিমাণ</th>
                   <th className="border border-black py-1 px-3 w-[120px] text-right">মোট টাকা (৳)</th>
                 </tr>
@@ -297,6 +305,9 @@ export default function PurchaseBillPage({
                         </span>
                       )}
                     </td>
+                    <td className="border border-black py-1 px-2 text-right font-mono">
+                      {item.cost_price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
                     <td className="border border-black py-1 px-2 text-center font-bold whitespace-nowrap">
                       {item.quantity} {item.unit || "একক"}
                     </td>
@@ -308,28 +319,15 @@ export default function PurchaseBillPage({
               </tbody>
             </table>
           </div>
-        </div>
 
-        {/* 3. BOTTOM SUMMARY SECTION */}
-        <div className="sheet-bottom-content mt-auto pt-2">
-          <div className="flex flex-col sm:flex-row print:flex-row items-start sm:items-end print:items-end justify-between gap-4 mb-6">
-            {/* In Words */}
-            <div className="w-full sm:w-[58%] print:w-[58%] text-[12px]">
-              <div className="flex items-end">
-                <span className="font-semibold whitespace-nowrap mr-1">In Words:</span>
-                <span className="flex-1 border-b border-dotted border-black font-bold pl-1 italic">
-                  {numberToWords(netAmount)} Taka Only
-                </span>
-              </div>
-            </div>
-
-            {/* Totals Table */}
-            <div className="w-full sm:w-[40%] print:w-[40%]">
+          {/* Totals Table directly beneath items table */}
+          <div className="flex justify-end mt-1 mb-2">
+            <div className="w-full sm:w-[42%] print:w-[42%]">
               <table className="w-full border-collapse border border-black text-[12px]">
                 <tbody>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50 w-1/2">
-                      Total Bill
+                      মোট বিল:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold w-1/2">
                       {totalBill.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -337,7 +335,7 @@ export default function PurchaseBillPage({
                   </tr>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50">
-                      Delivery Charge
+                      পরিবহন / ডেলিভারি খরচ:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold">
                       {purchase.delivery_charge.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -345,7 +343,7 @@ export default function PurchaseBillPage({
                   </tr>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50">
-                      Paid Amount
+                      পরিশোধিত টাকা:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold text-emerald-800">
                       {paidAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -353,7 +351,7 @@ export default function PurchaseBillPage({
                   </tr>
                   <tr className="border-b border-black">
                     <td className="border border-black py-1 px-2 font-bold bg-slate-50">
-                      Today Due
+                      আজকের বকেয়া:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-bold text-rose-700">
                       {todayDue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -361,7 +359,7 @@ export default function PurchaseBillPage({
                   </tr>
                   <tr>
                     <td className="border border-black py-1 px-2 font-black bg-slate-100">
-                      Total Payable
+                      মোট প্রদেয় টাকা:
                     </td>
                     <td className="border border-black py-1 px-2 text-right font-mono font-black text-rose-800 text-[13px]">
                       {totalPayable.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -371,27 +369,45 @@ export default function PurchaseBillPage({
               </table>
             </div>
           </div>
+        </div>
 
-          {/* Signatures (Rule 12.3: 3 signature areas) */}
-          <div className="flex justify-between items-end pt-12 pb-3 text-[11px] font-semibold text-black gap-4">
+        {/* 3. BOTTOM SUMMARY SECTION */}
+        <div className="sheet-bottom-content mt-auto pt-4 print:mt-auto break-inside-avoid">
+          {/* In Words */}
+          <div className="w-full text-[12px] mb-4">
+            <div className="flex items-end">
+              <span className="font-semibold whitespace-nowrap mr-1">কথায়:</span>
+              <span className="flex-1 border-b border-dotted border-black font-bold pl-1 italic">
+                {numberToBanglaWords(netAmount)} টাকা মাত্র
+              </span>
+            </div>
+          </div>
+
+          {/* Signatures */}
+          <div className="flex justify-between items-end pt-8 pb-3 text-[11px] font-semibold text-black gap-4">
             <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
               প্রস্তুতকারীর স্বাক্ষর
-              <span className="block text-[9px] text-slate-500 font-normal">Prepared By</span>
+              
             </div>
             <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
               গ্রহণকারীর স্বাক্ষর
-              <span className="block text-[9px] text-slate-500 font-normal">Received By</span>
+              
             </div>
             <div className="w-32 sm:w-36 print:w-36 text-center border-t border-dotted border-black pt-1">
               অনুমোদনকারীর স্বাক্ষর
-              <span className="block text-[9px] text-slate-500 font-normal">Authorized By</span>
+              
             </div>
           </div>
 
           {/* Bottom Dual Color Accent Bar */}
-          <div className="flex h-3 w-[calc(100%+2rem)] sm:w-[calc(100%+4rem)] -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 mt-4">
+          <div className="flex h-2.5 w-[calc(100%+2rem)] sm:w-[calc(100%+4rem)] -mx-4 sm:-mx-8 -mb-4 sm:-mb-8 mt-3">
             <div className="w-1/2 bg-[#dc2626]"></div>
             <div className="w-1/2 bg-[#15803d]"></div>
+          </div>
+
+          {/* Copyright Footer */}
+          <div className="text-center text-[9px] text-slate-500 pt-1 -mb-2 sm:-mb-6 print:mb-0">
+            © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
           </div>
         </div>
       </div>
@@ -421,7 +437,10 @@ export default function PurchaseBillPage({
             padding: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            min-height: auto !important;
+            min-height: calc(297mm - 20mm) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
           }
           #purchasePrintSheet table {
             width: 100% !important;

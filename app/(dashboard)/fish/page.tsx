@@ -23,7 +23,7 @@ import {
   Printer,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination , PageSkeleton } from "@/components/ui";
 
 interface Pond {
   id: number;
@@ -515,6 +515,12 @@ export default function FishFarmingPage() {
       setSubmitting(false);
     }
   };
+
+  if (loading && !data) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="no-print space-y-6">

@@ -10,7 +10,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { CustomSelect, Pagination, DeleteConfirmModal } from "@/components/ui";
+import { CustomSelect, Pagination, DeleteConfirmModal , PageSkeleton } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 
 interface BrandItem {
@@ -134,6 +134,12 @@ export default function BrandsPage() {
   );
   const startIndex = (currentPage - 1) * pageSize;
   const displayedBrands = filtered.slice(startIndex, startIndex + pageSize);
+
+  if (loading && brands.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

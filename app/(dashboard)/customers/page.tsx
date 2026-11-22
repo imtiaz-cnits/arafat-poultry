@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
-import { Pagination, DeleteConfirmModal, CustomSelect } from "@/components/ui";
+import { Pagination, DeleteConfirmModal, CustomSelect, TableSkeleton, CardSkeleton , PageSkeleton } from "@/components/ui";
 
 interface Customer {
   id: number;
@@ -238,6 +238,12 @@ export default function CustomersPage() {
   const displayedCustomers = customers.slice(startIndex, startIndex + pageSize);
   const totalCustomerDue = customers.reduce((sum, c) => sum + c.previous_due_amount, 0);
 
+  if (loading && customers.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -323,16 +329,11 @@ export default function CustomersPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="text-center text-slate-400 p-[10px]">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-                    <span>Loading customers...</span>
-                  </td>
-                </tr>
+                <tr><td colSpan={6} className="p-0"><TableSkeleton rows={6} columns={6} /></td></tr>
               ) : customers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center text-slate-400 font-bold p-[10px]">
-                    No customers found. Click "+ Add Customer" to create one.
+                    কোনো কাস্টমার পাওয়া যায়নি।
                   </td>
                 </tr>
               ) : (
@@ -426,10 +427,7 @@ export default function CustomersPage() {
       {/* Mobile Card / Box List (Strict Rule: block md:hidden) */}
       <div className="block md:hidden space-y-2.5">
         {loading ? (
-          <div className="py-10 text-center text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-            <span>Loading customers...</span>
-          </div>
+          <CardSkeleton count={4} />
         ) : customers.length === 0 ? (
           <div className="p-6 text-center text-slate-400 font-bold bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155]">
             No customers found. Click "+ Add Customer" to create one.
@@ -558,7 +556,7 @@ export default function CustomersPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    কাস্টমারের নাম (Customer Name) <span className="text-red-500">*</span>
+                    কাস্টমারের নাম <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -571,7 +569,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    মোবাইল নম্বর (Mobile Phone) <span className="text-red-500">*</span>
+                    মোবাইল নম্বর <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -584,7 +582,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Previous Due (৳)
+                    পূর্বের বকেয়া (৳)
                   </label>
                   <input
                     type="number"
@@ -600,7 +598,7 @@ export default function CustomersPage() {
 
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Address / Area Details
+                    ঠিকানা / এলাকা
                   </label>
                   <input
                     type="text"
@@ -612,7 +610,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Email (Optional)
+                    ইমেইল (ঐচ্ছিক)
                   </label>
                   <input
                     type="email"
@@ -624,7 +622,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    National ID (Optional)
+                    জাতীয় পরিচয়পত্র / এনআইডি (ঐচ্ছিক)
                   </label>
                   <input
                     type="text"
@@ -653,7 +651,7 @@ export default function CustomersPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Customer</span>
+                  <span>কাস্টমার সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>
@@ -670,7 +668,7 @@ export default function CustomersPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  কাস্টমার বকেয়া আদায় (Collect Due)
+                  কাস্টমার বকেয়া আদায়
                 </h3>
               </div>
               <button
@@ -693,25 +691,25 @@ export default function CustomersPage() {
                 {/* Customer Info Card */}
                 <div className="bg-slate-50 dark:bg-[#1e293b] p-3.5 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-2 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 dark:text-slate-400">কাস্টমার (Customer):</span>
+                    <span className="text-slate-500 dark:text-slate-400">কাস্টমার:</span>
                     <strong className="font-bold text-slate-800 dark:text-white">
                       {collectCustomer.customer_name} ({collectCustomer.customer_id})
                     </strong>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 dark:text-slate-400">মোবাইল (Mobile):</span>
+                    <span className="text-slate-500 dark:text-slate-400">মোবাইল:</span>
                     <span className="font-semibold text-slate-700 dark:text-slate-300">
                       {collectCustomer.mobile}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-1.5 border-t border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-500 dark:text-slate-400">বর্তমান বকেয়া (Current Due):</span>
+                    <span className="text-slate-500 dark:text-slate-400">বর্তমান বকেয়া:</span>
                     <strong className="font-black text-rose-600 dark:text-rose-400 text-sm">
                       {formatBdCurrency(collectCustomer.previous_due_amount)}
                     </strong>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 dark:text-slate-400">অবশিষ্ট বকেয়া (Remaining Due):</span>
+                    <span className="text-slate-500 dark:text-slate-400">অবশিষ্ট বকেয়া:</span>
                     <strong className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                       {formatBdCurrency(
                         Math.max(
@@ -727,7 +725,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    আদায়কৃত টাকা (Collected Amount ৳) <span className="text-red-500">*</span>
+                    আদায়কৃত টাকা (৳) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -745,7 +743,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    ছাড় / সমন্বয় (Discount ৳)
+                    ছাড় / সমন্বয় (৳)
                   </label>
                   <input
                     type="number"
@@ -762,7 +760,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    আদায়ের তারিখ (Collection Date)
+                    আদায়ের তারিখ
                   </label>
                   <input
                     type="date"
@@ -776,7 +774,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    পরিশোধের মাধ্যম (Payment Method)
+                    পেমেন্ট পদ্ধতি
                   </label>
                   <CustomSelect
                     value={collectionData.payment_method}
@@ -797,7 +795,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    ট্রানজেকশন আইডি / রেফারেন্স (Transaction ID)
+                    ট্রানজেকশন আইডি / রেফারেন্স
                   </label>
                   <input
                     type="text"
@@ -812,7 +810,7 @@ export default function CustomersPage() {
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    নোট / মন্তব্য (Note)
+                    নোট / মন্তব্য
                   </label>
                   <input
                     type="text"
@@ -834,7 +832,7 @@ export default function CustomersPage() {
                   disabled={collecting}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  বাতিল (Cancel)
+                  বাতিল
                 </button>
                 <button
                   type="submit"

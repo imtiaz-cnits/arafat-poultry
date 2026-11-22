@@ -24,7 +24,7 @@ import {
   Tag,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination , PageSkeleton } from "@/components/ui";
 
 interface Flock {
   id: number;
@@ -217,6 +217,12 @@ export default function ChickenManagementPage() {
       setSavingMortality(false);
     }
   };
+
+  if (loading && flocks.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

@@ -24,8 +24,8 @@ import {
   Sparkles,
   HeartPulse,
 } from "lucide-react";
-import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast, Pagination } from "@/components/ui";
+import { formatBdCurrency, formatBdDate } from "@/lib/utils";
+import { CustomDatePicker, CustomSelect, useToast, Pagination, DeleteConfirmModal , PageSkeleton } from "@/components/ui";
 
 interface MedicationItem {
   id: number;
@@ -57,6 +57,8 @@ export default function MedicationsPage() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<MedicationItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     medicine_name: "",
@@ -169,20 +171,24 @@ export default function MedicationsPage() {
     }
   };
 
-  // Handle Delete
-  const handleDelete = async (id: number) => {
-    if (!confirm("আপনি কি নিশ্চিতভাবে এই ওষুধের শিডিউলটি মুছে ফেলতে চান?")) return;
+  // Handle Delete Confirmation
+  const confirmDeleteItem = async () => {
+    if (!itemToDelete) return;
     try {
-      const res = await fetch(`/api/medications?id=${id}`, { method: "DELETE" });
+      setIsDeleting(true);
+      const res = await fetch(`/api/medications?id=${itemToDelete.id}`, { method: "DELETE" });
       const json = await res.json();
       if (json.status === "success") {
         toast.success("শিডিউল মুছে ফেলা হয়েছে", "সফল");
+        setItemToDelete(null);
         loadData();
       } else {
         toast.error(json.message || "মুছতে ব্যর্থ হয়েছে", "ত্রুটি");
       }
     } catch (err: any) {
       toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -236,6 +242,12 @@ export default function MedicationsPage() {
     }
   };
 
+  if (loading && items.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* 1. Page Header */}
@@ -246,10 +258,10 @@ export default function MedicationsPage() {
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white m-0 leading-tight">
-              ওষুধ ও ভ্যাকসিন প্রয়োগ রেজিস্টার (Medicine &amp; Vaccine Schedule)
+              ওষুধ ও ভ্যাকসিন প্রয়োগ রেজিস্টার
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 m-0">
-              মাছ ও মুরগির ওষুধ, সঠিক ডোজ, প্রয়োগের ফ্রিকোয়েন্সি (Daily/Weekly/Monthly) ও বেলা (সকাল/দুপুর/বিকাল/রাত)
+              মাছ ও মুরগির ওষুধ, সঠিক ডোজ, প্রয়োগের সময়সূচি ও স্বাস্থ্য ব্যবস্থাপনা
             </p>
           </div>
         </div>
@@ -440,7 +452,7 @@ export default function MedicationsPage() {
                     <td className="text-center font-bold text-slate-800 dark:text-slate-100 p-[10px]">
                       <div className="flex items-center justify-center gap-1">
                         <Calendar className="w-3 h-3 text-slate-400" />
-                        <span>{item.next_due_date}</span>
+                        <span>{formatBdDate(item.next_due_date)}</span>
                       </div>
                       {item.next_due_date === todayStr && (
                         <span className="inline-block px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-500 text-white mt-0.5">
@@ -451,7 +463,7 @@ export default function MedicationsPage() {
                     <td className="text-center p-[10px]">
                       <button
                         type="button"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setItemToDelete(item)}
                         className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer mx-auto"
                         title="শিডিউল মুছে ফেলুন"
                       >
@@ -495,7 +507,7 @@ export default function MedicationsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => setItemToDelete(item)}
                     className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                     title="শিডিউল মুছে ফেলুন"
                   >
@@ -538,7 +550,7 @@ export default function MedicationsPage() {
                     <span className="text-[10px] text-slate-400 block">পরবর্তী প্রয়োগ</span>
                     <div className="flex items-center gap-1 mt-0.5 font-bold text-slate-900 dark:text-slate-100 text-xs whitespace-nowrap">
                       <Calendar className="w-3 h-3 text-slate-400" />
-                      <span>{item.next_due_date}</span>
+                      <span>{formatBdDate(item.next_due_date)}</span>
                     </div>
                     {item.next_due_date === todayStr && (
                       <span className="inline-block px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-500 text-white mt-0.5">
@@ -758,6 +770,16 @@ export default function MedicationsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(itemToDelete)}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={confirmDeleteItem}
+        title="ওষুধ / ভ্যাকসিন শিডিউল মুছে ফেলুন"
+        description={`আপনি কি নিশ্চিতভাবে "${itemToDelete?.medicine_name || "এই"}" এর শিডিউল মুছে ফেলতে চান? এটি তালিকা থেকে মুছে যাবে।`}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

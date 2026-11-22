@@ -21,7 +21,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomSelect, Pagination, DeleteConfirmModal } from "@/components/ui";
+import { CustomSelect, Pagination, DeleteConfirmModal, TableSkeleton, CardSkeleton , PageSkeleton } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 
 interface Supplier {
@@ -247,6 +247,12 @@ export default function SuppliersPage() {
 
   const totalPayableDue = suppliers.reduce((sum, s) => sum + s.purchase_payable_amount, 0);
 
+  if (loading && suppliers.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div className="space-y-4">
       {/* 1. Header & Top Actions (Strict Marss Corp Layout) */}
@@ -407,7 +413,7 @@ export default function SuppliersPage() {
                             type="button"
                             onClick={() => handleOpenPay(s)}
                             className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
-                            title="Pay Supplier Due"
+                            title="সরবরাহকারীর বকেয়া পরিশোধ"
                           >
                             <Wallet className="w-3 h-3" />
                             <span>Pay</span>
@@ -449,10 +455,7 @@ export default function SuppliersPage() {
       {/* 4. Mobile View: Responsive Card List (Strict Rule: block md:hidden) */}
       <div className="block md:hidden space-y-2.5">
         {loading ? (
-          <div className="py-10 text-center text-slate-400">
-            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
-            <span>Loading suppliers...</span>
-          </div>
+          <CardSkeleton count={4} />
         ) : suppliers.length === 0 ? (
           <div className="p-6 text-center text-slate-400 font-bold bg-white dark:bg-[#0f172a] rounded-2xl border border-[#cbd5e1] dark:border-[#334155]">
             No suppliers found.
@@ -504,7 +507,7 @@ export default function SuppliersPage() {
                     className="h-[30px] w-full px-3 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1"
                   >
                     <Wallet className="w-3.5 h-3.5" />
-                    <span>Pay Due</span>
+                    <span>বকেয়া পরিশোধ</span>
                   </button>
                 )}
 
@@ -661,7 +664,7 @@ export default function SuppliersPage() {
                   disabled={saving}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -669,7 +672,7 @@ export default function SuppliersPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Supplier</span>
+                  <span>সরবরাহকারী সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>
@@ -685,7 +688,7 @@ export default function SuppliersPage() {
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  Pay Supplier Due
+                  সরবরাহকারীর বকেয়া পরিশোধ
                 </h3>
               </div>
               <button
@@ -702,13 +705,13 @@ export default function SuppliersPage() {
               {/* Supplier Info Badge */}
               <div className="bg-slate-50 dark:bg-[#1e293b] p-3 rounded-xl border border-[#cbd5e1] dark:border-[#334155] space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Supplier:</span>
+                  <span className="text-slate-500">সরবরাহকারী:</span>
                   <strong className="font-bold text-slate-800 dark:text-white">
                     {selectedSupplier.name} ({selectedSupplier.company})
                   </strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Current Payable Due:</span>
+                  <span className="text-slate-500">বর্তমান প্রদেয় বকেয়া:</span>
                   <strong className="font-bold text-rose-600">
                     {formatBdCurrency(selectedSupplier.purchase_payable_amount)}
                   </strong>
@@ -718,7 +721,7 @@ export default function SuppliersPage() {
               {/* Amount to pay */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Paid Amount (৳) <span className="text-red-500">*</span>
+                  পরিশোধের পরিমাণ (৳) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -734,7 +737,7 @@ export default function SuppliersPage() {
               {/* Discount / Adjustment */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Discount / Concession (৳)
+                  ছাড় / সমন্বয় (৳)
                 </label>
                 <input
                   type="number"
@@ -751,7 +754,7 @@ export default function SuppliersPage() {
               {/* Payment Method */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Payment Method
+                  পেমেন্ট পদ্ধতি
                 </label>
                 <CustomSelect
                   value={paymentData.payment_method}
@@ -759,25 +762,25 @@ export default function SuppliersPage() {
                     setPaymentData({ ...paymentData, payment_method: val })
                   }
                   options={[
-                    { value: "Cash", label: "Cash" },
-                    { value: "Bank", label: "Bank Transfer" },
-                    { value: "bKash", label: "bKash" },
-                    { value: "Nagad", label: "Nagad" },
-                    { value: "Rocket", label: "Rocket" },
-                    { value: "Card", label: "Card" },
+                    { value: "Cash", label: "নগদ (Cash)" },
+                    { value: "Bank", label: "ব্যাংক (Bank Transfer)" },
+                    { value: "bKash", label: "বিকাশ (bKash)" },
+                    { value: "Nagad", label: "নগদ (Nagad)" },
+                    { value: "Rocket", label: "রকেট (Rocket)" },
+                    { value: "Card", label: "কার্ড (Card)" },
                   ]}
-                  placeholder="Select Payment Method"
+                  placeholder="পেমেন্ট পদ্ধতি নির্বাচন করুন"
                 />
               </div>
 
               {/* Trx ID */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Transaction / Cheque No. (Optional)
+                  ট্রানজেকশন / চেক নং (ঐচ্ছিক)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. CHQ-984214"
+                  placeholder="ঐচ্ছিক চেক বা ট্রানজেকশন আইডি..."
                   value={paymentData.transaction_id}
                   onChange={(e) =>
                     setPaymentData({ ...paymentData, transaction_id: e.target.value })
@@ -796,7 +799,7 @@ export default function SuppliersPage() {
                   disabled={saving}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
-                  Cancel
+                  বাতিল
                 </button>
                 <button
                   type="submit"
@@ -804,7 +807,7 @@ export default function SuppliersPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Confirm Payment</span>
+                  <span>পরিশোধ সম্পন্ন করুন</span>
                 </button>
               </div>
             </form>

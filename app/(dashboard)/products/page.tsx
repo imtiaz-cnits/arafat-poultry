@@ -28,7 +28,7 @@ import {
   autoCalculateSqftPerBox,
   formatBoxAndPcs,
 } from "@/lib/tiles-calculator";
-import { CustomSelect, Pagination, DeleteConfirmModal } from "@/components/ui";
+import { CustomSelect, Pagination, DeleteConfirmModal , PageSkeleton } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 
 interface ProductItem {
@@ -524,6 +524,12 @@ export default function ProductsPage() {
 
   const startIndex = (currentPage - 1) * pageSize;
   const displayedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
+
+  if (loading && products.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
 
   return (
     <div className="space-y-4">

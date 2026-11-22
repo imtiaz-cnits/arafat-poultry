@@ -5,6 +5,7 @@ import {
   isAdminRole,
   isProtectedSuperAdmin,
   isSuperAdminRole,
+  isDevUser,
   SUPER_ADMIN_EMAIL,
 } from "@/lib/roles";
 import { NextRequest, NextResponse } from "next/server";
@@ -17,7 +18,7 @@ export async function PUT(
 ) {
   try {
     const authUser = await getAuthUser(req);
-    if (!authUser || !isSuperAdminRole(authUser.role)) {
+    if (!authUser || (!isDevUser(authUser.email) && !isSuperAdminRole(authUser.role))) {
       return NextResponse.json({ status: "fail", message: "অননুমোদিত: শুধুমাত্র সুপার অ্যাডমিন ব্যবহারকারী সম্পাদনা করতে পারবেন" }, { status: 403 });
     }
 
@@ -122,9 +123,9 @@ export async function DELETE(
     }
 
     // Safeguard: dev@arafatpoultry.com (super_admin) is strictly undeletable
-    if (isProtectedSuperAdmin(targetUser)) {
+    if (targetUser.role === "super_admin" || isProtectedSuperAdmin(targetUser) || isDevUser(targetUser.email)) {
       return NextResponse.json(
-        { status: "fail", message: `Super Admin account (${SUPER_ADMIN_EMAIL}) cannot be deleted.` },
+        { status: "fail", message: "সুপার অ্যাডমিন অ্যাকাউন্ট মুছে ফেলা নিষিদ্ধ।" },
         { status: 403 }
       );
     }

@@ -18,7 +18,7 @@ import {
 import { exportReportToPdf } from "@/lib/pdf-export";
 import { formatBdCurrency } from "@/lib/utils";
 import { CustomDatePicker } from "@/components/ui/date-picker";
-import { Pagination } from "@/components/ui";
+import { Pagination , PageSkeleton } from "@/components/ui";
 
 interface SalesOrder {
   id: number;
@@ -148,6 +148,12 @@ export default function SalesReportPage() {
   const startIndex = (currentPage - 1) * pageSize;
   const displayedOrders = orders.slice(startIndex, startIndex + pageSize);
 
+  if (loading && orders.length === 0) {
+
+    return <PageSkeleton />;
+
+  }
+
   return (
     <div>
       {/* Print-Only Styles and Dedicated Report Template */}
@@ -171,8 +177,12 @@ export default function SalesReportPage() {
             display: none !important;
           }
           .print-only {
-            display: block !important;
-            padding: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            min-height: calc(297mm - 22mm) !important;
+            box-sizing: border-box !important;
+            padding: 4px !important;
             margin: 0 !important;
           }
           .print-table {
@@ -575,7 +585,7 @@ export default function SalesReportPage() {
           <tfoot>
             <tr className="bg-slate-100 font-bold border-t-2 border-slate-900">
               <td colSpan={4} className="text-right font-bold p-[10px]">
-                Total Statement Summary:
+                সর্বমোট বিবরণী সামারি:
               </td>
               <td className="text-center p-[10px]">
                 {orders.reduce((a, b) => a + b.items_count, 0)} Items
@@ -598,19 +608,24 @@ export default function SalesReportPage() {
           </tfoot>
         </table>
 
-        {/* Signatures */}
-        <div className="flex justify-between items-end mt-12 pt-6 text-[10px] text-slate-600">
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Prepared By</span>
+        {/* Signatures & Universal Copyright */}
+        <div className="mt-auto pt-6 text-[10px] text-slate-800 break-inside-avoid">
+          <div className="flex justify-between items-end pb-3">
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">প্রস্তুতকারী</span>
+            </div>
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">বিক্রয় ম্যানেজার</span>
+            </div>
+            <div className="text-center w-36">
+              <div className="w-full border-t border-black mb-1"></div>
+              <span className="font-bold">অনুমোদনকারী</span>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Sales Manager</span>
-          </div>
-          <div className="text-center">
-            <div className="w-36 border-t border-slate-400 mb-1"></div>
-            <span>Authorized Signature</span>
+          <div className="text-center text-[9px] text-slate-500 pt-2 border-t border-slate-300 mt-2">
+            © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
           </div>
         </div>
       </div>
