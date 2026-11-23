@@ -99,13 +99,27 @@ export default function StockEggsPage() {
     loadData();
   }, []);
 
-  // Total egg breakdown
+  // Total egg breakdown & smart product matching
   const largeEggProduct = data?.grade_products?.find(
-    (p) => p.product_name.toLowerCase().includes("large") || p.product_name.toLowerCase().includes("grade a")
-  );
+    (p) =>
+      p.product_name.toLowerCase().includes("large") ||
+      p.product_name.toLowerCase().includes("grade a") ||
+      p.product_name.includes("বড়") ||
+      p.product_name.includes("লাল ডিম") ||
+      p.product_name.includes("গ্রেড-এ") ||
+      p.product_name.includes("গ্রেড এ")
+  ) || data?.grade_products?.[0];
+
   const smallEggProduct = data?.grade_products?.find(
-    (p) => p.product_name.toLowerCase().includes("medium") || p.product_name.toLowerCase().includes("grade b")
-  );
+    (p) =>
+      p.product_name.toLowerCase().includes("medium") ||
+      p.product_name.toLowerCase().includes("grade b") ||
+      p.product_name.includes("ছোট") ||
+      p.product_name.includes("সাদা ডিম") ||
+      p.product_name.includes("গ্রেড-বি") ||
+      p.product_name.includes("গ্রেড বি") ||
+      p.product_name.includes("হাঁসের ডিম")
+  ) || (data?.grade_products && data.grade_products.length > 1 ? data.grade_products.find((p) => p.id !== largeEggProduct?.id) || data.grade_products[1] : largeEggProduct);
 
   const totalLargeEggs = largeEggProduct?.pieces || 0;
   const totalSmallEggs = smallEggProduct?.pieces || 0;
@@ -158,19 +172,36 @@ export default function StockEggsPage() {
     try {
       setSubmitting(true);
       const gradesPayload: any[] = [];
-      if (largeEggProduct && lrg > 0) {
+      const pLarge = largeEggProduct || data?.grade_products?.[0];
+      const pSmall =
+        smallEggProduct ||
+        (data?.grade_products && data.grade_products.length > 1
+          ? data.grade_products.find((p) => p.id !== pLarge?.id) || data.grade_products[1]
+          : pLarge);
+
+      if (pLarge && lrg > 0) {
         gradesPayload.push({
-          product_id: largeEggProduct.id,
+          product_id: pLarge.id,
           grade_name: "Grade A (Large)",
           quantity_pieces: lrg,
           tray_capacity: 30,
         });
       }
-      if (smallEggProduct && sml > 0) {
+      if (pSmall && sml > 0) {
         gradesPayload.push({
-          product_id: smallEggProduct.id,
+          product_id: pSmall.id,
           grade_name: "Grade B (Medium)",
           quantity_pieces: sml,
+          tray_capacity: 30,
+        });
+      }
+
+      // Safety fallback: ensure at least one grade allocation if accepted eggs > 0
+      if (gradesPayload.length === 0 && tot - brk > 0 && pLarge) {
+        gradesPayload.push({
+          product_id: pLarge.id,
+          grade_name: "Grade A (Standard)",
+          quantity_pieces: tot - brk,
           tray_capacity: 30,
         });
       }

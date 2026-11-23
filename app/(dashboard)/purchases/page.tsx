@@ -27,6 +27,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useToast } from "@/components/ui/toast";
 import { Pagination, DeleteConfirmModal, TableSkeleton , PageSkeleton } from "@/components/ui";
 import { SupplierModal } from "@/components/suppliers/supplier-modal";
+import { QuickProductModal } from "@/components/pos/quick-product-modal";
 
 interface PurchaseItem {
   product_id: number;
@@ -114,7 +115,13 @@ export default function PurchasesPage() {
   // Modals
   const [isNewPurchaseOpen, setIsNewPurchaseOpen] = useState(false);
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+
+  // Metadata for Quick Product Modal
+  const [categories, setCategories] = useState<Array<{ id: number; category_name: string }>>([]);
+  const [brands, setBrands] = useState<Array<{ id: number; name: string }>>([]);
+  const [units, setUnits] = useState<Array<{ id: number; unit_name: string }>>([]);
 
   // Delete Confirm Modal State
   const [purchaseToDelete, setPurchaseToDelete] = useState<Purchase | null>(null);
@@ -139,24 +146,69 @@ export default function PurchasesPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("/api/products?limit=all");
+      const json = await res.json();
+      if (json.status === "success" && Array.isArray(json.data)) {
+        setProducts(json.data);
+      }
+    } catch (e) {
+      console.error("Error fetching products:", e);
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    try {
+      const res = await fetch("/api/suppliers");
+      const json = await res.json();
+      if (json.status === "success" && Array.isArray(json.data)) {
+        setSuppliers(json.data);
+      }
+    } catch (e) {
+      console.error("Error fetching suppliers:", e);
+    }
+  };
+
+  const fetchMetadata = async () => {
+    try {
+      const [catRes, brandRes, unitRes] = await Promise.allSettled([
+        fetch("/api/categories").then((r) => r.json()),
+        fetch("/api/brands").then((r) => r.json()),
+        fetch("/api/units").then((r) => r.json()),
+      ]);
+      if (catRes.status === "fulfilled" && catRes.value.status === "success" && Array.isArray(catRes.value.data)) {
+        setCategories(catRes.value.data);
+      }
+      if (brandRes.status === "fulfilled" && brandRes.value.status === "success" && Array.isArray(brandRes.value.data)) {
+        setBrands(brandRes.value.data);
+      }
+      if (unitRes.status === "fulfilled" && unitRes.value.status === "success" && Array.isArray(unitRes.value.data)) {
+        setUnits(unitRes.value.data);
+      }
+    } catch (e) {
+      console.error("Error fetching metadata:", e);
+    }
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
-      const [purRes, supRes, prodRes] = await Promise.all([
-        fetch(`/api/purchases?search=${encodeURIComponent(search)}`),
-        fetch("/api/suppliers"),
-        fetch("/api/products?limit=all"),
+      const [purRes, supRes, prodRes] = await Promise.allSettled([
+        fetch(`/api/purchases?search=${encodeURIComponent(search)}`).then((r) => r.json()),
+        fetch("/api/suppliers").then((r) => r.json()),
+        fetch("/api/products?limit=all").then((r) => r.json()),
       ]);
 
-      const [purData, supData, prodData] = await Promise.all([
-        purRes.json(),
-        supRes.json(),
-        prodRes.json(),
-      ]);
-
-      if (purData.status === "success") setPurchases(purData.data);
-      if (supData.status === "success") setSuppliers(supData.data);
-      if (prodData.status === "success") setProducts(prodData.data);
+      if (purRes.status === "fulfilled" && purRes.value.status === "success") {
+        setPurchases(purRes.value.data);
+      }
+      if (supRes.status === "fulfilled" && supRes.value.status === "success") {
+        setSuppliers(supRes.value.data);
+      }
+      if (prodRes.status === "fulfilled" && prodRes.value.status === "success") {
+        setProducts(prodRes.value.data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -166,7 +218,17 @@ export default function PurchasesPage() {
 
   useEffect(() => {
     loadData();
+    fetchMetadata();
   }, [search]);
+
+  // Ensure fresh products & suppliers whenever the stock in modal opens
+  useEffect(() => {
+    if (isNewPurchaseOpen) {
+      fetchProducts();
+      fetchSuppliers();
+      fetchMetadata();
+    }
+  }, [isNewPurchaseOpen]);
 
   const handleDeletePurchase = (p: Purchase) => {
     setDeleteError(null);
@@ -195,14 +257,25 @@ export default function PurchasesPage() {
     }
   };
 
-  // Handle adding product line to new purchase
+  // Handle adding product line to new purchase dynamically
   const handleAddLineItem = () => {
-    if (!selectedProdId) return;
-    const prod = products.find((p) => p.id === Number(selectedProdId));
-    if (!prod) return;
+    if (!selectedProdId) {
+      toast.error("অনুগ্রহ করে যোগ করার জন্য একটি পণ্য নির্বাচন করুন", "সতর্কতা");
+      return;
+    }
+    const prod = products.find((p) => String(p.id) === String(selectedProdId));
+    if (!prod) {
+      toast.error("নির্বাচিত পণ্যটি পাওয়া যায়নি। তালিকা থেকে পুনরায় নির্বাচন করুন।", "সতর্কতা");
+      return;
+    }
 
-    const qty = parseFloat(tempQty) || 1;
-    const cost = parseFloat(tempCost) || prod.cost_price;
+    const qty = parseFloat(tempQty) || 0;
+    if (qty <= 0) {
+      toast.error("পণ্যের পরিমাণ অবশ্যই ০-এর বেশি হতে হবে", "সতর্কতা");
+      return;
+    }
+
+    const cost = tempCost !== "" ? parseFloat(tempCost) || 0 : prod.cost_price;
 
     const existingIndex = newItems.findIndex((i) => i.product_id === prod.id);
     if (existingIndex > -1) {
@@ -210,6 +283,7 @@ export default function PurchasesPage() {
       copy[existingIndex].quantity += qty;
       copy[existingIndex].cost_price = cost;
       setNewItems(copy);
+      toast.success(`${prod.product_name}-এর পরিমাণ বৃদ্ধি করা হয়েছে (${copy[existingIndex].quantity} ${prod.unit || "Pcs"})`);
     } else {
       setNewItems([
         ...newItems,
@@ -226,11 +300,35 @@ export default function PurchasesPage() {
           unit: prod.unit,
         },
       ]);
+      toast.success(`${prod.product_name} সফলভাবে তালিকায় যোগ করা হয়েছে`);
     }
 
     setSelectedProdId("");
     setTempQty("1");
     setTempCost("");
+  };
+
+  const handleProductCreated = (newProd: any) => {
+    const mappedProduct: Product = {
+      id: Number(newProd.id),
+      product_name: newProd.product_name,
+      cost_price: Number(newProd.cost_price || 0),
+      quantity: Number(newProd.quantity || 0),
+      unit: newProd.unit || "Pcs",
+      tile_size: newProd.tile_size || null,
+      sqft_per_box: newProd.sqft_per_box ? Number(newProd.sqft_per_box) : null,
+      pcs_per_box: newProd.pcs_per_box ? Number(newProd.pcs_per_box) : null,
+      grade: newProd.grade || null,
+      primary_code: newProd.primary_code || (Array.isArray(newProd.product_code) ? newProd.product_code[0] : newProd.product_code) || "",
+      brand: newProd.brand || "N/A",
+      category: newProd.category || "N/A",
+    };
+
+    setProducts((prev) => [mappedProduct, ...prev.filter((p) => p.id !== mappedProduct.id)]);
+    setSelectedProdId(String(mappedProduct.id));
+    setTempCost(String(mappedProduct.cost_price));
+    setTempQty("1");
+    toast.success(`নতুন পণ্য "${mappedProduct.product_name}" সফলভাবে তৈরি হয়েছে এবং নির্বাচন করা হয়েছে!`);
   };
 
   const handleRemoveLineItem = (prodId: number) => {
@@ -248,11 +346,13 @@ export default function PurchasesPage() {
   const handleSubmitPurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSupplierId) {
-      setErrorMsg("Please select a supplier!");
+      toast.error("অনুগ্রহ করে সরবরাহকারী নির্বাচন করুন", "সতর্কতা");
+      setErrorMsg("অনুগ্রহ করে সরবরাহকারী নির্বাচন করুন");
       return;
     }
     if (newItems.length === 0) {
-      setErrorMsg("Please add at least one item to purchase!");
+      toast.error("অনুগ্রহ করে ক্রয়ের তালিকায় অন্তত একটি পণ্য যোগ করুন", "সতর্কতা");
+      setErrorMsg("অনুগ্রহ করে ক্রয়ের তালিকায় অন্তত একটি পণ্য যোগ করুন");
       return;
     }
 
@@ -289,6 +389,7 @@ export default function PurchasesPage() {
 
       const data = await res.json();
       if (data.status === "success") {
+        toast.success("ক্রয় ও স্টক ইন সফলভাবে সংরক্ষিত হয়েছে!", "সফল");
         setIsNewPurchaseOpen(false);
         setNewItems([]);
         setSelectedSupplierId("");
@@ -298,10 +399,14 @@ export default function PurchasesPage() {
         setCurrentPage(1);
         loadData();
       } else {
-        setErrorMsg(data.message || "Failed to save purchase");
+        const msg = data.message || "ক্রয় ও স্টক ইন সংরক্ষণ করতে ব্যর্থ হয়েছে";
+        toast.error(msg, "ত্রুটি");
+        setErrorMsg(msg);
       }
     } catch (err: any) {
-      setErrorMsg(err?.message || "Communication error");
+      const msg = err?.message || "সার্ভার এরর: ক্রয় ও স্টক ইন সংরক্ষণ করা সম্ভব হয়নি";
+      toast.error(msg, "ত্রুটি");
+      setErrorMsg(msg);
     } finally {
       setSaving(false);
     }
@@ -688,50 +793,76 @@ export default function PurchasesPage() {
 
               {/* Item Picker Row */}
               <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 space-y-2">
-                <div className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
-                  ইনওয়ার্ড স্টকে পণ্য যোগ করুন
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
+                    ইনওয়ার্ড স্টকে পণ্য যোগ করুন
+                  </div>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    মোট পণ্য: {products.length} টি
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                  <div className="sm:col-span-6">
-                    <CustomSelect
-                      options={products.map((p) => {
-                        const isTile = Boolean(
-                          p.tile_size ||
-                          p.pcs_per_box ||
-                          (p.unit && p.unit.toLowerCase().includes("box")) ||
-                          (p.category && p.category.toLowerCase().includes("tile"))
-                        );
-                        const stockDisplay = isTile
-                          ? formatBoxAndPcs(p.quantity, p.pcs_per_box, p.tile_size)
-                          : `${p.quantity} Pcs`;
-                        const codeStr = p.primary_code ? ` • ${p.primary_code}` : "";
-                        const brandStr = p.brand && p.brand !== "N/A" ? ` • ${p.brand}` : "";
-                        return {
-                          value: p.id,
-                          label: `${p.product_name} ${p.tile_size ? `[${p.tile_size}]` : ""}`,
-                          subLabel: `Stock: ${stockDisplay}${codeStr}${brandStr}`,
-                        };
-                      })}
-                      value={selectedProdId}
-                      onChange={(val) => {
-                        setSelectedProdId(String(val));
-                        const p = products.find((x) => x.id === Number(val));
-                        if (p) setTempCost(String(p.cost_price));
-                      }}
-                      placeholder="যোগ করতে পণ্য নির্বাচন করুন..."
-                    />
+                  <div className="sm:col-span-6 space-y-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      পণ্য নির্বাচন করুন <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center gap-1.5 w-full min-w-0">
+                      <div className="flex-1 min-w-0">
+                        <CustomSelect
+                          options={products.map((p) => {
+                            const isTile = Boolean(
+                              p.tile_size ||
+                              p.pcs_per_box ||
+                              (p.unit && p.unit.toLowerCase().includes("box")) ||
+                              (p.category && p.category.toLowerCase().includes("tile"))
+                            );
+                            const stockDisplay = isTile
+                              ? formatBoxAndPcs(p.quantity, p.pcs_per_box, p.tile_size)
+                              : `${p.quantity} Pcs`;
+                            const codeStr = p.primary_code ? ` • ${p.primary_code}` : "";
+                            const brandStr = p.brand && p.brand !== "N/A" ? ` • ${p.brand}` : "";
+                            return {
+                              value: String(p.id),
+                              label: `${p.product_name} ${p.tile_size ? `[${p.tile_size}]` : ""}`,
+                              subLabel: `Stock: ${stockDisplay}${codeStr}${brandStr}`,
+                            };
+                          })}
+                          value={selectedProdId}
+                          onChange={(val) => {
+                            setSelectedProdId(String(val));
+                            const p = products.find((x) => String(x.id) === String(val));
+                            if (p) setTempCost(String(p.cost_price));
+                          }}
+                          placeholder={products.length === 0 ? "পণ্য লোড হচ্ছে..." : "যোগ করতে পণ্য নির্বাচন করুন..."}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsProductModalOpen(true)}
+                        className="w-[42px] h-[42px] bg-[#166534] hover:bg-[#14532d] text-white rounded-xl flex items-center justify-center shrink-0 shadow-xs cursor-pointer active:scale-95 transition-all"
+                        title="নতুন পণ্য তৈরি করুন (Add New Product)"
+                      >
+                        <Plus className="w-5 h-5 text-white stroke-[2.5]" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 space-y-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      পরিমাণ (Qty) <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="number"
                       min="1"
                       placeholder="পরিমাণ"
                       value={tempQty}
                       onChange={(e) => setTempQty(e.target.value)}
-                      className="w-full h-[40px] px-2 text-center text-xs font-bold bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
+                      className="w-full h-[42px] px-2 text-center text-xs font-bold bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 space-y-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      ক্রয় দর (৳) <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="number"
                       min="0"
@@ -739,16 +870,19 @@ export default function PurchasesPage() {
                       placeholder="ক্রয় দর"
                       value={tempCost}
                       onChange={(e) => setTempCost(e.target.value)}
-                      className="w-full h-[40px] px-2 text-right text-xs font-bold text-emerald-600 bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
+                      className="w-full h-[42px] px-2 text-right text-xs font-bold text-emerald-600 bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 space-y-1">
+                    <label className="block text-xs font-bold text-transparent select-none invisible sm:visible">
+                      অ্যাকশন
+                    </label>
                     <button
                       type="button"
                       onClick={handleAddLineItem}
-                      className="w-full h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                      className="w-full h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95 transition-all"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-4 h-4 stroke-[2.5]" />
                       <span>যোগ করুন</span>
                     </button>
                   </div>
@@ -1083,6 +1217,16 @@ export default function PurchasesPage() {
           setSelectedSupplierId(String(newSupp.id));
           toast.success("নতুন সরবরাহকারী সফলভাবে যুক্ত হয়েছে!");
         }}
+      />
+
+      {/* 9. QUICK PRODUCT MODAL (DYNAMIC PRODUCT CREATION) */}
+      <QuickProductModal
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
+        categories={categories}
+        brands={brands}
+        units={units}
+        onProductCreated={handleProductCreated}
       />
     </div>
   );

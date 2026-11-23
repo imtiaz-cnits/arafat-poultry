@@ -287,10 +287,39 @@ export default function EggProductionPage() {
       return;
     }
 
-    // Find grade products
-    const gradeAProd = data?.grade_products.find((p) => p.product_name.includes("Grade A") || p.product_name.includes("গ্রেড এ"));
-    const gradeBProd = data?.grade_products.find((p) => p.product_name.includes("Grade B") || p.product_name.includes("গ্রেড বি"));
-    const gradeCProd = data?.grade_products.find((p) => p.product_name.includes("Grade C") || p.product_name.includes("গ্রেড সি"));
+    // Find grade products with Bengali and fallback support
+    const gradeAProd =
+      data?.grade_products.find(
+        (p) =>
+          p.product_name.toLowerCase().includes("grade a") ||
+          p.product_name.includes("গ্রেড-এ") ||
+          p.product_name.includes("গ্রেড এ") ||
+          p.product_name.includes("লাল ডিম")
+      ) || data?.grade_products?.[0];
+
+    const gradeBProd =
+      data?.grade_products.find(
+        (p) =>
+          p.product_name.toLowerCase().includes("grade b") ||
+          p.product_name.includes("গ্রেড-বি") ||
+          p.product_name.includes("গ্রেড বি") ||
+          p.product_name.includes("সাদা ডিম")
+      ) ||
+      (data?.grade_products && data.grade_products.length > 1
+        ? data.grade_products.find((p) => p.id !== gradeAProd?.id) || data.grade_products[1]
+        : gradeAProd);
+
+    const gradeCProd =
+      data?.grade_products.find(
+        (p) =>
+          p.product_name.toLowerCase().includes("grade c") ||
+          p.product_name.includes("গ্রেড-সি") ||
+          p.product_name.includes("গ্রেড সি") ||
+          p.product_name.includes("হাঁসের ডিম")
+      ) ||
+      (data?.grade_products && data.grade_products.length > 2
+        ? data.grade_products[2]
+        : gradeBProd);
 
     const gradesPayload: any[] = [];
     if (parseInt(gradeAQuantity) > 0 && gradeAProd) {
