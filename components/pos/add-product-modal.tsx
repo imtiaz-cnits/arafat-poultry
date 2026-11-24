@@ -29,21 +29,19 @@ export function AddProductModal({
   const [quantity, setQuantity] = useState<string>("100");
   const [productCode, setProductCode] = useState<string>("");
 
-  // Categories for Farm
+  // Categories for Farm (Feed/Bosta removed per requirement)
   const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([
     { value: "2", label: "ডিম (Poultry Eggs)" },
-    { value: "1", label: "ফিড (Poultry Feed)" },
     { value: "3", label: "মাছ (Fisheries)" },
     { value: "4", label: "মুরগি ও বাচ্চা (Poultry / Chicks)" },
   ]);
 
-  // Units
+  // Units (Bosta removed per requirement)
   const [unitOptions, setUnitOptions] = useState<SelectOption[]>([
     { value: "3", label: "পিস (Piece)" },
     { value: "4", label: "হালি (Hali)" },
     { value: "5", label: "খাঁচা / ট্রে (Tray)" },
     { value: "2", label: "কেজি (Kg)" },
-    { value: "1", label: "বস্তা (Bag)" },
   ]);
 
   // Fetch dynamic categories and units if available
@@ -59,10 +57,15 @@ export function AddProductModal({
           const catJson = await catRes.json();
           if (catJson.status === "success" && Array.isArray(catJson.data) && catJson.data.length > 0) {
             setCategoryOptions(
-              catJson.data.map((c: any) => ({
-                value: String(c.id),
-                label: c.category_name,
-              }))
+              catJson.data
+                .filter((c: any) => {
+                  const cName = (c.category_name || "").toLowerCase();
+                  return String(c.id) !== "1" && !cName.includes("feed") && !cName.includes("ফিড") && !cName.includes("বস্তা");
+                })
+                .map((c: any) => ({
+                  value: String(c.id),
+                  label: c.category_name,
+                }))
             );
           }
         }
@@ -71,10 +74,15 @@ export function AddProductModal({
           const unitJson = await unitRes.json();
           if (unitJson.status === "success" && Array.isArray(unitJson.data) && unitJson.data.length > 0) {
             setUnitOptions(
-              unitJson.data.map((u: any) => ({
-                value: String(u.id),
-                label: u.unit_name,
-              }))
+              unitJson.data
+                .filter((u: any) => {
+                  const uName = (u.unit_name || "").toLowerCase();
+                  return String(u.id) !== "1" && !uName.includes("bag") && !uName.includes("বস্তা");
+                })
+                .map((u: any) => ({
+                  value: String(u.id),
+                  label: u.unit_name,
+                }))
             );
           }
         }
@@ -96,8 +104,6 @@ export function AddProductModal({
       setUnitId("2"); // Kg for fish
     } else if (categoryId === "4") {
       setUnitId("3"); // Piece for chicken
-    } else if (categoryId === "1") {
-      setUnitId("1"); // Bag for feed
     }
   }, [categoryId]);
 
@@ -130,6 +136,51 @@ export function AddProductModal({
     try {
       setLoading(true);
 
+      // Category-based auto image assignment
+      let autoImgUrl = "/images/products/egg-large.svg";
+      const pNameLower = productName.trim().toLowerCase();
+
+      if (
+        categoryId === "4" ||
+        pNameLower.includes("murgi") ||
+        pNameLower.includes("মুরগি") ||
+        pNameLower.includes("chicken") ||
+        pNameLower.includes("chick") ||
+        pNameLower.includes("বাচ্চা") ||
+        pNameLower.includes("সোনালী") ||
+        pNameLower.includes("ব্রয়লার") ||
+        pNameLower.includes("লেয়ার")
+      ) {
+        autoImgUrl =
+          pNameLower.includes("large") || pNameLower.includes("বড়")
+            ? "/images/products/chicken-large.svg"
+            : "/images/products/chicken-medium.svg";
+      } else if (
+        categoryId === "3" ||
+        pNameLower.includes("fish") ||
+        pNameLower.includes("mach") ||
+        pNameLower.includes("মাছ") ||
+        pNameLower.includes("রুই") ||
+        pNameLower.includes("কাতলা") ||
+        pNameLower.includes("তেলাপিয়া") ||
+        pNameLower.includes("পাঙ্গাস") ||
+        pNameLower.includes("শিং")
+      ) {
+        autoImgUrl =
+          pNameLower.includes("rui") || pNameLower.includes("রুই") || pNameLower.includes("কাতলা")
+            ? "/images/products/fish-rui.svg"
+            : "/images/products/fish-tilapia.svg";
+      } else {
+        // Eggs (category 2)
+        if (pNameLower.includes("ফাটা") || pNameLower.includes("ভাঙা") || pNameLower.includes("crack")) {
+          autoImgUrl = "/images/products/egg-cracked.svg";
+        } else if (pNameLower.includes("medium") || pNameLower.includes("মাঝারি") || pNameLower.includes("ছোট") || pNameLower.includes("কোয়েল")) {
+          autoImgUrl = "/images/products/egg-medium.svg";
+        } else {
+          autoImgUrl = "/images/products/egg-large.svg";
+        }
+      }
+
       const payload = {
         product_name: productName.trim(),
         category_id: categoryId,
@@ -139,6 +190,7 @@ export function AddProductModal({
         cost_price: parseFloat(costPrice) || 0,
         quantity: parseFloat(quantity) || 0,
         product_code: productCode.trim() ? [productCode.trim()] : undefined,
+        img_url: autoImgUrl,
         status: "active",
       };
 
@@ -152,7 +204,7 @@ export function AddProductModal({
 
       if (data.status === "success") {
         toast.success(`"${productName}" পণ্য সফলভাবে যোগ করা হয়েছে!`, "সফল");
-        onProductCreated(data.data);
+        onProductCreated({ ...data.data, img_url: autoImgUrl });
         onClose();
       } else {
         toast.error(data.message || "পণ্য যোগ করতে সমস্যা হয়েছে", "ত্রুটি");

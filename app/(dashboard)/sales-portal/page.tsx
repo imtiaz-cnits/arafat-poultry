@@ -50,10 +50,83 @@ interface Product {
   img_url?: string | null;
 }
 
+// Strict, deterministic category mapping
+function getProductCategory(product: {
+  category_id?: number | string | null;
+  category?: string | null;
+  name?: string | null;
+  product_name?: string | null;
+}): "EGGS" | "FISH" | "POULTRY" | "FEED" {
+  const catId = product.category_id ? Number(product.category_id) : 0;
+  const cat = (product.category || "").toLowerCase();
+  const name = (product.product_name || product.name || "").toLowerCase();
+
+  // 1. Feed (Category 1)
+  if (catId === 1 || cat.includes("feed") || cat.includes("ফিড") || name.includes("feed") || name.includes("ফিড")) {
+    return "FEED";
+  }
+
+  // 2. Eggs (Category 2, or name / category contains egg or dim)
+  if (
+    catId === 2 ||
+    cat.includes("egg") ||
+    cat.includes("ডিম") ||
+    name.includes("egg") ||
+    name.includes("dim") ||
+    name.includes("ডিম")
+  ) {
+    return "EGGS";
+  }
+
+  // 3. Fish (Category 3, or fisheries, fish, mach, etc.)
+  if (
+    catId === 3 ||
+    cat.includes("fish") ||
+    cat.includes("মাছ") ||
+    cat.includes("fisheries") ||
+    cat.includes("aqua") ||
+    name.includes("fish") ||
+    name.includes("mach") ||
+    name.includes("মাছ") ||
+    name.includes("রুই") ||
+    name.includes("কাতলা") ||
+    name.includes("পাঙ্গাস") ||
+    name.includes("তেলাপিয়া") ||
+    name.includes("শিং") ||
+    name.includes("পোনা")
+  ) {
+    return "FISH";
+  }
+
+  // 4. Poultry / Chicken (Category 4 or poultry, chicken, murgi)
+  return "POULTRY";
+}
+
 // Clean illustrated image helper for egg, fish, chicken
 function getProductImage(product: Product): string {
-  if (product.img_url) return product.img_url;
-  const name = (product.name || "").toLowerCase();
+  const name = (product.name || product.product_name || "").toLowerCase();
+  const pCat = getProductCategory(product);
+
+  // 1. Fish
+  if (pCat === "FISH") {
+    if (product.img_url && product.img_url.includes("fish")) return product.img_url;
+    if (name.includes("কাতলা") || name.includes("catla") || name.includes("রুই") || name.includes("rui") || name.includes("carp") || name.includes("পোনা")) {
+      return "/images/products/fish-rui.svg";
+    }
+    return "/images/products/fish-tilapia.svg";
+  }
+
+  // 2. Chicken / Poultry
+  if (pCat === "POULTRY") {
+    if (product.img_url && product.img_url.includes("chicken")) return product.img_url;
+    if (name.includes("বড়") || name.includes("large") || name.includes("parent")) {
+      return "/images/products/chicken-large.svg";
+    }
+    return "/images/products/chicken-medium.svg";
+  }
+
+  // 3. Eggs (pCat === "EGGS" or fallback)
+  if (product.img_url && product.img_url.includes("egg")) return product.img_url;
   if (name.includes("ফাটা") || name.includes("ভাঙা") || name.includes("crack") || name.includes("damage")) {
     return "/images/products/egg-cracked.svg";
   }
@@ -63,27 +136,18 @@ function getProductImage(product: Product): string {
   if (name.includes("হাঁস") || name.includes("duck") || name.includes("দেশি") || name.includes("বড় ডিম") || (name.includes("egg") && (name.includes("large") || name.includes("grade a")))) {
     return "/images/products/egg-large.svg";
   }
-  if (name.includes("ডিম") || name.includes("egg")) {
-    return "/images/products/egg-small.svg";
+  if (name.includes("সাদা") || name.includes("white")) {
+    return "/images/products/egg-large.svg";
   }
-  if (name.includes("কাতলা") || name.includes("catla") || name.includes("রুই") || name.includes("rui") || name.includes("carp") || name.includes("পোনা")) {
-    return "/images/products/fish-rui.svg";
-  }
-  if (name.includes("শিং") || name.includes("shing") || name.includes("পাঙ্গাস") || name.includes("pangas") || name.includes("মাছ") || name.includes("fish") || name.includes("তেলাপিয়া") || name.includes("tilapia")) {
-    return "/images/products/fish-tilapia.svg";
-  }
-  if (name.includes("বড়") && (name.includes("মুরগি") || name.includes("chicken") || name.includes("layer"))) {
-    return "/images/products/chicken-large.svg";
-  }
-  if (name.includes("মুরগি") || name.includes("chicken") || name.includes("chick") || name.includes("সোনালী") || name.includes("ব্রয়লার")) {
-    return "/images/products/chicken-medium.svg";
-  }
-  return "/images/products/egg-large.svg";
+  return "/images/products/egg-small.svg";
 }
 
 // Clean Bangla Display Name Mapping
 function getProductDisplayName(product: { name?: string; product_name?: string }): string {
   const name = product.product_name || product.name || "";
+  if (name.toLowerCase() === "murgi") return "মুরগি";
+  if (name.toLowerCase() === "dim") return "ডিম";
+  if (name.toLowerCase() === "mach") return "মাছ";
   if (name.includes("Grade A") || (name.includes("Large") && name.includes("Egg"))) return "বড় ডিম";
   if (name.includes("Grade B") || (name.includes("Medium") && name.includes("Egg"))) return "মাঝারি ডিম";
   if (name.includes("ভাঙা") || name.includes("Cracked")) return "ফাটা ডিম";
@@ -96,16 +160,13 @@ function getProductDisplayName(product: { name?: string; product_name?: string }
   return name.replace(/\([^)]*\)/g, "").trim() || name;
 }
 
-// Unit Display Helper
-function getProductUnitDisplay(product: { unit?: string; name?: string; product_name?: string }): string {
-  const name = (product.product_name || product.name || "").toLowerCase();
-  const unit = (product.unit || "").toLowerCase();
-  if (name.includes("egg") || name.includes("ডিম")) return "ডজন";
-  if (name.includes("fish") || name.includes("মাছ")) return "কেজি";
-  if (name.includes("chick") || name.includes("মুরগি")) return "পিস";
-  if (unit.includes("piece") || unit.includes("পিস")) return "পিস";
-  if (unit.includes("kg") || unit.includes("কেজি")) return "কেজি";
-  return product.unit || "পিস";
+// Unit Display Helper: Eggs & Chicken in Pcs, Fish in Kg (No dozen calculation)
+function getProductUnitDisplay(product: { unit?: string; name?: string; product_name?: string; category_id?: number | string | null; category?: string | null }): string {
+  const pCat = getProductCategory(product);
+  if (pCat === "FISH") {
+    return "কেজি";
+  }
+  return "পিস";
 }
 
 export default function SalesPortalPage() {
@@ -221,18 +282,18 @@ export default function SalesPortalPage() {
       if (prodsData.status === "success" && Array.isArray(prodsData.data)) {
         const formatted: Product[] = prodsData.data.map((p: any) => ({
           id: Number(p.id),
-          name: p.product_name,
-          product_name: p.product_name,
-          primary_code: p.product_code?.[0] || `PRD-${p.id}`,
-          display_codes: p.product_code?.[0] || `PRD-${p.id}`,
-          all_codes: p.product_code || [],
+          name: p.product_name || p.name,
+          product_name: p.product_name || p.name,
+          primary_code: p.primary_code || p.product_code?.[0] || `PRD-${p.id}`,
+          display_codes: p.display_codes || p.primary_code || `PRD-${p.id}`,
+          all_codes: p.all_codes || p.product_code || [],
           cost_price: parseFloat(p.cost_price || 0),
           sell_price: parseFloat(p.sell_price || 0),
           quantity: parseFloat(p.quantity || 0),
           category_id: Number(p.category_id),
-          category: p.category?.category_name || "General",
-          brand: p.brand?.name || "General",
-          unit: p.unit?.unit_name || "Piece",
+          category: typeof p.category === "string" ? p.category : (p.category?.category_name || p.categories?.category_name || "General"),
+          brand: typeof p.brand === "string" ? p.brand : (p.brand?.name || p.brands?.name || "General"),
+          unit: typeof p.unit === "string" ? p.unit : (p.unit?.unit_name || p.units?.unit_name || "Piece"),
           img_url: p.img_url,
         }));
         setProducts(formatted);
@@ -291,26 +352,17 @@ export default function SalesPortalPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [cart, selectedCustomer, paidAmount, returnAdjustment, completedOrder, isCustomerModalOpen, isReceiptModalOpen]);
 
-  // Dynamic Category Product Counts (Strictly 3 categories: Eggs, Fish, Poultry; Feed & Medicine excluded)
+  // Dynamic Category Product Counts (Strictly 3 categories: Eggs, Fish, Poultry; Feed excluded)
   const categoryCounts = useMemo(() => {
     let egg = 0;
     let fish = 0;
     let poultry = 0;
 
     products.forEach((p) => {
-      const cat = (p.category || "").toLowerCase();
-      const name = (p.name || "").toLowerCase();
-      const isFeed = cat.includes("feed") || cat.includes("ফিড") || name.includes("feed") || name.includes("ফিড");
-      const isMed = cat.includes("medicine") || cat.includes("ওষুধ") || cat.includes("ভ্যাকসিন") || cat.includes("vet") || name.includes("vitamino");
-      if (isFeed || isMed) return;
-
-      if (cat.includes("egg") || cat.includes("ডিম") || name.includes("egg") || name.includes("ডিম")) {
-        egg++;
-      } else if (cat.includes("fish") || cat.includes("মাছ") || cat.includes("aqua") || name.includes("fish") || name.includes("মাছ")) {
-        fish++;
-      } else if (cat.includes("chick") || cat.includes("মুরগি") || cat.includes("poultry") || name.includes("মুরগি") || name.includes("chick")) {
-        poultry++;
-      }
+      const pCat = getProductCategory(p);
+      if (pCat === "EGGS") egg++;
+      else if (pCat === "FISH") fish++;
+      else if (pCat === "POULTRY") poultry++;
     });
 
     return {
@@ -321,33 +373,14 @@ export default function SalesPortalPage() {
     };
   }, [products]);
 
-  // Filtered Products (Strictly Eggs, Fish, Poultry; Feed & Medicine excluded)
+  // Filtered Products (Strictly Eggs, Fish, Poultry; Feed excluded)
   const filteredProducts = useMemo(() => {
-    // Exclude Feed & Medicine
-    let result = products.filter((p) => {
-      const cat = (p.category || "").toLowerCase();
-      const name = (p.name || "").toLowerCase();
-      const isFeed = cat.includes("feed") || cat.includes("ফিড") || name.includes("feed") || name.includes("ফিড");
-      const isMedicine = cat.includes("medicine") || cat.includes("ওষুধ") || cat.includes("ভ্যাকসিন") || cat.includes("vet") || name.includes("vitamino");
-      return !isFeed && !isMedicine;
-    });
+    // Exclude Feed
+    let result = products.filter((p) => getProductCategory(p) !== "FEED");
 
-    // Category Filter
+    // Category Filter: only show products of the selected category
     if (selectedCategory !== "ALL") {
-      result = result.filter((p) => {
-        const cat = (p.category || "").toLowerCase();
-        const name = (p.name || "").toLowerCase();
-        if (selectedCategory === "EGGS") {
-          return cat.includes("egg") || cat.includes("ডিম") || name.includes("egg") || name.includes("ডিম");
-        }
-        if (selectedCategory === "FISH") {
-          return cat.includes("fish") || cat.includes("মাছ") || cat.includes("aqua") || name.includes("fish") || name.includes("মাছ");
-        }
-        if (selectedCategory === "POULTRY") {
-          return cat.includes("chick") || cat.includes("মুরগি") || cat.includes("poultry") || name.includes("মুরগি") || name.includes("chick");
-        }
-        return true;
-      });
+      result = result.filter((p) => getProductCategory(p) === selectedCategory);
     }
 
     // Search query
@@ -414,20 +447,21 @@ export default function SalesPortalPage() {
     }
   };
 
-  // Unit Options for Cart Table
+  // Unit Options for Cart Table (Bosta completely removed per requirement)
   const getUnitOptions = (item: CartItem): SelectOption[] => {
-    const cat = (item.category || "").toLowerCase();
-    const name = (item.product_name || "").toLowerCase();
+    const pCat = getProductCategory({
+      name: item.product_name,
+      category: item.category,
+    });
 
-    if (cat.includes("egg") || cat.includes("ডিম") || name.includes("egg") || name.includes("ডিম")) {
+    if (pCat === "EGGS") {
       return [
-        { value: "Dozen", label: "ডজন" },
-        { value: "Hali", label: "হালি" },
         { value: "Piece", label: "পিস" },
+        { value: "Hali", label: "হালি" },
         { value: "Tray", label: "খাঁচা" },
       ];
     }
-    if (cat.includes("fish") || cat.includes("মাছ") || name.includes("fish") || name.includes("মাছ")) {
+    if (pCat === "FISH") {
       return [
         { value: "Kg", label: "কেজি" },
         { value: "Gram", label: "গ্রাম" },
@@ -437,7 +471,6 @@ export default function SalesPortalPage() {
     return [
       { value: "Piece", label: "পিস" },
       { value: "Kg", label: "কেজি" },
-      { value: "Bag", label: "বস্তা" },
     ];
   };
 
@@ -1016,7 +1049,6 @@ export default function SalesPortalPage() {
                         <th className="py-2 px-2 text-center w-[92px]">একক</th>
                         <th className="py-2 px-2 text-center w-[85px]">দর (৳)</th>
                         <th className="py-2 px-2 text-right w-[85px]">মোট (৳)</th>
-                        <th className="py-2 px-2 text-center w-[75px]">ছাড় (৳)</th>
                         <th className="py-2 px-2 text-right w-[85px]">নেট মোট (৳)</th>
                         <th className="py-2 px-1 text-center w-9">Action</th>
                       </tr>
@@ -1097,17 +1129,6 @@ export default function SalesPortalPage() {
 
                             <td className="py-1.5 px-2 text-right font-bold text-slate-700 dark:text-slate-200">
                               {rowTotal.toFixed(2)}
-                            </td>
-
-                            <td className="py-1.5 px-2 text-center">
-                              <input
-                                type="number"
-                                min={0}
-                                step="any"
-                                value={item.line_discount || 0}
-                                onChange={(e) => updateLineDiscount(item.product_id, parseFloat(e.target.value) || 0)}
-                                className="w-16 h-7 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                              />
                             </td>
 
                             <td className="py-1.5 px-2 text-right font-black text-emerald-700 dark:text-emerald-400">
@@ -1206,7 +1227,7 @@ export default function SalesPortalPage() {
                           />
                         </div>
 
-                        {/* Bottom: Rate, Discount, Net */}
+                        {/* Bottom: Rate & Net */}
                         <div className="flex items-center justify-between gap-1 text-[11px] pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                           <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                             <span>দর:</span>
@@ -1217,18 +1238,6 @@ export default function SalesPortalPage() {
                               value={item.selling_price}
                               onChange={(e) => updatePrice(item.product_id, parseFloat(e.target.value) || 0)}
                               className="w-16 h-6 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
-                            />
-                          </div>
-
-                          <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                            <span>ছাড়:</span>
-                            <input
-                              type="number"
-                              min={0}
-                              step="any"
-                              value={item.line_discount || 0}
-                              onChange={(e) => updateLineDiscount(item.product_id, parseFloat(e.target.value) || 0)}
-                              className="w-14 h-6 text-center font-bold text-xs border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                             />
                           </div>
 
