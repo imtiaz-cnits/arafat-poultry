@@ -6,6 +6,21 @@ import { recordFinancialTransaction, getAccountByPaymentMethod } from "@/lib/fin
 import { logAudit } from "@/lib/audit-service";
 import { convertFeedBagsToKg } from "@/lib/unit-service";
 
+
+async function getOrCreateFeedBusinessUnit(txOrPrisma: any, userId?: any) {
+  let feedBu = await txOrPrisma.business_units.findUnique({ where: { code: "FEED" } });
+  if (!feedBu) {
+    feedBu = await txOrPrisma.business_units.create({
+      data: {
+        code: "FEED",
+        name: "পোল্ট্রি ও মাছের খাদ্য ব্যবসা",
+        status: "active",
+        user_id: userId ? BigInt(userId) : BigInt(1),
+      },
+    });
+  }
+  return feedBu;
+}
 export interface RecordFeedPurchaseParams {
   supplierId: bigint | number;
   productId: bigint | number;
@@ -104,7 +119,7 @@ export async function recordFeedPurchase(params: RecordFeedPurchaseParams) {
     const costPerKg = bagWeight > 0 ? costPerBag / bagWeight : costPerBag;
 
     // Get FEED business unit
-    const feedBu = await tx.business_units.findUnique({ where: { code: "FEED" } });
+    const feedBu = await getOrCreateFeedBusinessUnit(tx, params.userId);
 
     // Fetch existing product for weighted average cost update
     const product = await tx.products.findUnique({ where: { id: prodId } });
@@ -231,7 +246,7 @@ export async function recordFeedSale(params: RecordFeedSaleParams) {
     const dueNum = Math.max(0, totalSaleAmount - paidNum);
     const saleDate = params.date || new Date();
 
-    const feedBu = await tx.business_units.findUnique({ where: { code: "FEED" } });
+    const feedBu = await getOrCreateFeedBusinessUnit(tx, params.userId);
 
     // Determine stock deduction: if sold in KG, convert to bags
     let stockQtyToDeduct = qtySold;
@@ -320,7 +335,7 @@ export async function recordFeedPurchaseReturn(params: RecordFeedPurchaseReturnP
     const refundReceived = Math.max(0, Number(params.refundReceived || 0));
     const returnDate = params.date || new Date();
 
-    const feedBu = await tx.business_units.findUnique({ where: { code: "FEED" } });
+    const feedBu = await getOrCreateFeedBusinessUnit(tx, params.userId);
 
     // 1. Deduct stock via PURCHASE_RETURN_OUTWARD
     const stockRes = await recordStockMovement(
@@ -402,7 +417,7 @@ export async function recordFeedCustomerReturn(params: RecordFeedCustomerReturnP
     const refundPaid = Math.max(0, Number(params.refundPaid || 0));
     const returnDate = params.date || new Date();
 
-    const feedBu = await tx.business_units.findUnique({ where: { code: "FEED" } });
+    const feedBu = await getOrCreateFeedBusinessUnit(tx, params.userId);
 
     // 1. Inward stock via SALE_RETURN_INWARD
     const stockRes = await recordStockMovement(
@@ -500,8 +515,7 @@ export async function recordInternalFeedIssue(params: RecordInternalFeedIssuePar
     const totalFeedCost = bags * costPricePerBag;
 
     // Get source business unit (FEED)
-    const feedBu = await tx.business_units.findUnique({ where: { code: "FEED" } });
-    if (!feedBu) throw new Error("FEED business unit not found");
+    const feedBu = await getOrCreateFeedBusinessUnit(tx, params.userId);
 
     // 2. Deduct stock atomically with INTERNAL_ISSUE_OUTWARD movement
     const stockRes = await recordStockMovement(
@@ -617,7 +631,7 @@ export async function recordInternalFeedIssue(params: RecordInternalFeedIssuePar
  * Feed Stock & Profitability Summary
  */
 export async function getFeedStockAndProfitability() {
-  const feedBu = await prisma.business_units.findUnique({ where: { code: "FEED" } });
+  const feedBu = await getOrCreateFeedBusinessUnit(prisma);
 
   // Get all stock movements related to feed
   const movements = await prisma.stock_movements.findMany({

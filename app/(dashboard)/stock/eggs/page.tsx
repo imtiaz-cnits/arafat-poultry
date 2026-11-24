@@ -69,6 +69,25 @@ export default function StockEggsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedFlockId, setSelectedFlockId] = useState<string>("");
+
+  // Add Shed Modal State
+  const [isAddShedModalOpen, setIsAddShedModalOpen] = useState(false);
+  const [addShedSubmitting, setAddShedSubmitting] = useState(false);
+  const [newShedName, setNewShedName] = useState("");
+  const [newBreed, setNewBreed] = useState("লেয়ার (ব্রাউন)");
+  const [newInitialCount, setNewInitialCount] = useState("1000");
+  const [newHousingDate, setNewHousingDate] = useState(new Date().toISOString().split("T")[0]);
+  const [newShedNote, setNewShedNote] = useState("");
+
+  // Convert Egg to Product Modal State
+  const [isConvertToProductOpen, setIsConvertToProductOpen] = useState(false);
+  const [convertSubmitting, setConvertSubmitting] = useState(false);
+  const [selectedEggCollection, setSelectedEggCollection] = useState<EggCollection | null>(null);
+  const [convertEggType, setConvertEggType] = useState<"LARGE" | "SMALL" | "BROKEN">("LARGE");
+  const [convertUnit, setConvertUnit] = useState<"Pcs" | "Hali" | "Khacha">("Pcs");
+  const [convertAmount, setConvertAmount] = useState<string>("100");
+  const [convertSellPrice, setConvertSellPrice] = useState<string>("12.50");
+  const [convertProductName, setConvertProductName] = useState<string>("ফার্মের তাজা লাল ডিম (বড়)");
   const [totalCollected, setTotalCollected] = useState<string>("1500");
   const [largeCount, setLargeCount] = useState<string>("1000"); // বড় ডিম
   const [smallCount, setSmallCount] = useState<string>("470");  // ছোট ডিম
@@ -98,6 +117,137 @@ export default function StockEggsPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+
+  const handleOpenAddShedModal = () => {
+    setNewShedName("");
+    setNewBreed("লেয়ার (ব্রাউন)");
+    setNewInitialCount("1000");
+    setNewHousingDate(new Date().toISOString().split("T")[0]);
+    setNewShedNote("");
+    setIsAddShedModalOpen(true);
+  };
+
+  const handleAddShedSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newShedName.trim()) {
+      toast.error("শেডের নাম দিন", "সতর্কতা");
+      return;
+    }
+    try {
+      setAddShedSubmitting(true);
+      const res = await fetch("/api/egg/flocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shed_name: newShedName.trim(),
+          breed: newBreed.trim() || "লেয়ার (ব্রাউন)",
+          initial_chicks_count: Number(newInitialCount) || 1000,
+          housing_date: newHousingDate,
+          note: newShedNote.trim() || undefined,
+        }),
+      });
+      const resData = await res.json();
+      if (res.ok && resData.status === "success") {
+        toast.success("নতুন শেড সফলভাবে যুক্ত করা হয়েছে!", "সফল");
+        try {
+          const stored = localStorage.getItem("ap_chicken_sheds");
+          const list = stored ? JSON.parse(stored) : [];
+          if (!list.includes(newShedName.trim())) {
+            list.push(newShedName.trim());
+            localStorage.setItem("ap_chicken_sheds", JSON.stringify(list));
+          }
+        } catch {}
+        await loadData();
+        if (resData.data?.id) {
+          setSelectedFlockId(String(resData.data.id));
+        }
+        setIsAddShedModalOpen(false);
+      } else {
+        toast.error(resData.message || "শেড যোগ করা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "সার্ভারে সমস্যা হয়েছে", "ত্রুটি");
+    } finally {
+      setAddShedSubmitting(false);
+    }
+  };
+
+  const handleOpenConvertModal = (col: EggCollection) => {
+    setSelectedEggCollection(col);
+    setConvertEggType("LARGE");
+    setConvertUnit("Pcs");
+    const grpA = col.grades?.find((g) => g.grade_name.toLowerCase().includes("grade a"));
+    const defCount = grpA ? String(grpA.pieces) : String(Math.min(100, col.accepted_quantity));
+    setConvertAmount(defCount);
+    setConvertSellPrice("12.50");
+    setConvertProductName(`ফার্মের তাজা লাল ডিম (বড়) - ${col.flock_name}`);
+    setIsConvertToProductOpen(true);
+  };
+
+  const handleEggTypeChange = (type: "LARGE" | "SMALL" | "BROKEN") => {
+    setConvertEggType(type);
+    if (!selectedEggCollection) return;
+    if (type === "LARGE") {
+      const grpA = selectedEggCollection.grades?.find((g) => g.grade_name.toLowerCase().includes("grade a"));
+      setConvertAmount(grpA ? String(grpA.pieces) : "100");
+      setConvertSellPrice("12.50");
+      setConvertProductName(`ফার্মের তাজা লাল ডিম (বড়) - ${selectedEggCollection.flock_name}`);
+    } else if (type === "SMALL") {
+      const grpB = selectedEggCollection.grades?.find((g) => g.grade_name.toLowerCase().includes("grade b"));
+      setConvertAmount(grpB ? String(grpB.pieces) : "50");
+      setConvertSellPrice("10.00");
+      setConvertProductName(`ফার্মের মাঝারি লাল ডিম (ছোট) - ${selectedEggCollection.flock_name}`);
+    } else {
+      setConvertAmount(String(selectedEggCollection.rejected_breakage || 10));
+      setConvertSellPrice("6.00");
+      setConvertProductName(`ফাটা ও ভাঙা ডিম (ডিসকাউন্ট) - ${selectedEggCollection.flock_name}`);
+    }
+  };
+
+  const handleConvertToProductSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEggCollection) return;
+    const amountNum = parseFloat(convertAmount);
+    if (!amountNum || amountNum <= 0) {
+      toast.error("সঠিক পরিমাণ প্রদান করুন", "সতর্কতা");
+      return;
+    }
+
+    try {
+      setConvertSubmitting(true);
+      const res = await fetch("/api/stock/convert-to-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "EGG",
+          source_id: selectedEggCollection.id,
+          product_name: convertProductName.trim(),
+          quantity: amountNum,
+          unit: convertUnit,
+          sell_price: parseFloat(convertSellPrice) || 0,
+          cost_price: selectedEggCollection.cost_per_accepted_egg || 0,
+          metadata: {
+            flock_name: selectedEggCollection.flock_name,
+            egg_type: convertEggType,
+          },
+        }),
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData.status === "success") {
+        toast.success(resData.message || "ডিম সফলভাবে বিক্রয়যোগ্য পণ্যে রূপান্তর করা হয়েছে!", "সফল");
+        setIsConvertToProductOpen(false);
+        await loadData();
+      } else {
+        toast.error(resData.message || "পণ্য হিসেবে যোগ করা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "সার্ভারে সমস্যা হয়েছে", "ত্রুটি");
+    } finally {
+      setConvertSubmitting(false);
+    }
+  };
 
   // Total egg breakdown & smart product matching
   const largeEggProduct = data?.grade_products?.find(
@@ -361,6 +511,7 @@ export default function StockEggsPage() {
                 <th className="text-center p-[10px]">ফাটা ও নষ্ট ডিম</th>
                 <th className="text-center p-[10px]">গৃহীত ভালো ডিম</th>
                 <th className="text-right p-[10px]">গড় উৎপাদন খরচ</th>
+                <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -418,6 +569,17 @@ export default function StockEggsPage() {
                       </td>
                       <td className="text-right font-semibold text-slate-800 dark:text-slate-200 p-[10px]">
                         {col.cost_per_accepted_egg > 0 ? `৳${col.cost_per_accepted_egg.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="text-center p-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenConvertModal(col)}
+                          className="h-[28px] px-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[11px] flex items-center gap-1.5 mx-auto transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                          title="বিক্রয়যোগ্য পণ্য হিসেবে প্রোডাক্ট ইনভেন্টরিতে যোগ করুন"
+                        >
+                          <Boxes className="w-3 h-3" />
+                          <span>প্রোডাক্টে যোগ</span>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -549,20 +711,32 @@ export default function StockEggsPage() {
 
             <form onSubmit={handleCollectionSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <div className="p-5 space-y-3.5 flex-1 min-h-0 overflow-y-auto">
-              {/* Flock / Shed */}
+              {/* Flock / Shed with Plus Button */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   শেড / মুরগির ফ্লক <span className="text-red-500">*</span>
                 </label>
-                <CustomSelect
-                  options={(data?.flocks || []).map((f) => ({
-                    value: f.id,
-                    label: `${f.shed_name} (${f.flock_code})`,
-                  }))}
-                  value={selectedFlockId}
-                  onChange={(val) => setSelectedFlockId(String(val))}
-                  placeholder="শেড নির্বাচন করুন..."
-                />
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CustomSelect
+                      options={(data?.flocks || []).map((f) => ({
+                        value: f.id,
+                        label: `${f.shed_name} (${f.flock_code})`,
+                      }))}
+                      value={selectedFlockId}
+                      onChange={(val) => setSelectedFlockId(String(val))}
+                      placeholder="শেড নির্বাচন করুন..."
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleOpenAddShedModal}
+                    className="w-[42px] h-[42px] rounded-xl bg-gradient-to-r from-emerald-800 to-green-700 hover:from-emerald-900 hover:to-green-800 text-white flex items-center justify-center shrink-0 shadow-sm transition-all cursor-pointer"
+                    title="নতুন শেড / ফ্লক যোগ করুন"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Total Collection and Date */}
@@ -693,6 +867,282 @@ export default function StockEggsPage() {
           </div>
         </div>
       )}
+
+      {/* Add Shed / Flock Modal */}
+      {isAddShedModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-emerald-800 to-green-700 px-6 py-4 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2">
+                <Home className="w-5 h-5 text-emerald-200" />
+                <h3 className="font-bold text-base leading-tight">নতুন শেড / ফ্লক যোগ করুন</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddShedModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddShedSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-5 overflow-y-auto space-y-3.5 text-xs">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    শেডের নাম / নম্বর <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: শেড ৪ (লেয়ার)"
+                    value={newShedName}
+                    onChange={(e) => setNewShedName(e.target.value)}
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    মুরগির জাত / প্রকার <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: হাই-লাইন ব্রাউন"
+                    value={newBreed}
+                    onChange={(e) => setNewBreed(e.target.value)}
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">মুরগির সংখ্যা</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="১০০০"
+                      value={newInitialCount}
+                      onChange={(e) => setNewInitialCount(e.target.value)}
+                      className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">আগমনের তারিখ</label>
+                    <CustomDatePicker
+                      value={newHousingDate}
+                      onChange={setNewHousingDate}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">মন্তব্য / বিবরণ</label>
+                  <input
+                    type="text"
+                    placeholder="শেড সংক্রান্ত বিশেষ নোট"
+                    value={newShedNote}
+                    onChange={(e) => setNewShedNote(e.target.value)}
+                    className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
+                <button
+                  type="button"
+                  onClick={() => setIsAddShedModalOpen(false)}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={addShedSubmitting}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {addShedSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  <span>শেড সংরক্ষণ করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Convert Egg Stock to Product Modal */}
+      {isConvertToProductOpen && selectedEggCollection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-emerald-800 to-green-700 px-6 py-4 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2">
+                <Boxes className="w-5 h-5 text-emerald-200" />
+                <div>
+                  <h3 className="font-bold text-base leading-tight">ডিম বিক্রয়যোগ্য পণ্যে রূপান্তর / যোগ (Add Egg to Products)</h3>
+                  <p className="text-[11px] text-emerald-100 font-normal">স্টক হতে ডিম বিক্রয়যোগ্য পণ্য হিসেবে ইনভেন্টরিতে যুক্ত করুন</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConvertToProductOpen(false)}
+                className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConvertToProductSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
+                {/* Source details card */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                  <div>
+                    <span className="text-[11px] text-slate-500 block">উৎস শেড ও সংগ্রহ নং:</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-xs">
+                      {selectedEggCollection.flock_name} ({selectedEggCollection.collection_no})
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[11px] text-slate-500 block">মোট সংগৃহীত ভালো ডিম:</span>
+                    <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-xs">
+                      {selectedEggCollection.accepted_quantity} পিস
+                    </span>
+                  </div>
+                </div>
+
+                {/* Egg Type Selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    ডিমের প্রকার নির্বাচন করুন <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleEggTypeChange("LARGE")}
+                      className={`h-[42px] px-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                        convertEggType === "LARGE"
+                          ? "bg-sky-50 dark:bg-sky-950/50 border-sky-500 text-sky-800 dark:text-sky-300 shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      বড় ডিম (Grade A)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEggTypeChange("SMALL")}
+                      className={`h-[42px] px-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                        convertEggType === "SMALL"
+                          ? "bg-amber-50 dark:bg-amber-950/50 border-amber-500 text-amber-800 dark:text-amber-300 shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      ছোট ডিম (Grade B)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEggTypeChange("BROKEN")}
+                      className={`h-[42px] px-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                        convertEggType === "BROKEN"
+                          ? "bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-800 dark:text-rose-300 shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      ফাটা ও নষ্ট ডিম
+                    </button>
+                  </div>
+                </div>
+
+                {/* Unit & Amount */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      বিক্রয় একক <span className="text-red-500">*</span>
+                    </label>
+                    <CustomSelect
+                      options={[
+                        { value: "Pcs", label: "পিস (Piece)" },
+                        { value: "Hali", label: "হালি (Hali - ৪ পিস)" },
+                        { value: "Khacha", label: "খাঁচা / ট্রে (Tray - ৩০ পিস)" },
+                      ]}
+                      value={convertUnit}
+                      onChange={(v) => setConvertUnit(v as any)}
+                      placeholder="একক নির্বাচন করুন"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      পরিমাণ ({convertUnit === "Pcs" ? "পিস" : convertUnit === "Hali" ? "হালি" : "খাঁচা"}) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="1"
+                      value={convertAmount}
+                      onChange={(e) => setConvertAmount(e.target.value)}
+                      required
+                      className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white font-bold focus:outline-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Live conversion info */}
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800/70 flex justify-between items-center text-xs">
+                  <span className="text-emerald-800 dark:text-emerald-300 font-medium">স্টক হতে কাটা হবে:</span>
+                  <span className="font-mono font-bold text-emerald-950 dark:text-emerald-100">
+                    {convertUnit === "Hali" ? (parseFloat(convertAmount) || 0) * 4 : convertUnit === "Khacha" ? (parseFloat(convertAmount) || 0) * 30 : (parseFloat(convertAmount) || 0)} পিস ডিম
+                  </span>
+                </div>
+
+                {/* Selling Price & Product Name */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      বিক্রয় মূল্য প্রতি {convertUnit === "Pcs" ? "পিস" : convertUnit === "Hali" ? "হালি" : "খাঁচা"} (৳) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0.1"
+                      value={convertSellPrice}
+                      onChange={(e) => setConvertSellPrice(e.target.value)}
+                      required
+                      className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white font-bold focus:outline-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      পণ্যের নাম <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={convertProductName}
+                      onChange={(e) => setConvertProductName(e.target.value)}
+                      required
+                      className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
+                <button
+                  type="button"
+                  onClick={() => setIsConvertToProductOpen(false)}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={convertSubmitting}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {convertSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  <span>পণ্য ইনভেন্টরিতে যোগ করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

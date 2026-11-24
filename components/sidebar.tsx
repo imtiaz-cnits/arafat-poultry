@@ -66,6 +66,17 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Truck,
   },
   {
+    id: "stock",
+    label: "স্টক",
+    icon: Package,
+    children: [
+      { label: "ডিমের স্টক", href: "/stock/eggs", icon: Egg },
+      { label: "মাছের স্টক", href: "/stock/fish", icon: Fish },
+      { label: "ফিডের স্টক", href: "/feed", icon: Boxes },
+      { label: "মুরগির স্টক", href: "/stock/chicken", icon: Package },
+    ],
+  },
+  {
     id: "poultry",
     label: "মুরগির হিসাব",
     href: "/chicken",
@@ -94,17 +105,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "মেমো",
     href: "/invoices",
     icon: Receipt,
-  },
-  {
-    id: "stock",
-    label: "স্টক",
-    icon: Package,
-    children: [
-      { label: "ডিমের স্টক", href: "/stock/eggs", icon: Egg },
-      { label: "মাছের স্টক", href: "/stock/fish", icon: Fish },
-      { label: "ফিডের স্টক", href: "/feed", icon: Boxes },
-      { label: "মুরগির স্টক", href: "/stock/chicken", icon: Package },
-    ],
   },
   {
     id: "medications",

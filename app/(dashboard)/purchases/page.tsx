@@ -27,7 +27,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useToast } from "@/components/ui/toast";
 import { Pagination, DeleteConfirmModal, TableSkeleton , PageSkeleton } from "@/components/ui";
 import { SupplierModal } from "@/components/suppliers/supplier-modal";
-import { QuickProductModal } from "@/components/pos/quick-product-modal";
+import { AddProductModal } from "@/components/pos/add-product-modal";
 
 interface PurchaseItem {
   product_id: number;
@@ -1219,13 +1219,10 @@ export default function PurchasesPage() {
         }}
       />
 
-      {/* 9. QUICK PRODUCT MODAL (DYNAMIC PRODUCT CREATION) */}
-      <QuickProductModal
+      {/* 9. ADD PRODUCT MODAL (SALES PORTAL STYLE) */}
+      <AddProductModal
         isOpen={isProductModalOpen}
         onClose={() => setIsProductModalOpen(false)}
-        categories={categories}
-        brands={brands}
-        units={units}
         onProductCreated={handleProductCreated}
       />
     </div>

@@ -13,9 +13,10 @@ import {
   Droplets,
   Scale,
   Plus,
+  CheckCircle2,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { useToast, Pagination , PageSkeleton } from "@/components/ui";
+import { useToast, Pagination , PageSkeleton, CustomSelect, CustomDatePicker } from "@/components/ui";
 
 interface PondStockItem {
   id: number;
@@ -47,6 +48,37 @@ export default function StockFishPage() {
   const [saving, setSaving] = useState(false);
   const [ponds, setPonds] = useState<any[]>([]);
   const [speciesList, setSpeciesList] = useState<any[]>([]);
+
+  // Add Pond Modal State
+  const [isAddPondModalOpen, setIsAddPondModalOpen] = useState(false);
+  const [savingPond, setSavingPond] = useState(false);
+  const [newPond, setNewPond] = useState({
+    pond_name: "",
+    pond_code: "",
+    area_decimal: "",
+    water_depth_feet: "5.0",
+    location: "",
+    note: "",
+  });
+
+  // Add Species Modal State
+  const [isAddSpeciesModalOpen, setIsAddSpeciesModalOpen] = useState(false);
+  const [savingSpecies, setSavingSpecies] = useState(false);
+  // Convert Fish to Product Modal
+  const [isConvertFishModalOpen, setIsConvertFishModalOpen] = useState(false);
+  const [convertSubmitting, setConvertSubmitting] = useState(false);
+  const [selectedFishBatch, setSelectedFishBatch] = useState<PondStockItem | null>(null);
+  const [fishSizeCategory, setFishSizeCategory] = useState<"LARGE" | "MEDIUM" | "FINGERLING">("LARGE");
+  const [fishUnit, setFishUnit] = useState<"Kg" | "Gram" | "Pcs">("Kg");
+  const [fishAmount, setFishAmount] = useState<string>("50");
+  const [fishSellPrice, setFishSellPrice] = useState<string>("240");
+  const [fishProductName, setFishProductName] = useState<string>("তাজা মাছ");
+
+  const [newSpecies, setNewSpecies] = useState({
+    species_name: "",
+    scientific_name: "",
+  });
+
   const [formData, setFormData] = useState({
     pond_id: "",
     species_id: "",
@@ -55,6 +87,156 @@ export default function StockFishPage() {
     stocking_date: new Date().toISOString().split("T")[0],
     note: "",
   });
+
+
+  const handleOpenConvertFishModal = (item: PondStockItem) => {
+    setSelectedFishBatch(item);
+    const w = item.latest_avg_weight_g || 0;
+    const initialSize = w >= 800 ? "LARGE" : w >= 200 ? "MEDIUM" : "FINGERLING";
+    setFishSizeCategory(initialSize);
+    setFishUnit("Kg");
+    setFishAmount(String(Math.min(50, Math.round(item.estimated_biomass_kg || 10))));
+    setFishSellPrice("240");
+    setFishProductName(`তাজা ${item.species_name} (${item.pond_name})`);
+    setIsConvertFishModalOpen(true);
+  };
+
+  const handleFishSizeChange = (size: "LARGE" | "MEDIUM" | "FINGERLING") => {
+    setFishSizeCategory(size);
+    if (!selectedFishBatch) return;
+    if (size === "LARGE") {
+      setFishSellPrice("280");
+      setFishProductName(`বড় সাইজের তাজা ${selectedFishBatch.species_name} (${selectedFishBatch.pond_name})`);
+    } else if (size === "MEDIUM") {
+      setFishSellPrice("220");
+      setFishProductName(`মাঝারি ${selectedFishBatch.species_name} (${selectedFishBatch.pond_name})`);
+    } else {
+      setFishSellPrice("140");
+      setFishProductName(`পোনা মাছ / ছোট ${selectedFishBatch.species_name} (${selectedFishBatch.pond_name})`);
+    }
+  };
+
+  const handleConvertFishSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFishBatch) return;
+    const amountNum = parseFloat(fishAmount);
+    if (!amountNum || amountNum <= 0) {
+      toast.error("সঠিক পরিমাণ প্রদান করুন", "সতর্কতা");
+      return;
+    }
+
+    try {
+      setConvertSubmitting(true);
+      const res = await fetch("/api/stock/convert-to-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "FISH",
+          source_id: selectedFishBatch.id,
+          product_name: fishProductName.trim(),
+          quantity: amountNum,
+          unit: fishUnit,
+          sell_price: parseFloat(fishSellPrice) || 0,
+          cost_price: 0,
+          metadata: {
+            pond_name: selectedFishBatch.pond_name,
+            species_name: selectedFishBatch.species_name,
+            size_category: fishSizeCategory,
+          },
+        }),
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData.status === "success") {
+        toast.success(resData.message || "মাছ সফলভাবে বিক্রয়যোগ্য পণ্যে রূপান্তর করা হয়েছে!", "সফল");
+        setIsConvertFishModalOpen(false);
+        await loadData();
+      } else {
+        toast.error(resData.message || "পণ্য হিসেবে যোগ করা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "সার্ভারে সমস্যা হয়েছে", "ত্রুটি");
+    } finally {
+      setConvertSubmitting(false);
+    }
+  };
+
+  const handleCreatePond = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPond.pond_name.trim()) {
+      toast.error("পুকুরের নাম আবশ্যক", "ত্রুটি");
+      return;
+    }
+    try {
+      setSavingPond(true);
+      const res = await fetch("/api/fish/ponds", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pond_name: newPond.pond_name.trim(),
+          pond_code: newPond.pond_code.trim() || undefined,
+          area_decimal: parseFloat(newPond.area_decimal) || 0,
+          water_depth_feet: parseFloat(newPond.water_depth_feet) || 5,
+          location: newPond.location.trim() || undefined,
+          note: newPond.note.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.status === "success" && json.data) {
+        toast.success("নতুন পুকুর সফলভাবে যুক্ত হয়েছে!", "সফল");
+        setPonds((prev) => [json.data, ...prev]);
+        setFormData((prev) => ({ ...prev, pond_id: String(json.data.id) }));
+        setIsAddPondModalOpen(false);
+        setNewPond({
+          pond_name: "",
+          pond_code: "",
+          area_decimal: "",
+          water_depth_feet: "5.0",
+          location: "",
+          note: "",
+        });
+      } else {
+        toast.error(json.message || "পুকুর সংরক্ষণ করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setSavingPond(false);
+    }
+  };
+
+  const handleCreateSpecies = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSpecies.species_name.trim()) {
+      toast.error("মাছের প্রজাতির নাম আবশ্যক", "ত্রুটি");
+      return;
+    }
+    try {
+      setSavingSpecies(true);
+      const res = await fetch("/api/fish/species", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          species_name: newSpecies.species_name.trim(),
+          scientific_name: newSpecies.scientific_name.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.status === "success" && json.data) {
+        toast.success("নতুন মাছের প্রজাতি যুক্ত হয়েছে!", "সফল");
+        setSpeciesList((prev) => [json.data, ...prev]);
+        setFormData((prev) => ({ ...prev, species_id: String(json.data.id) }));
+        setIsAddSpeciesModalOpen(false);
+        setNewSpecies({ species_name: "", scientific_name: "" });
+      } else {
+        toast.error(json.message || "সংরক্ষণ করতে ব্যর্থ হয়েছে", "ত্রুটি");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setSavingSpecies(false);
+    }
+  };
 
   const handleCreateFishStock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,6 +462,7 @@ export default function StockFishPage() {
                 <th className="text-right p-[10px]">মোট ওজন</th>
                 <th className="text-center p-[10px]">চাষকাল</th>
                 <th className="text-center p-[10px]">স্ট্যাটাস</th>
+                <th className="text-center w-28 p-[10px]">অ্যাকশন</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -352,6 +535,17 @@ export default function StockFishPage() {
                         <span className="whitespace-nowrap inline-flex items-center shrink-0 inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                           {item.status || "ACTIVE"}
                         </span>
+                      </td>
+                      <td className="text-center p-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenConvertFishModal(item)}
+                          className="h-[28px] px-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[11px] flex items-center gap-1.5 mx-auto transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                          title="বিক্রয়যোগ্য পণ্য হিসেবে প্রোডাক্ট ইনভেন্টরিতে যোগ করুন"
+                        >
+                          <Boxes className="w-3 h-3" />
+                          <span>প্রোডাক্টে যোগ</span>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -494,38 +688,56 @@ export default function StockFishPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     পুকুর নির্বাচন <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    required
-                    value={formData.pond_id}
-                    onChange={(e) => setFormData({ ...formData, pond_id: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  >
-                    <option value="">পুকুর বেছে নিন...</option>
-                    {ponds.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.pond_name} ({p.pond_code})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CustomSelect
+                        options={ponds.map((p) => ({
+                          value: String(p.id),
+                          label: `${p.pond_name} (${p.pond_code})`,
+                          subLabel: (p.area_decimal || p.pond_area_decimal) ? `আয়তন: ${p.area_decimal || p.pond_area_decimal} শতাংশ` : undefined,
+                        }))}
+                        value={formData.pond_id}
+                        onChange={(val) => setFormData({ ...formData, pond_id: String(val) })}
+                        placeholder="পুকুর বেছে নিন..."
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddPondModalOpen(true)}
+                      className="h-[42px] w-[42px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-colors"
+                      title="নতুন পুকুর যোগ করুন"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     মাছের প্রজাতি <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    required
-                    value={formData.species_id}
-                    onChange={(e) => setFormData({ ...formData, species_id: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  >
-                    <option value="">প্রজাতি বেছে নিন...</option>
-                    {speciesList.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name_bn || s.name_en}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CustomSelect
+                        options={speciesList.map((s) => ({
+                          value: String(s.id),
+                          label: s.species_name || s.name_bn || s.name_en || `প্রজাতি #${s.id}`,
+                          subLabel: s.scientific_name || s.name_scientific || undefined,
+                        }))}
+                        value={formData.species_id}
+                        onChange={(val) => setFormData({ ...formData, species_id: String(val) })}
+                        placeholder="প্রজাতি বেছে নিন..."
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddSpeciesModalOpen(true)}
+                      className="h-[42px] w-[42px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-colors"
+                      title="নতুন মাছের প্রজাতি যোগ করুন"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -547,12 +759,9 @@ export default function StockFishPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     মজুদকরণ তারিখ <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    required
+                  <CustomDatePicker
                     value={formData.stocking_date}
-                    onChange={(e) => setFormData({ ...formData, stocking_date: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    onChange={(d) => setFormData({ ...formData, stocking_date: d })}
                   />
                 </div>
 
@@ -609,6 +818,362 @@ export default function StockFishPage() {
           </div>
         </div>
       )}
+      {/* Add New Pond Modal */}
+      {isAddPondModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] flex flex-col">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Fish className="w-5 h-5 text-white" />
+                <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
+                  নতুন পুকুর যোগ করুন (Add New Pond)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddPondModalOpen(false)}
+                className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePond} className="flex flex-col">
+              <div className="p-5 space-y-3 text-xs">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    পুকুরের নাম <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: পুকুর ১ (দক্ষিণ পাড়)"
+                    value={newPond.pond_name}
+                    onChange={(e) => setNewPond({ ...newPond, pond_name: e.target.value })}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      পুকুর কোড
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="যেমন: PND-01"
+                      value={newPond.pond_code}
+                      onChange={(e) => setNewPond({ ...newPond, pond_code: e.target.value })}
+                      className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      আয়তন (শতাংশ)
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="যেমন: ৩০"
+                      value={newPond.area_decimal}
+                      onChange={(e) => setNewPond({ ...newPond, area_decimal: e.target.value })}
+                      className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      গভীরতা (ফুট)
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="যেমন: ৫.৫"
+                      value={newPond.water_depth_feet}
+                      onChange={(e) => setNewPond({ ...newPond, water_depth_feet: e.target.value })}
+                      className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      অবস্থান / লোকেশন
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="যেমন: খামার প্রাঙ্গণ"
+                      value={newPond.location}
+                      onChange={(e) => setNewPond({ ...newPond, location: e.target.value })}
+                      className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAddPondModalOpen(false)}
+                  disabled={savingPond}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPond}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  {savingPond && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>পুকুর সংরক্ষণ করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Fish Species Modal */}
+      {isAddSpeciesModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] flex flex-col">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Fish className="w-5 h-5 text-white" />
+                <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
+                  নতুন মাছের প্রজাতি যোগ করুন (Add Species)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddSpeciesModalOpen(false)}
+                className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSpecies} className="flex flex-col">
+              <div className="p-5 space-y-3 text-xs">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    প্রজাতির নাম <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: রুই, কাতলা, পাঙ্গাশ, তেলাপিয়া"
+                    value={newSpecies.species_name}
+                    onChange={(e) => setNewSpecies({ ...newSpecies, species_name: e.target.value })}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    বৈজ্ঞানিক নাম (ঐচ্ছিক)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="যেমন: Labeo rohita"
+                    value={newSpecies.scientific_name}
+                    onChange={(e) => setNewSpecies({ ...newSpecies, scientific_name: e.target.value })}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAddSpeciesModalOpen(false)}
+                  disabled={savingSpecies}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingSpecies}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  {savingSpecies && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>প্রজাতি সংরক্ষণ করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Convert Fish Stock to Product Modal */}
+      {isConvertFishModalOpen && selectedFishBatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-emerald-800 to-green-700 px-6 py-4 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2">
+                <Boxes className="w-5 h-5 text-emerald-200" />
+                <div>
+                  <h3 className="font-bold text-base leading-tight">মাছ বিক্রয়যোগ্য পণ্যে রূপান্তর / যোগ (Add Fish to Products)</h3>
+                  <p className="text-[11px] text-emerald-100 font-normal">পুকুর স্টক হতে মাছ বিক্রয়যোগ্য পণ্য হিসেবে ইনভেন্টরিতে যুক্ত করুন</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConvertFishModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConvertFishSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs">
+                {/* Source details card */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                  <div>
+                    <span className="text-[11px] text-slate-500 block">উৎস পুকুর ও প্রজাতি:</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-xs">
+                      {selectedFishBatch.pond_name} ({selectedFishBatch.species_name})
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[11px] text-slate-500 block">মজুত বায়োমাস ও মাছ:</span>
+                    <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-xs">
+                      {Math.round(selectedFishBatch.estimated_biomass_kg)} কেজি ({selectedFishBatch.current_fish_count} টি)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Size Category Selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    মাছের সাইজ ক্যাটাগরি <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFishSizeChange("LARGE")}
+                      className={`h-[42px] px-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                        fishSizeCategory === "LARGE"
+                          ? "bg-purple-50 dark:bg-purple-950/50 border-purple-500 text-purple-800 dark:text-purple-300 shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      বড় মাছ (৮০০ গ্রাম+)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFishSizeChange("MEDIUM")}
+                      className={`h-[42px] px-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                        fishSizeCategory === "MEDIUM"
+                          ? "bg-sky-50 dark:bg-sky-950/50 border-sky-500 text-sky-800 dark:text-sky-300 shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      মাঝারি (২০০-৮০০ গ্রাম)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFishSizeChange("FINGERLING")}
+                      className={`h-[42px] px-2 rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
+                        fishSizeCategory === "FINGERLING"
+                          ? "bg-amber-50 dark:bg-amber-950/50 border-amber-500 text-amber-800 dark:text-amber-300 shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      পোনা মাছ (&lt;২০০ গ্রাম)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Unit & Amount */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      বিক্রয় একক <span className="text-red-500">*</span>
+                    </label>
+                    <CustomSelect
+                      options={[
+                        { value: "Kg", label: "কেজি (Kg)" },
+                        { value: "Gram", label: "গ্রাম (Gram)" },
+                        { value: "Pcs", label: "পিস (Piece / টি)" },
+                      ]}
+                      value={fishUnit}
+                      onChange={(v) => setFishUnit(v as any)}
+                      placeholder="একক নির্বাচন করুন"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      পরিমাণ ({fishUnit === "Kg" ? "কেজি" : fishUnit === "Gram" ? "গ্রাম" : "টি"}) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0.1"
+                      value={fishAmount}
+                      onChange={(e) => setFishAmount(e.target.value)}
+                      required
+                      className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white font-bold focus:outline-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Selling Price & Product Name */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      বিক্রয় মূল্য প্রতি {fishUnit === "Kg" ? "কেজি" : fishUnit === "Gram" ? "গ্রাম" : "পিস"} (৳) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="1"
+                      value={fishSellPrice}
+                      onChange={(e) => setFishSellPrice(e.target.value)}
+                      required
+                      className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white font-bold focus:outline-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                      পণ্যের নাম <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={fishProductName}
+                      onChange={(e) => setFishProductName(e.target.value)}
+                      required
+                      className="w-full h-[42px] px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-gray-900 dark:text-white focus:outline-emerald-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 z-10">
+                <button
+                  type="button"
+                  onClick={() => setIsConvertFishModalOpen(false)}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={convertSubmitting}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {convertSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  <span>পণ্য ইনভেন্টরিতে যোগ করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

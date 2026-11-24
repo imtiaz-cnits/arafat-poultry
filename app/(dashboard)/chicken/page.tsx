@@ -74,6 +74,105 @@ export default function ChickenManagementPage() {
     note: "",
   });
 
+  // Shed and Breed dynamic options
+  const defaultSheds = useMemo(
+    () => [
+      "শেড ১",
+      "শেড ২",
+      "শেড ৩",
+      "লেয়ার শেড ১",
+      "লেয়ার শেড ২",
+      "লেয়ার শেড ৩",
+      "ব্রয়লার শেড ১",
+      "ব্রয়লার শেড ২",
+      "সোনালী শেড ১",
+    ],
+    []
+  );
+
+  const defaultBreeds = useMemo(
+    () => [
+      "লেয়ার (ব্রাউন)",
+      "লেয়ার (সাদা)",
+      "ব্রয়লার (মাংসের জন্য)",
+      "সোনালী (ক্লাসিক)",
+      "সোনালী (হাইব্রিড)",
+      "হাই-লাইন ব্রাউন",
+      "কক / ফাউমি",
+      "দেশি মুরগি",
+      "টার্কি",
+      "কোয়েল",
+    ],
+    []
+  );
+
+  const [customSheds, setCustomSheds] = useState<string[]>([]);
+  const [customBreeds, setCustomBreeds] = useState<string[]>([]);
+  const [isAddShedModalOpen, setIsAddShedModalOpen] = useState(false);
+  const [isAddBreedModalOpen, setIsAddBreedModalOpen] = useState(false);
+  const [newShedInput, setNewShedInput] = useState("");
+  const [newBreedInput, setNewBreedInput] = useState("");
+
+  // Load custom sheds and breeds from localStorage
+  useEffect(() => {
+    try {
+      const storedSheds = localStorage.getItem("ap_chicken_sheds");
+      if (storedSheds) setCustomSheds(JSON.parse(storedSheds));
+      const storedBreeds = localStorage.getItem("ap_chicken_breeds");
+      if (storedBreeds) setCustomBreeds(JSON.parse(storedBreeds));
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const allSheds = useMemo(() => {
+    const fromFlocks = flocks.map((f) => f.shed_name).filter(Boolean);
+    const set = new Set([...customSheds, ...fromFlocks, ...defaultSheds]);
+    return Array.from(set);
+  }, [flocks, customSheds, defaultSheds]);
+
+  const allBreeds = useMemo(() => {
+    const fromFlocks = flocks.map((f) => f.breed).filter(Boolean);
+    const set = new Set([...customBreeds, ...fromFlocks, ...defaultBreeds]);
+    return Array.from(set);
+  }, [flocks, customBreeds, defaultBreeds]);
+
+  const handleSaveNewShed = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newShedInput.trim();
+    if (!trimmed) {
+      toast.error("শেডের নাম লিখুন", "ত্রুটি");
+      return;
+    }
+    const updated = Array.from(new Set([trimmed, ...customSheds]));
+    setCustomSheds(updated);
+    try {
+      localStorage.setItem("ap_chicken_sheds", JSON.stringify(updated));
+    } catch (e) {}
+    setNewFlock((prev) => ({ ...prev, shed_name: trimmed }));
+    setNewShedInput("");
+    setIsAddShedModalOpen(false);
+    toast.success("নতুন শেড সফলভাবে যুক্ত হয়েছে!", "সফল");
+  };
+
+  const handleSaveNewBreed = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newBreedInput.trim();
+    if (!trimmed) {
+      toast.error("মুরগির জাতের নাম লিখুন", "ত্রুটি");
+      return;
+    }
+    const updated = Array.from(new Set([trimmed, ...customBreeds]));
+    setCustomBreeds(updated);
+    try {
+      localStorage.setItem("ap_chicken_breeds", JSON.stringify(updated));
+    } catch (e) {}
+    setNewFlock((prev) => ({ ...prev, breed: trimmed }));
+    setNewBreedInput("");
+    setIsAddBreedModalOpen(false);
+    toast.success("নতুন জাত সফলভাবে যুক্ত হয়েছে!", "সফল");
+  };
+
   // Modal: Record Mortality
   const [isMortalityModalOpen, setIsMortalityModalOpen] = useState(false);
   const [selectedFlock, setSelectedFlock] = useState<Flock | null>(null);
@@ -598,14 +697,24 @@ export default function ChickenManagementPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     শেডের নাম / নম্বর (Shed Name / No) <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="যেমন: শেড ১, লেয়ার শেড ৩"
-                    value={newFlock.shed_name}
-                    onChange={(e) => setNewFlock({ ...newFlock, shed_name: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CustomSelect
+                        options={allSheds}
+                        value={newFlock.shed_name}
+                        onChange={(val) => setNewFlock({ ...newFlock, shed_name: String(val) })}
+                        placeholder="শেড নির্বাচন করুন..."
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddShedModalOpen(true)}
+                      className="h-[42px] w-[42px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-colors"
+                      title="নতুন শেড যোগ করুন"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Breed / Type */}
@@ -613,14 +722,24 @@ export default function ChickenManagementPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     মুরগির জাত / প্রকার (Breed / Type) <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="যেমন: হাই-লাইন ব্রাউন, সোনালী, ব্রয়লার"
-                    value={newFlock.breed}
-                    onChange={(e) => setNewFlock({ ...newFlock, breed: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CustomSelect
+                        options={allBreeds}
+                        value={newFlock.breed}
+                        onChange={(val) => setNewFlock({ ...newFlock, breed: String(val) })}
+                        placeholder="জাত / প্রকার নির্বাচন করুন..."
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddBreedModalOpen(true)}
+                      className="h-[42px] w-[42px] rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center shrink-0 cursor-pointer shadow-xs transition-colors"
+                      title="নতুন জাত যোগ করুন"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -866,6 +985,119 @@ export default function ChickenManagementPage() {
                 >
                   {savingMortality && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>মৃত্যু রেকর্ড সংরক্ষণ করুন (Save)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Add New Shed Modal */}
+      {isAddShedModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] flex flex-col">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Home className="w-5 h-5 text-white" />
+                <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
+                  নতুন শেড যোগ করুন (Add Shed)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddShedModalOpen(false)}
+                className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewShed} className="flex flex-col">
+              <div className="p-5 space-y-3 text-xs">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    শেডের নাম / নম্বর <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: শেড ৪, ব্রয়লার শেড ২"
+                    value={newShedInput}
+                    onChange={(e) => setNewShedInput(e.target.value)}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAddShedModalOpen(false)}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <span>শেড সংরক্ষণ করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Breed Modal */}
+      {isAddBreedModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white dark:bg-[#0f172a] rounded-[16px] shadow-2xl overflow-hidden border border-[#cbd5e1] dark:border-[#334155] flex flex-col">
+            <div className="bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] px-5 py-3.5 flex items-center justify-between text-white shrink-0">
+              <div className="flex items-center gap-2">
+                <Tag className="w-5 h-5 text-white" />
+                <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
+                  নতুন মুরগির জাত যোগ (Add Breed)
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddBreedModalOpen(false)}
+                className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewBreed} className="flex flex-col">
+              <div className="p-5 space-y-3 text-xs">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    মুরগির জাত / প্রকারের নাম <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="যেমন: সোনালী সুপার, হাই-লাইন সাদা"
+                    value={newBreedInput}
+                    onChange={(e) => setNewBreedInput(e.target.value)}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAddBreedModalOpen(false)}
+                  className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <span>জাত সংরক্ষণ করুন</span>
                 </button>
               </div>
             </form>

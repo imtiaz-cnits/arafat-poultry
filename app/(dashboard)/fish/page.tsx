@@ -960,7 +960,7 @@ export default function FishFarmingPage() {
                       <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70">
                         <span className="text-[10px] text-slate-400 block">মোট ব্যয়</span>
                         <span className="font-black text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
-                          ৳ {formatBdCurrency(b.total_cost)}
+                          {formatBdCurrency(b.total_cost)}
                         </span>
                       </div>
                     </div>
@@ -1307,22 +1307,7 @@ export default function FishFarmingPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
-                  সংযুক্ত বিক্রয়যোগ্য পণ্য (ইনভেন্টরি লিংক)
-                </label>
-                <CustomSelect
-                  options={
-                    data?.saleable_fish_products.map((p) => ({
-                      value: p.id,
-                      label: p.product_name,
-                    })) || []
-                  }
-                  value={batchProductId || ""}
-                  onChange={(v) => setBatchProductId(v ? Number(v) : "")}
-                  placeholder="-- বিক্রয়যোগ্য পণ্য নির্বাচন করুন (ঐচ্ছিক) --"
-                />
-              </div>
+
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

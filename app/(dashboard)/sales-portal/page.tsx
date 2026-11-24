@@ -403,7 +403,7 @@ export default function SalesPortalPage() {
       value: c.id,
       label: c.customer_name,
       subLabel: `মোবাইল: ${c.mobile || "N/A"}${c.address_details ? ` • ${c.address_details}` : ""}`,
-      badge: c.previous_due_amount > 0 ? `বকেয়া: ৳${formatBdCurrency(c.previous_due_amount)}` : undefined,
+      badge: c.previous_due_amount > 0 ? `বকেয়া: ${formatBdCurrency(c.previous_due_amount)}` : undefined,
     }));
   }, [customers]);
 
@@ -1280,7 +1280,7 @@ export default function SalesPortalPage() {
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-600 dark:text-slate-400">মোট মূল্য:</span>
               <span className="font-black text-slate-900 dark:text-white text-sm">
-                ৳ {formatBdCurrency(subtotal)}
+                {formatBdCurrency(subtotal)}
               </span>
             </div>
 
@@ -1332,7 +1332,7 @@ export default function SalesPortalPage() {
                   বিনিময় কর্তন:
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-black">- ৳ {formatBdCurrency(returnAdjustment)}</span>
+                  <span className="font-black">- {formatBdCurrency(returnAdjustment)}</span>
                   <button
                     type="button"
                     onClick={() => setIsExchangeModalOpen(true)}
@@ -1350,7 +1350,7 @@ export default function SalesPortalPage() {
                 পরিশোধযোগ্য:
               </span>
               <span className="text-base sm:text-lg font-black text-emerald-800 dark:text-emerald-300">
-                ৳ {formatBdCurrency(netPayable)}
+                {formatBdCurrency(netPayable)}
               </span>
             </div>
 
@@ -1446,7 +1446,7 @@ export default function SalesPortalPage() {
                     : "text-slate-800 dark:text-slate-200"
                   }`}
               >
-                ৳ {formatBdCurrency(currentDue)}
+                {formatBdCurrency(currentDue)}
               </span>
             </div>
 
@@ -1465,7 +1465,7 @@ export default function SalesPortalPage() {
             {selectedCustomer && selectedCustomer.previous_due_amount > 0 && (
               <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl p-1.5 text-[11px] text-amber-800 dark:text-amber-300 flex items-center justify-between">
                 <span>পূর্বের মোট বকেয়া:</span>
-                <span className="font-black">৳ {formatBdCurrency(selectedCustomer.previous_due_amount)}</span>
+                <span className="font-black">{formatBdCurrency(selectedCustomer.previous_due_amount)}</span>
               </div>
             )}
           </div>

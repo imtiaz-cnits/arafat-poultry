@@ -169,7 +169,10 @@ export function CustomSelect({
       if (typeof opt === "string") {
         return { value: opt, label: opt };
       }
-      return opt;
+      return {
+        ...opt,
+        label: (opt.label && opt.label.trim()) || String(opt.value ?? ""),
+      };
     });
   }, [options]);
 
@@ -399,10 +402,10 @@ export function CustomSelect({
                     <div
                       key={String(opt.value)}
                       onClick={() => handleSelect(opt.value)}
-                      className={`px-3 py-2 rounded-xl text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                      className={`px-3.5 py-2.5 min-h-[38px] rounded-xl text-xs cursor-pointer flex items-center justify-between transition-colors ${
                         isSelected
                           ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold shadow-xs"
-                          : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
+                          : "hover:bg-emerald-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100"
                       }`}
                     >
                       <div className="w-full min-w-0">

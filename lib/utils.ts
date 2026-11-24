@@ -17,7 +17,8 @@ export function formatBdCurrency(amount: any): string {
     return '৳ 0.00';
   }
 
-  const strVal = typeof amount === 'object' && 'toString' in amount ? amount.toString() : String(amount);
+  let strVal = typeof amount === 'object' && 'toString' in amount ? amount.toString() : String(amount);
+  strVal = strVal.replace(/৳/g, '').trim();
   const num = Number(strVal);
   if (isNaN(num)) {
     return '৳ 0.00';
