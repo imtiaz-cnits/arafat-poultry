@@ -433,8 +433,22 @@ export async function getFlockDetailsWithAnalytics(flockId: bigint | number) {
   const totalEggBreakage = flock.egg_collections.reduce((sum, c) => sum + c.rejected_breakage, 0);
   const totalAcceptedEggs = flock.egg_collections.reduce((sum, c) => sum + c.accepted_quantity, 0);
 
-  // 4. Mortality rate
-  const mortalityCount = Math.max(0, flock.initial_chicks_count - flock.current_birds_count);
+  // 4. Mortality rate ( strictly summed from recorded mortality events )
+  const flockMortalityLogs = await prisma.audit_logs.findMany({
+    where: {
+      entity_type: "POULTRY_MORTALITY",
+      entity_id: String(flock.id),
+    },
+    select: { new_values: true },
+  });
+  const mortalityCount = flockMortalityLogs.reduce((sum, l) => {
+    try {
+      const parsed = typeof l.new_values === "string" ? JSON.parse(l.new_values) : (l.new_values as any);
+      return sum + Number(parsed?.mortality_count || 0);
+    } catch {
+      return sum;
+    }
+  }, 0);
   const mortalityRatePercent =
     flock.initial_chicks_count > 0 ? (mortalityCount / flock.initial_chicks_count) * 100 : 0;
 
@@ -494,29 +508,188 @@ export async function getFlockDetailsWithAnalytics(flockId: bigint | number) {
 }
 
 /**
- * 6. List All Poultry Flocks with Real-Time Dynamic Age & Feed Metrics
+ * Helper: Parse note metadata & compute 3-stage age + dynamic weight
+ * Stage 1 (< 45 days): বাচ্চা মুরগি (Chick)
+ * Stage 2 (45 - 119 days): মাঝারি মুরগি (Medium / Grower)
+ * Stage 3 (>= 120 days): বড় মুরগি (Adult / Large — Medium becomes 0)
+ */
+export function parseFlockNoteMetadata(note?: string | null) {
+  const raw = note || "";
+  let initWeightStr = "";
+  let dailyFeedStr = "";
+  let unitPriceStr = "";
+  let paymentMethodStr = "";
+  let supplierIdStr = "";
+
+  const cleanParts: string[] = [];
+  raw.split("|").forEach((part) => {
+    const trimmed = part.trim();
+    if (!trimmed) return;
+    if (trimmed.startsWith("ওজন:")) {
+      initWeightStr = trimmed.replace("ওজন:", "").replace(/g$/i, "").trim();
+    } else if (trimmed.startsWith("খাবার:")) {
+      dailyFeedStr = trimmed.replace("খাবার:", "").replace(/g\/দিন$/i, "").replace(/g$/i, "").trim();
+    } else if (trimmed.startsWith("দর:")) {
+      unitPriceStr = trimmed.replace("দর:", "").trim();
+    } else if (trimmed.startsWith("মাধ্যম:")) {
+      paymentMethodStr = trimmed.replace("মাধ্যম:", "").trim();
+    } else if (trimmed.startsWith("সাপ্লায়ার:")) {
+      supplierIdStr = trimmed.replace("সাপ্লায়ার:", "").trim();
+    } else {
+      cleanParts.push(trimmed.replace(/\s*\(Supplier:[^)]+\)\s*$/, "").trim());
+    }
+  });
+
+  const numMatch = initWeightStr.match(/[\d.]+/);
+  const initWeightNum = numMatch ? parseFloat(numMatch[0]) : 0;
+
+  return {
+    initWeightStr,
+    initWeightNum,
+    dailyFeedStr,
+    unitPriceStr,
+    paymentMethodStr,
+    supplierIdStr,
+    cleanNote: cleanParts.filter(Boolean).join(" | "),
+  };
+}
+
+export function computeThreeStagePoultryMetrics(
+  totalDays: number,
+  currentBirds: number,
+  initWeightNum?: number
+) {
+  const safeDays = Math.max(0, totalDays);
+  const birds = Math.max(0, currentBirds);
+
+  // Stage 1: 0 - 44 days -> বাচ্চা মুরগি
+  if (safeDays < 45) {
+    const baseG = initWeightNum && initWeightNum > 0 && initWeightNum < 500 ? initWeightNum : 45;
+    const estGrams = Math.round(baseG + safeDays * ((420 - baseG) / 45));
+    return {
+      age_stage: 1 as const,
+      age_stage_label: "১ম ধাপ (বাচ্চা)",
+      chick_birds: birds,
+      medium_birds: 0,
+      adult_birds: 0,
+      avg_weight_g: estGrams,
+      avg_weight_display: `${estGrams} গ্রাম`,
+    };
+  }
+
+  // Stage 2: 45 - 119 days -> মাঝারি মুরগি
+  if (safeDays < 120) {
+    const estGrams = Math.round(500 + ((safeDays - 45) / 75) * 850);
+    return {
+      age_stage: 2 as const,
+      age_stage_label: "২য় ধাপ (মাঝারি)",
+      chick_birds: 0,
+      medium_birds: birds,
+      adult_birds: 0,
+      avg_weight_g: estGrams,
+      avg_weight_display:
+        estGrams >= 1000 ? `${(estGrams / 1000).toFixed(2)} কেজি` : `${estGrams} গ্রাম`,
+    };
+  }
+
+  // Stage 3: >= 120 days -> বড় মুরগি (মাঝারি becomes 0!)
+  const estKg = Math.min(2.1, 1.45 + ((safeDays - 120) / 150) * 0.55);
+  return {
+    age_stage: 3 as const,
+    age_stage_label: "৩য় ধাপ (বড় মুরগি)",
+    chick_birds: 0,
+    medium_birds: 0,
+    adult_birds: birds,
+    avg_weight_g: Math.round(estKg * 1000),
+    avg_weight_display: `${estKg.toFixed(2)} কেজি`,
+  };
+}
+
+/**
+ * 6. List All Poultry Flocks with Real-Time Dynamic 3-Stage Age, Weight, Exact Mortality & Linked Product
  */
 export async function listPoultryFlocksWithMetrics() {
-  const flocks = await prisma.poultry_flocks.findMany({
-    orderBy: { id: "desc" },
-    include: {
-      egg_collections: {
-        select: {
-          total_collected: true,
-          accepted_quantity: true,
-          rejected_breakage: true,
+  const [flocks, mortalityLogs, chickenProducts] = await Promise.all([
+    prisma.poultry_flocks.findMany({
+      orderBy: { id: "desc" },
+      include: {
+        egg_collections: {
+          select: {
+            total_collected: true,
+            accepted_quantity: true,
+            rejected_breakage: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.audit_logs.findMany({
+      where: { entity_type: "POULTRY_MORTALITY" },
+      select: { entity_id: true, new_values: true },
+    }),
+    prisma.products.findMany({
+      where: {
+        status: { not: "deleted" },
+        OR: [
+          { surface_finish: { startsWith: "FLOCK:" } },
+          { category_id: BigInt(4) },
+        ],
+      },
+      include: { units: true },
+      orderBy: { id: "desc" },
+    }),
+  ]);
+
+  // Sum recorded mortality per flock ID
+  const mortalityByFlock = new Map<string, number>();
+  for (const log of mortalityLogs) {
+    if (!log.entity_id) continue;
+    try {
+      const parsed =
+        typeof log.new_values === "string"
+          ? JSON.parse(log.new_values)
+          : (log.new_values as any);
+      const count = Number(parsed?.mortality_count || 0);
+      if (count > 0) {
+        mortalityByFlock.set(
+          String(log.entity_id),
+          (mortalityByFlock.get(String(log.entity_id)) || 0) + count
+        );
+      }
+    } catch {}
+  }
 
   return flocks.map((flock) => {
     const age = calculateAgeInMonthsAndDays(flock.housing_date, new Date());
-    const feedReq = calculateDailyFeedRequirementKg(flock.current_birds_count, 120);
+    const noteMeta = parseFlockNoteMetadata(flock.note);
+    const dailyFeedRateG =
+      noteMeta.dailyFeedStr && !isNaN(Number(noteMeta.dailyFeedStr)) && Number(noteMeta.dailyFeedStr) > 0
+        ? Number(noteMeta.dailyFeedStr)
+        : 120;
+    const feedReq = calculateDailyFeedRequirementKg(flock.current_birds_count, dailyFeedRateG);
     const expectedDailyFeedKg = feedReq.dailyKg;
-    const mortalityCount = Math.max(0, flock.initial_chicks_count - flock.current_birds_count);
+
+    const mortalityCount = mortalityByFlock.get(String(flock.id)) || 0;
     const mortalityPercent =
       flock.initial_chicks_count > 0 ? (mortalityCount / flock.initial_chicks_count) * 100 : 0;
+
+    const stageMetrics = computeThreeStagePoultryMetrics(
+      age.totalDays,
+      flock.current_birds_count,
+      noteMeta.initWeightNum
+    );
+
+    // Match linked commercial product (only for non-chick flocks or explicit FLOCK:<id> link)
+    const flockTag = `FLOCK:${flock.id}`;
+    const matchedProd =
+      chickenProducts.find((p) => p.surface_finish === flockTag) ||
+      (stageMetrics.age_stage >= 2
+        ? chickenProducts.find(
+            (p) =>
+              !p.surface_finish &&
+              flock.shed_name &&
+              p.product_name.includes(`(${flock.shed_name}`)
+          )
+        : undefined);
 
     const totalEggsCollected = flock.egg_collections.reduce((sum, c) => sum + c.total_collected, 0);
 
@@ -530,17 +703,43 @@ export async function listPoultryFlocksWithMetrics() {
       initial_chicks_count: flock.initial_chicks_count,
       current_birds_count: flock.current_birds_count,
       current_birds: flock.current_birds_count,
+      chick_birds: stageMetrics.chick_birds,
+      medium_birds: stageMetrics.medium_birds,
+      adult_birds: stageMetrics.adult_birds,
+      age_stage: stageMetrics.age_stage,
+      age_stage_label: stageMetrics.age_stage_label,
+      avg_weight_g: stageMetrics.avg_weight_g,
+      avg_weight_display: stageMetrics.avg_weight_display,
       mortality_count: mortalityCount,
       mortality_rate_percent: parseFloat(mortalityPercent.toFixed(1)),
       age_display: age.display,
       age_months: age.months,
       age_days: age.days,
       age_total_days: age.totalDays,
+      daily_feed_rate_g: dailyFeedRateG,
       expected_daily_feed_kg: parseFloat(expectedDailyFeedKg.toFixed(2)),
       actual_feed_consumed_kg: Number(flock.feed_consumed_kg),
       total_expenses: Number(flock.total_expenses),
       total_eggs_collected: totalEggsCollected,
       note: flock.note,
+      clean_note: noteMeta.cleanNote,
+      init_weight_input: noteMeta.initWeightStr,
+      unit_price_input: noteMeta.unitPriceStr,
+      payment_method_input: noteMeta.paymentMethodStr,
+      supplier_id_input: noteMeta.supplierIdStr,
+      linked_product: matchedProd
+        ? {
+            id: Number(matchedProd.id),
+            product_name: matchedProd.product_name,
+            quantity: parseFloat(matchedProd.quantity || "0"),
+            sell_price: parseFloat(matchedProd.sell_price || "0"),
+            cost_price: parseFloat(matchedProd.cost_price || "0"),
+            weight_display: matchedProd.door_side || stageMetrics.avg_weight_display,
+            size_group:
+              matchedProd.grade || (stageMetrics.age_stage === 3 ? "LARGE" : "MEDIUM"),
+            unit: matchedProd.units?.unit_name || "Pcs",
+          }
+        : null,
     };
   });
 }

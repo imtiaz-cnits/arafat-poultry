@@ -17,6 +17,7 @@ import {
   FileText,
   Calendar,
   RotateCcw,
+  Pencil,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -35,11 +36,30 @@ interface PurchaseItem {
   quantity: number;
   cost_price: number;
   unit: string;
+  selected_unit?: string;
   tile_size?: string | null;
   sqft_per_box?: number | null;
   pcs_per_box?: number | null;
   grade?: string | null;
   category?: string | null;
+}
+
+function getProductCategoryType(p: { product_name?: string; category?: string }): "EGGS" | "FISH" | "CHICKEN" | "FEED" | "OTHER" {
+  const name = (p.product_name || "").toLowerCase();
+  const cat = (p.category || "").toLowerCase();
+  if (name.includes("dim") || name.includes("ডিম") || cat.includes("egg") || cat.includes("ডিম")) return "EGGS";
+  if (name.includes("mach") || name.includes("মাছ") || name.includes("fish") || cat.includes("fish") || cat.includes("মাছ")) return "FISH";
+  if (name.includes("murgi") || name.includes("মুরগি") || name.includes("বাচ্চা") || name.includes("chick") || name.includes("poultry") || cat.includes("chicken") || cat.includes("poultry")) return "CHICKEN";
+  if (name.includes("feed") || name.includes("ফিড") || name.includes("খাবার") || cat.includes("feed")) return "FEED";
+  return "OTHER";
+}
+
+function getAllowedUnits(type: "EGGS" | "FISH" | "CHICKEN" | "FEED" | "OTHER", defaultUnit?: string): string[] {
+  if (type === "EGGS") return ["পিস", "হালি", "খাঁচা"];
+  if (type === "FISH") return ["কেজি", "গ্রাম", "পিস"];
+  if (type === "CHICKEN") return ["পিস"];
+  if (type === "FEED") return ["বস্তা", "কেজি", "গ্রাম"];
+  return [defaultUnit || "Pcs"];
 }
 
 interface Purchase {
@@ -75,6 +95,7 @@ interface Purchase {
     paid_amount: number;
     payment_method: string;
     payment_status: string;
+    transaction_id?: string | null;
   }>;
 }
 
@@ -114,6 +135,7 @@ export default function PurchasesPage() {
 
   // Modals
   const [isNewPurchaseOpen, setIsNewPurchaseOpen] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
@@ -141,7 +163,47 @@ export default function PurchasesPage() {
   const [newItems, setNewItems] = useState<PurchaseItem[]>([]);
   const [selectedProdId, setSelectedProdId] = useState("");
   const [tempQty, setTempQty] = useState("1");
+  const [tempUnit, setTempUnit] = useState("Pcs");
   const [tempCost, setTempCost] = useState("");
+
+  const getProductUnitOptions = (prodName: string, category?: string | null, defaultUnit?: string): string[] => {
+    const name = (prodName || "").toLowerCase();
+    const cat = (category || "").toLowerCase();
+    if (name.includes("dim") || name.includes("ডিম") || cat.includes("egg") || cat.includes("ডিম")) {
+      return ["পিস", "হালি", "খাঁচা"];
+    }
+    if (name.includes("mach") || name.includes("মাছ") || name.includes("fish") || cat.includes("fish") || cat.includes("মাছ")) {
+      return ["কেজি", "গ্রাম", "পিস"];
+    }
+    if (name.includes("murgi") || name.includes("মুরগি") || name.includes("chicken") || name.includes("বাচ্চা") || cat.includes("chicken") || cat.includes("মুরগি") || cat.includes("poultry")) {
+      return ["পিস"];
+    }
+    return [defaultUnit || "Pcs", "কেজি", "গ্রাম", "বস্তা", "পিস"].filter((v, i, a) => a.indexOf(v) === i);
+  };
+
+  const handleUpdateRowQty = (index: number, newQty: number) => {
+    setNewItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], quantity: Math.max(0, newQty) };
+      return copy;
+    });
+  };
+
+  const handleUpdateRowCost = (index: number, newCost: number) => {
+    setNewItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], cost_price: Math.max(0, newCost) };
+      return copy;
+    });
+  };
+
+  const handleUpdateRowUnit = (index: number, newUnit: string) => {
+    setNewItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], unit: newUnit };
+      return copy;
+    });
+  };
 
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -235,6 +297,32 @@ export default function PurchasesPage() {
     setPurchaseToDelete(p);
   };
 
+  const handleOpenEdit = (p: Purchase) => {
+    setEditingPurchase(p);
+    setSelectedSupplierId(String(p.supplier?.id || ""));
+    setReferenceNo(p.referance_no || "");
+    setPurchaseDate(p.date ? p.date.split("T")[0] : new Date().toISOString().split("T")[0]);
+    setDeliveryCharge(String(p.delivery_charge || 0));
+    setPaidAmount(String(p.paid_amount || 0));
+    setPaymentMethod(p.payments?.[0]?.payment_method || "Cash");
+    setTransactionId(p.payments?.[0]?.transaction_id || "");
+    setErrorMsg(null);
+
+    const mappedItems: PurchaseItem[] = (p.details || []).map((d) => ({
+      product_id: (d as any).product_id || (d as any).id,
+      product_name: d.product_name,
+      quantity: d.quantity,
+      cost_price: d.cost_price,
+      unit: d.unit || "Pcs",
+      tile_size: d.tile_size,
+      sqft_per_box: d.sqft_per_box,
+      pcs_per_box: d.pcs_per_box,
+      grade: d.grade,
+    }));
+    setNewItems(mappedItems);
+    setIsNewPurchaseOpen(true);
+  };
+
   const confirmDeletePurchase = async () => {
     if (!purchaseToDelete) return;
     setIsDeleting(true);
@@ -276,14 +364,15 @@ export default function PurchasesPage() {
     }
 
     const cost = tempCost !== "" ? parseFloat(tempCost) || 0 : prod.cost_price;
+    const chosenUnit = tempUnit || prod.unit || "Pcs";
 
-    const existingIndex = newItems.findIndex((i) => i.product_id === prod.id);
+    const existingIndex = newItems.findIndex((i) => i.product_id === prod.id && i.unit === chosenUnit);
     if (existingIndex > -1) {
       const copy = [...newItems];
       copy[existingIndex].quantity += qty;
       copy[existingIndex].cost_price = cost;
       setNewItems(copy);
-      toast.success(`${prod.product_name}-এর পরিমাণ বৃদ্ধি করা হয়েছে (${copy[existingIndex].quantity} ${prod.unit || "Pcs"})`);
+      toast.success(`${prod.product_name}-এর পরিমাণ বৃদ্ধি করা হয়েছে (${copy[existingIndex].quantity} ${chosenUnit})`);
     } else {
       setNewItems([
         ...newItems,
@@ -297,7 +386,7 @@ export default function PurchasesPage() {
           grade: prod.grade,
           quantity: qty,
           cost_price: cost,
-          unit: prod.unit,
+          unit: chosenUnit,
         },
       ]);
       toast.success(`${prod.product_name} সফলভাবে তালিকায় যোগ করা হয়েছে`);
@@ -335,6 +424,36 @@ export default function PurchasesPage() {
     setNewItems(newItems.filter((i) => i.product_id !== prodId));
   };
 
+  const handleUpdateItemQty = (idx: number, qty: number) => {
+    setNewItems((prev) => {
+      const copy = [...prev];
+      if (copy[idx]) {
+        copy[idx] = { ...copy[idx], quantity: Math.max(0, qty) };
+      }
+      return copy;
+    });
+  };
+
+  const handleUpdateItemCost = (idx: number, cost: number) => {
+    setNewItems((prev) => {
+      const copy = [...prev];
+      if (copy[idx]) {
+        copy[idx] = { ...copy[idx], cost_price: Math.max(0, cost) };
+      }
+      return copy;
+    });
+  };
+
+  const handleUpdateItemUnit = (idx: number, unit: string) => {
+    setNewItems((prev) => {
+      const copy = [...prev];
+      if (copy[idx]) {
+        copy[idx] = { ...copy[idx], unit };
+      }
+      return copy;
+    });
+  };
+
   // Calculations for new purchase
   const subTotal = newItems.reduce((sum, item) => sum + item.cost_price * item.quantity, 0);
   const delivery = parseFloat(deliveryCharge) || 0;
@@ -361,8 +480,11 @@ export default function PurchasesPage() {
       setErrorMsg(null);
 
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      const res = await fetch("/api/purchases", {
-        method: "POST",
+      const url = editingPurchase ? `/api/purchases/${editingPurchase.id}` : "/api/purchases";
+      const method = editingPurchase ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -378,19 +500,42 @@ export default function PurchasesPage() {
           due_amount: due,
           payment_method: paymentMethod,
           transaction_id: transactionId,
-          items: newItems.map((i) => ({
-            product_id: i.product_id,
-            quantity: i.quantity,
-            cost_price: i.cost_price,
-            subtotal: i.cost_price * i.quantity,
-          })),
+          items: newItems.map((i) => {
+            const catType = getProductCategoryType({ product_name: i.product_name, category: i.category || undefined });
+            const selUnit = (i.unit || "").trim();
+            let effQty = i.quantity;
+            let effCost = i.cost_price;
+
+            if (catType === "EGGS") {
+              if (selUnit === "হালি" || selUnit.toLowerCase() === "hali") {
+                effQty = i.quantity * 4;
+                effCost = effQty > 0 ? (i.cost_price * i.quantity) / effQty : i.cost_price / 4;
+              } else if (selUnit === "খাঁচা" || selUnit.toLowerCase() === "tray" || selUnit.toLowerCase() === "khacha") {
+                effQty = i.quantity * 30;
+                effCost = effQty > 0 ? (i.cost_price * i.quantity) / effQty : i.cost_price / 30;
+              }
+            } else if (catType === "FISH") {
+              if (selUnit === "গ্রাম" || selUnit.toLowerCase() === "gram") {
+                effQty = i.quantity / 1000;
+                effCost = effQty > 0 ? (i.cost_price * i.quantity) / effQty : i.cost_price * 1000;
+              }
+            }
+
+            return {
+              product_id: i.product_id,
+              quantity: effQty,
+              cost_price: effCost,
+              subtotal: i.cost_price * i.quantity,
+            };
+          }),
         }),
       });
 
       const data = await res.json();
       if (data.status === "success") {
-        toast.success("ক্রয় ও স্টক ইন সফলভাবে সংরক্ষিত হয়েছে!", "সফল");
+        toast.success(editingPurchase ? "ক্রয় ও স্টক ইন সফলভাবে আপডেট করা হয়েছে!" : "ক্রয় ও স্টক ইন সফলভাবে সংরক্ষিত হয়েছে!", "সফল");
         setIsNewPurchaseOpen(false);
+        setEditingPurchase(null);
         setNewItems([]);
         setSelectedSupplierId("");
         setReferenceNo("");
@@ -476,7 +621,13 @@ export default function PurchasesPage() {
 
           <button
             onClick={() => {
+              setEditingPurchase(null);
               setNewItems([]);
+              setSelectedSupplierId("");
+              setReferenceNo("");
+              setPaidAmount("0");
+              setDeliveryCharge("0");
+              setErrorMsg(null);
               setIsNewPurchaseOpen(true);
             }}
             className="h-[38px] px-2.5 sm:px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer shrink-0"
@@ -601,6 +752,15 @@ export default function PurchasesPage() {
 
                         <button
                           type="button"
+                          onClick={() => handleOpenEdit(p)}
+                          className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center transition-colors cursor-pointer"
+                          title="Edit Purchase"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => handleDeletePurchase(p)}
                           className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
                           title="Delete Purchase"
@@ -671,18 +831,25 @@ export default function PurchasesPage() {
               <button
                 type="button"
                 onClick={() => setSelectedPurchase(p)}
-                className="h-[30px] w-full text-center px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1"
+                className="h-[30px] w-full text-center px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
               >
                 <Eye className="w-3.5 h-3.5 text-emerald-600" />
                 <span>View</span>
               </button>
 
-
+              <button
+                type="button"
+                onClick={() => handleOpenEdit(p)}
+                className="h-[30px] w-full text-center px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </button>
 
               <button
                 type="button"
                 onClick={() => handleDeletePurchase(p)}
-                className="h-[30px] w-full text-center px-2.5 rounded-lg bg-rose-50 text-rose-600 font-bold text-xs flex items-center justify-center gap-1"
+                className="h-[30px] w-full text-center px-2.5 rounded-lg bg-rose-50 text-rose-600 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete</span>
@@ -716,7 +883,7 @@ export default function PurchasesPage() {
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  নতুন পণ্য ক্রয় ও স্টক ইন
+                  {editingPurchase ? "পণ্য ক্রয় ও স্টক ইন সম্পাদন (Edit Purchase)" : "নতুন পণ্য ক্রয় ও স্টক ইন"}
                 </h3>
               </div>
               <button
@@ -802,7 +969,7 @@ export default function PurchasesPage() {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                  <div className="sm:col-span-6 space-y-1">
+                  <div className="sm:col-span-5 space-y-1">
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                       পণ্য নির্বাচন করুন <span className="text-red-500">*</span>
                     </label>
@@ -831,7 +998,11 @@ export default function PurchasesPage() {
                           onChange={(val) => {
                             setSelectedProdId(String(val));
                             const p = products.find((x) => String(x.id) === String(val));
-                            if (p) setTempCost(String(p.cost_price));
+                            if (p) {
+                              setTempCost(String(p.cost_price));
+                              const uOpts = getProductUnitOptions(p.product_name, p.category, p.unit);
+                              setTempUnit(uOpts[0] || "Pcs");
+                            }
                           }}
                           placeholder={products.length === 0 ? "পণ্য লোড হচ্ছে..." : "যোগ করতে পণ্য নির্বাচন করুন..."}
                         />
@@ -852,11 +1023,29 @@ export default function PurchasesPage() {
                     </label>
                     <input
                       type="number"
-                      min="1"
+                      min="0.01"
+                      step="any"
                       placeholder="পরিমাণ"
                       value={tempQty}
                       onChange={(e) => setTempQty(e.target.value)}
                       className="w-full h-[42px] px-2 text-center text-xs font-bold bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 space-y-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      একক (Unit) <span className="text-red-500">*</span>
+                    </label>
+                    <CustomSelect
+                      options={(() => {
+                        const selP = products.find((x) => String(x.id) === String(selectedProdId));
+                        const opts = selP
+                          ? getProductUnitOptions(selP.product_name, selP.category, selP.unit)
+                          : ["পিস", "হালি", "খাঁচা", "কেজি", "গ্রাম", "বস্তা"];
+                        return opts.map((u) => ({ value: u, label: u }));
+                      })()}
+                      value={tempUnit}
+                      onChange={(val) => setTempUnit(String(val))}
+                      placeholder="একক"
                     />
                   </div>
                   <div className="sm:col-span-2 space-y-1">
@@ -873,7 +1062,7 @@ export default function PurchasesPage() {
                       className="w-full h-[42px] px-2 text-right text-xs font-bold text-emerald-600 bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-xl focus:outline-none"
                     />
                   </div>
-                  <div className="sm:col-span-2 space-y-1">
+                  <div className="sm:col-span-1 space-y-1">
                     <label className="block text-xs font-bold text-transparent select-none invisible sm:visible">
                       অ্যাকশন
                     </label>
@@ -881,9 +1070,10 @@ export default function PurchasesPage() {
                       type="button"
                       onClick={handleAddLineItem}
                       className="w-full h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer shadow-xs active:scale-95 transition-all"
+                      title="তালিকায় যোগ করুন"
                     >
                       <Plus className="w-4 h-4 stroke-[2.5]" />
-                      <span>যোগ করুন</span>
+                      <span className="sm:hidden">যোগ করুন</span>
                     </button>
                   </div>
                 </div>
@@ -895,8 +1085,8 @@ export default function PurchasesPage() {
                   <thead className="bg-slate-100 dark:bg-[#1e293b] font-bold text-slate-700 dark:text-slate-300">
                     <tr>
                       <th className="p-[10px]">পণ্যের নাম</th>
-                      <th className="p-[10px] text-center w-24">পরিমাণ</th>
-                      <th className="p-[10px] text-right w-28">ক্রয় দর (৳)</th>
+                      <th className="p-[10px] text-center w-36">পরিমাণ ও একক</th>
+                      <th className="p-[10px] text-right w-32">ক্রয় দর (৳)</th>
                       <th className="p-[10px] text-right w-28">মোট টাকা</th>
                       <th className="p-[10px] text-center w-12">অ্যাকশন</th>
                     </tr>
@@ -909,37 +1099,66 @@ export default function PurchasesPage() {
                         </td>
                       </tr>
                     ) : (
-                      newItems.map((item) => (
-                        <tr key={item.product_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                          <td className="p-[10px] font-bold text-slate-800 dark:text-slate-100 break-words">
-                            <div>{item.product_name}</div>
-                            {(item.tile_size || item.sqft_per_box) && (
-                              <span className="text-[10px] text-slate-500 font-normal">
-                                {item.tile_size ? `📐 ${item.tile_size} ` : ""}
-                                {item.sqft_per_box ? `(${(item.quantity * item.sqft_per_box).toFixed(1)} Sft)` : ""}
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-[10px] text-center font-bold">
-                            {formatTileOrItemQty(item.quantity, item)}
-                          </td>
-                          <td className="p-[10px] text-right font-medium">
-                            {item.cost_price.toFixed(2)}
-                          </td>
-                          <td className="p-[10px] text-right font-black text-slate-900 dark:text-white">
-                            {(item.cost_price * item.quantity).toFixed(2)}
-                          </td>
-                          <td className="p-[10px] text-center">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveLineItem(item.product_id)}
-                              className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                      newItems.map((item, idx) => {
+                        const unitOpts = getProductUnitOptions(item.product_name, item.category, item.unit);
+                        return (
+                          <tr key={`${item.product_id}-${idx}`} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                            <td className="p-[10px] font-bold text-slate-800 dark:text-slate-100 break-words">
+                              <div>{item.product_name}</div>
+                              {(item.tile_size || item.sqft_per_box) && (
+                                <span className="text-[10px] text-slate-500 font-normal">
+                                  {item.tile_size ? `📐 ${item.tile_size} ` : ""}
+                                  {item.sqft_per_box ? `(${(item.quantity * item.sqft_per_box).toFixed(1)} Sft)` : ""}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-[10px] text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <input
+                                  type="number"
+                                  min="0.01"
+                                  step="any"
+                                  value={item.quantity}
+                                  onChange={(e) => handleUpdateRowQty(idx, parseFloat(e.target.value) || 0)}
+                                  className="w-16 h-[34px] px-1 text-center font-bold text-xs bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                                />
+                                <div className="w-22 min-w-[80px]">
+                                  <CustomSelect
+                                    options={unitOpts.map((u) => ({ value: u, label: u }))}
+                                    value={item.unit}
+                                    onChange={(val) => handleUpdateRowUnit(idx, String(val))}
+                                    placeholder="একক"
+                                    triggerClassName="h-[34px]! py-1! px-2! text-xs font-bold rounded-lg"
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-[10px] text-right font-medium">
+                              <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                value={item.cost_price}
+                                onChange={(e) => handleUpdateRowCost(idx, parseFloat(e.target.value) || 0)}
+                                className="w-24 h-[34px] px-2 text-right font-bold text-xs text-emerald-700 dark:text-emerald-400 bg-white dark:bg-[#0f172a] border border-[#cbd5e1] dark:border-[#334155] rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600 ml-auto"
+                              />
+                            </td>
+                            <td className="p-[10px] text-right font-black text-slate-900 dark:text-white">
+                              {formatBdCurrency(item.cost_price * item.quantity)}
+                            </td>
+                            <td className="p-[10px] text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveLineItem(item.product_id)}
+                                className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
+                                title="মুছে ফেলুন"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -1042,7 +1261,7 @@ export default function PurchasesPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>ক্রয় ও স্টক ইন সংরক্ষণ করুন</span>
+                  <span>{editingPurchase ? "ক্রয় ও স্টক ইন আপডেট করুন" : "ক্রয় ও স্টক ইন সংরক্ষণ করুন"}</span>
                 </button>
               </div>
             </form>

@@ -230,6 +230,83 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// PUT: Update a medication schedule
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      id,
+      medicine_name,
+      target_type,
+      target_name,
+      disease,
+      dosage,
+      frequency,
+      time_of_day,
+      last_applied_date,
+      next_due_date,
+      note,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json({ status: "fail", message: "ID is required for editing" }, { status: 400 });
+    }
+
+    if (!medicine_name || !target_name || !dosage) {
+      return NextResponse.json(
+        { status: "fail", message: "ওষুধের নাম, শেড/পুকুর এবং ডোজ আবশ্যক" },
+        { status: 400 }
+      );
+    }
+
+    let currentList = await getStoredSchedules();
+    const idx = currentList.findIndex((x: any) => Number(x.id) === Number(id));
+    if (idx === -1) {
+      return NextResponse.json({ status: "fail", message: "শিডিউল পাওয়া যায়নি" }, { status: 404 });
+    }
+
+    currentList[idx] = {
+      ...currentList[idx],
+      medicine_name: String(medicine_name).trim(),
+      target_type: target_type || currentList[idx].target_type,
+      target_name: String(target_name).trim(),
+      disease: disease ? String(disease).trim() : currentList[idx].disease,
+      dosage: String(dosage).trim(),
+      frequency: frequency || currentList[idx].frequency,
+      time_of_day: time_of_day || currentList[idx].time_of_day,
+      last_applied_date: last_applied_date || currentList[idx].last_applied_date,
+      next_due_date: next_due_date || currentList[idx].next_due_date,
+      note: note !== undefined ? String(note).trim() : currentList[idx].note,
+      updated_at: new Date().toISOString(),
+    };
+
+    await saveSchedules(currentList);
+
+    try {
+      const authUser = await getAuthUser(req);
+      await recordActivity({
+        req,
+        userId: authUser?.id,
+        action: "UPDATE",
+        module: "Medication & Vaccine",
+        entityId: String(id),
+        description: `Updated medicine schedule "${currentList[idx].medicine_name}" for ${currentList[idx].target_name}`,
+      });
+    } catch {}
+
+    return NextResponse.json({
+      status: "success",
+      message: "ওষুধ ও ভ্যাকসিন শিডিউল সফলভাবে আপডেট করা হয়েছে",
+      data: currentList[idx],
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { status: "fail", message: error?.message || "Failed to update medication schedule" },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE: Delete a schedule
 export async function DELETE(req: NextRequest) {
   try {

@@ -170,6 +170,26 @@ export async function DELETE(
     const { id } = await params;
     const supplierId = BigInt(id);
 
+    const existingSupp = await prisma.suppliers.findUnique({
+      where: { id: supplierId },
+      select: { id: true, name: true, company: true, mobile: true, supplier_id: true, purchase_payable_amount: true },
+    });
+
+    if (!existingSupp) {
+      return NextResponse.json({ status: "fail", message: "সরবরাহকারী পাওয়া যায়নি" }, { status: 404 });
+    }
+
+    const payableAmount = parseFloat(existingSupp.purchase_payable_amount || "0");
+    if (payableAmount > 0) {
+      return NextResponse.json(
+        {
+          status: "fail",
+          message: `এই সরবরাহকারীর ৳${payableAmount} বকেয়া দেনা বিদ্যমান থাকায় মুছে ফেলা সম্ভব নয়!`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Check if supplier has purchases
     const purchaseCount = await prisma.purchases.count({
       where: { supplier_id: supplierId },
@@ -179,7 +199,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           status: "fail",
-          message: `Cannot delete supplier with ${purchaseCount} associated purchase records.`,
+          message: `এই সরবরাহকারীর সাথে ${purchaseCount}টি ক্রয় চালান বা মেমো যুক্ত থাকায় মুছে ফেলা সম্ভব নয়!`,
         },
         { status: 400 }
       );
@@ -192,7 +212,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           status: "fail",
-          message: `Cannot delete supplier with ${dueCount} associated due payment records.`,
+          message: `এই সরবরাহকারীর সাথে বকেয়া পরিশোধের রেকর্ড বিদ্যমান থাকায় মুছে ফেলা সম্ভব নয়!`,
         },
         { status: 400 }
       );
@@ -205,16 +225,11 @@ export async function DELETE(
       return NextResponse.json(
         {
           status: "fail",
-          message: `Cannot delete supplier with ${returnCount} associated purchase return records.`,
+          message: `এই সরবরাহকারীর সাথে ক্রয় ফেরত রেকর্ড বিদ্যমান থাকায় মুছে ফেলা সম্ভব নয়!`,
         },
         { status: 400 }
       );
     }
-
-    const existingSupp = await prisma.suppliers.findUnique({
-      where: { id: supplierId },
-      select: { id: true, name: true, company: true, mobile: true, supplier_id: true },
-    });
 
     await prisma.suppliers.delete({
       where: { id: supplierId },

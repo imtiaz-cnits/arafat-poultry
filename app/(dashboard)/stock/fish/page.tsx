@@ -13,10 +13,11 @@ import {
   Droplets,
   Scale,
   Plus,
+  Trash2,
   CheckCircle2,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { useToast, Pagination , PageSkeleton, CustomSelect, CustomDatePicker } from "@/components/ui";
+import { useToast, Pagination, PageSkeleton, CustomSelect, CustomDatePicker, DeleteConfirmModal } from "@/components/ui";
 
 interface PondStockItem {
   id: number;
@@ -235,6 +236,29 @@ export default function StockFishPage() {
       toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
     } finally {
       setSavingSpecies(false);
+    }
+  };
+
+  const [deleteBatch, setDeleteBatch] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const confirmDeleteBatch = async () => {
+    if (!deleteBatch) return;
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/fish/batches?id=${deleteBatch.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok && json.status === "success") {
+        toast.success(json.message || "মাছের স্টক সফলভাবে মুছে ফেলা হয়েছে!", "সফল");
+        setDeleteBatch(null);
+        loadData();
+      } else {
+        toast.error(json.message || "মুছে ফেলা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -537,15 +561,25 @@ export default function StockFishPage() {
                         </span>
                       </td>
                       <td className="text-center p-[10px]">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenConvertFishModal(item)}
-                          className="h-[28px] px-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[11px] flex items-center gap-1.5 mx-auto transition-all cursor-pointer shadow-xs whitespace-nowrap"
-                          title="বিক্রয়যোগ্য পণ্য হিসেবে প্রোডাক্ট ইনভেন্টরিতে যোগ করুন"
-                        >
-                          <Boxes className="w-3 h-3" />
-                          <span>প্রোডাক্টে যোগ</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setDeleteBatch(item)}
+                            className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center transition-colors cursor-pointer"
+                            title="মাছের স্টক মুছে ফেলুন"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenConvertFishModal(item)}
+                            className="h-[28px] px-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                            title="বিক্রয়যোগ্য পণ্য হিসেবে প্রোডাক্ট ইনভেন্টরিতে যোগ করুন"
+                          >
+                            <Boxes className="w-3 h-3" />
+                            <span>প্রোডাক্টে যোগ</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -602,6 +636,22 @@ export default function StockFishPage() {
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${sizeColor}`}>
                         {sizeCategory}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteBatch(item)}
+                        className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center transition-colors cursor-pointer"
+                        title="মাছের স্টক মুছে ফেলুন"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenConvertFishModal(item)}
+                        className="w-7 h-7 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        title="প্রোডাক্টে যোগ"
+                      >
+                        <Boxes className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
 
@@ -1173,6 +1223,17 @@ export default function StockFishPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Batch Stock Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteBatch)}
+        onClose={() => setDeleteBatch(null)}
+        onConfirm={confirmDeleteBatch}
+        recordIdentifier={deleteBatch?.batch_no}
+        title="মাছের স্টক মুছে ফেলার নিশ্চিতকরণ"
+        warningMessage={`আপনি কি নিশ্চিত যে ব্যাচ "${deleteBatch?.batch_no}" (${deleteBatch?.species_name}) এর স্টক মুছে ফেলতে চান?`}
+        isLoading={isDeleting}
+      />
 
     </div>
   );

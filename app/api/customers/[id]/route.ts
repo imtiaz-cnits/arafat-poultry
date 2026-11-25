@@ -173,6 +173,26 @@ export async function DELETE(
     const { id } = await params;
     const custId = BigInt(id);
 
+    const existingCust = await prisma.customers.findUnique({
+      where: { id: custId },
+      select: { id: true, customer_name: true, customer_id: true, mobile: true, previous_due_amount: true },
+    });
+
+    if (!existingCust) {
+      return NextResponse.json({ status: "fail", message: "কাস্টমার পাওয়া যায়নি" }, { status: 404 });
+    }
+
+    const currentDue = parseFloat(existingCust.previous_due_amount || "0");
+    if (currentDue > 0) {
+      return NextResponse.json(
+        {
+          status: "fail",
+          message: `এই কাস্টমারের ৳${currentDue} বকেয়া পাওনা বিদ্যমান থাকায় মুছে ফেলা সম্ভব নয়!`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Check if customer has orders
     const orderCount = await prisma.orders.count({
       where: { customer_id: custId },
@@ -182,7 +202,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           status: "fail",
-          message: `Cannot delete customer with ${orderCount} associated sales orders.`,
+          message: `এই কাস্টমারের সাথে ${orderCount}টি বিক্রয় মেমো বা চালান যুক্ত থাকায় মুছে ফেলা সম্ভব নয়!`,
         },
         { status: 400 }
       );
@@ -196,16 +216,11 @@ export async function DELETE(
       return NextResponse.json(
         {
           status: "fail",
-          message: `Cannot delete customer with ${dueCount} associated due collection records.`,
+          message: `এই কাস্টমারের সাথে লেনদেন বা পেমেন্ট রেকর্ড যুক্ত থাকায় মুছে ফেলা সম্ভব নয়!`,
         },
         { status: 400 }
       );
     }
-
-    const existingCust = await prisma.customers.findUnique({
-      where: { id: custId },
-      select: { id: true, customer_name: true, customer_id: true, mobile: true },
-    });
 
     await prisma.customers.delete({
       where: { id: custId },

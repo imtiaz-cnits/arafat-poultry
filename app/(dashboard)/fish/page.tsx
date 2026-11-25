@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   Eye,
   Trash2,
+  Pencil,
   Printer,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
@@ -55,6 +56,7 @@ interface FishBatch {
   harvested_kg: number;
   status: string;
   total_cost: number;
+  note?: string | null;
 }
 
 interface FishHarvest {
@@ -147,6 +149,77 @@ export default function FishFarmingPage() {
   const [viewHarvest, setViewHarvest] = useState<FishHarvest | null>(null);
   const [deleteHarvest, setDeleteHarvest] = useState<FishHarvest | null>(null);
   const [deletingHarvest, setDeletingHarvest] = useState(false);
+  const [deleteBatch, setDeleteBatch] = useState<FishBatch | null>(null);
+  const [deletingBatch, setDeletingBatch] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<FishBatch | null>(null);
+  const [editBatchFormData, setEditBatchFormData] = useState({
+    current_fish_count: "",
+    fingerling_count: "",
+    status: "ACTIVE",
+    note: "",
+  });
+  const [editingBatchSaving, setEditingBatchSaving] = useState(false);
+
+  const handleOpenEditBatch = (b: FishBatch) => {
+    setEditingBatch(b);
+    setEditBatchFormData({
+      current_fish_count: String(b.current_fish_count || 0),
+      fingerling_count: String(b.fingerling_count || 0),
+      status: b.status || "ACTIVE",
+      note: b.note || "",
+    });
+  };
+
+  const handleSaveEditBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBatch) return;
+    try {
+      setEditingBatchSaving(true);
+      const res = await fetch("/api/fish/batches", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingBatch.id,
+          current_fish_count: Number(editBatchFormData.current_fish_count),
+          fingerling_count: Number(editBatchFormData.fingerling_count),
+          status: editBatchFormData.status,
+          note: editBatchFormData.note.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.status === "success") {
+        toast.success("মাছের ব্যাচ সফলভাবে আপডেট হয়েছে!", "সফল");
+        setEditingBatch(null);
+        fetchData();
+      } else {
+        toast.error(json.message || "আপডেট করা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setEditingBatchSaving(false);
+    }
+  };
+
+  const handleDeleteBatch = async () => {
+    if (!deleteBatch) return;
+    try {
+      setDeletingBatch(true);
+      const res = await fetch(`/api/fish/batches?id=${deleteBatch.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok && json.status === "success") {
+        toast.success(json.message || "মাছের ব্যাচ সফলভাবে মুছে ফেলা হয়েছে!", "সফল");
+        setDeleteBatch(null);
+        fetchData();
+      } else {
+        toast.error(json.message || "মুছে ফেলা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setDeletingBatch(false);
+    }
+  };
 
   // Batch Form State
   const [batchPondId, setBatchPondId] = useState<number | "">("");
@@ -845,6 +918,22 @@ export default function FishFarmingPage() {
                           </button>
                           <button
                             type="button"
+                            onClick={() => handleOpenEditBatch(b)}
+                            className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center justify-center hover:bg-amber-100 transition-colors cursor-pointer"
+                            title="ব্যাচ সম্পাদনা"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteBatch(b)}
+                            className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center hover:bg-rose-100 transition-colors cursor-pointer"
+                            title="ব্যাচ মুছে ফেলুন"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setViewBatch(b)}
                             className="w-6 h-6 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center hover:bg-sky-100 transition-colors cursor-pointer"
                             title="ব্যাচ বিবরণ ও খতিয়ান"
@@ -908,6 +997,22 @@ export default function FishFarmingPage() {
                           title="মাছ আহরণ করুন"
                         >
                           <Scale className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditBatch(b)}
+                          className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center justify-center hover:bg-amber-100 transition-colors cursor-pointer"
+                          title="সম্পাদনা করুন"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteBatch(b)}
+                          className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center hover:bg-rose-100 transition-colors cursor-pointer"
+                          title="মুছে ফেলুন"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
@@ -2319,6 +2424,154 @@ export default function FishFarmingPage() {
           </div>
         </div>
       )}
+      {/* Edit Batch Modal */}
+      {editingBatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-emerald-800 to-green-700 px-6 py-4 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-emerald-200" />
+                <h3 className="font-bold text-base">মাছের ব্যাচ সম্পাদনা (Edit Fish Batch)</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingBatch(null)}
+                className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditBatch} className="flex flex-col">
+              <div className="p-5 space-y-3.5 text-xs">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    বর্তমান জীবিত মাছের সংখ্যা <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editBatchFormData.current_fish_count}
+                    onChange={(e) => setEditBatchFormData({ ...editBatchFormData, current_fish_count: e.target.value })}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    প্রারম্ভিক পোনার সংখ্যা <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editBatchFormData.fingerling_count}
+                    onChange={(e) => setEditBatchFormData({ ...editBatchFormData, fingerling_count: e.target.value })}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-emerald-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    স্ট্যাটাস
+                  </label>
+                  <select
+                    value={editBatchFormData.status}
+                    onChange={(e) => setEditBatchFormData({ ...editBatchFormData, status: e.target.value })}
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-emerald-600"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="PARTIALLY_HARVESTED">PARTIALLY_HARVESTED</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    মন্তব্য
+                  </label>
+                  <input
+                    type="text"
+                    value={editBatchFormData.note}
+                    onChange={(e) => setEditBatchFormData({ ...editBatchFormData, note: e.target.value })}
+                    placeholder="মন্তব্য (ঐচ্ছিক)"
+                    className="w-full h-[42px] px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800/60 px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingBatch(null)}
+                  className="h-[38px] px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={editingBatchSaving}
+                  className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-emerald-800 to-green-700 hover:from-emerald-900 hover:to-green-800 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {editingBatchSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  <span>পরিবর্তন সংরক্ষণ করুন</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Batch Confirmation Modal */}
+      {deleteBatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-rose-600 text-white p-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Trash2 className="w-5 h-5" />
+                <h3 className="font-bold text-sm">মাছের ব্যাচ মুছে ফেলার নিশ্চিতকরণ</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteBatch(null)}
+                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3 text-xs">
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                আপনি কি নিশ্চিত যে ব্যাচ <strong className="font-mono text-rose-600">{deleteBatch.batch_no}</strong> ({deleteBatch.species_name}) মুছে ফেলতে চান?
+              </p>
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-700 dark:text-rose-300 text-[11px]">
+                সতর্কতা: এই ব্যাচে কোনো আহরণ (Harvest) থাকলে তা মুছে ফেলা যাবে না।
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setDeleteBatch(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                disabled={deletingBatch}
+                onClick={handleDeleteBatch}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {deletingBatch ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                <span>হ্যাঁ, মুছে ফেলুন</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dedicated Print-Only Harvest Voucher */}
       {viewHarvest && (
         <div className="print-only text-black bg-white">

@@ -23,6 +23,7 @@ import {
   Trash2,
   Sparkles,
   HeartPulse,
+  Edit2,
 } from "lucide-react";
 import { formatBdCurrency, formatBdDate } from "@/lib/utils";
 import { CustomDatePicker, CustomSelect, useToast, Pagination, DeleteConfirmModal , PageSkeleton } from "@/components/ui";
@@ -57,6 +58,7 @@ export default function MedicationsPage() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MedicationItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<MedicationItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -73,14 +75,70 @@ export default function MedicationsPage() {
     note: "",
   });
 
+  // Dynamic Shed & Pond Lists from DB
+  const [flocksList, setFlocksList] = useState<any[]>([]);
+  const [pondsList, setPondsList] = useState<any[]>([]);
+
+  const handleOpenEdit = (item: MedicationItem) => {
+    setEditingItem(item);
+    setFormData({
+      medicine_name: item.medicine_name,
+      target_type: item.target_type,
+      target_name: item.target_name,
+      disease: item.disease,
+      dosage: item.dosage,
+      frequency: item.frequency,
+      time_of_day: item.time_of_day,
+      last_applied_date: item.last_applied_date,
+      next_due_date: item.next_due_date,
+      note: item.note || "",
+    });
+    setIsModalOpen(true);
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/medications");
-      const json = await res.json();
-      if (json.status === "success" && Array.isArray(json.data)) {
-        setItems(json.data);
+      const [medRes, flocksRes, pondsRes, batchesRes] = await Promise.all([
+        fetch("/api/medications").catch(() => null),
+        fetch("/api/egg/flocks").catch(() => null),
+        fetch("/api/fish/ponds").catch(() => null),
+        fetch("/api/fish/batches").catch(() => null),
+      ]);
+
+      if (medRes && medRes.ok) {
+        const json = await medRes.json();
+        if (json.status === "success" && Array.isArray(json.data)) {
+          setItems(json.data);
+        }
       }
+
+      if (flocksRes && flocksRes.ok) {
+        const flocksJson = await flocksRes.json();
+        if (flocksJson.status === "success" && Array.isArray(flocksJson.data)) {
+          setFlocksList(flocksJson.data);
+        }
+      }
+
+      const mergedPonds: any[] = [];
+      if (pondsRes && pondsRes.ok) {
+        const pondsJson = await pondsRes.json();
+        if (pondsJson.status === "success" && Array.isArray(pondsJson.data)) {
+          mergedPonds.push(...pondsJson.data);
+        }
+      }
+      if (batchesRes && batchesRes.ok) {
+        const batchesJson = await batchesRes.json();
+        if (batchesJson.status === "success" && Array.isArray(batchesJson.data)) {
+          batchesJson.data.forEach((b: any) => {
+            const pName = b.pond_name || b.pond?.pond_name;
+            if (pName && !mergedPonds.some((mp) => (mp.pond_name || mp.name) === pName)) {
+              mergedPonds.push({ pond_name: pName, pond_code: b.batch_code || "", species: b.species });
+            }
+          });
+        }
+      }
+      setPondsList(mergedPonds);
     } catch (err: any) {
       console.error(err);
       toast.error("ওষুধের শিডিউল লোড করতে ব্যর্থ হয়েছে", "ত্রুটি");
@@ -88,6 +146,59 @@ export default function MedicationsPage() {
       setLoading(false);
     }
   };
+
+  const shedOptions = useMemo(() => {
+    const list: { value: string; label: string; subLabel?: string }[] = [];
+    flocksList.forEach((f) => {
+      const name = f.shed_name || f.flock_code;
+      if (name && !list.some((opt) => opt.value === name)) {
+        list.push({
+          value: name,
+          label: name,
+          subLabel: `${f.flock_code || ""}${f.breed ? ` • ${f.breed}` : ""} (${f.current_birds ?? f.current_birds_count ?? 0} টি)`,
+        });
+      }
+    });
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("ap_chicken_sheds");
+        if (stored) {
+          const parsed: string[] = JSON.parse(stored);
+          parsed.forEach((s) => {
+            if (s && !list.some((opt) => opt.value === s)) {
+              list.push({ value: s, label: s, subLabel: "সংরক্ষিত শেড" });
+            }
+          });
+        }
+      } catch {}
+    }
+    list.push({ value: "সকল শেড (মুরগি ও বাচ্চা)", label: "সকল শেড (মুরগি ও বাচ্চা)", subLabel: "সকল পোল্ট্রি শেড" });
+    return list;
+  }, [flocksList]);
+
+  const pondOptions = useMemo(() => {
+    const list: { value: string; label: string; subLabel?: string }[] = [];
+    pondsList.forEach((p) => {
+      const name = p.pond_name || p.name || p.pond_code;
+      if (name && !list.some((opt) => opt.value === name)) {
+        list.push({
+          value: name,
+          label: name,
+          subLabel: `${p.pond_code ? `কোড: ${p.pond_code}` : "পুকুর"}${p.location ? ` • ${p.location}` : ""}${p.species ? ` • ${p.species}` : ""}`,
+        });
+      }
+    });
+    list.push({ value: "সকল পুকুর (মাছ)", label: "সকল পুকুর (মাছ)", subLabel: "সকল মৎস্য পুকুর" });
+    return list;
+  }, [pondsList]);
+
+  const targetLocationOptions = useMemo(() => {
+    const base = formData.target_type === "FISH" ? [...pondOptions] : [...shedOptions];
+    if (formData.target_name && !base.some((o) => o.value === formData.target_name)) {
+      base.unshift({ value: formData.target_name, label: formData.target_name });
+    }
+    return base;
+  }, [formData.target_type, formData.target_name, shedOptions, pondOptions]);
 
   useEffect(() => {
     loadData();
@@ -139,15 +250,16 @@ export default function MedicationsPage() {
     try {
       setSubmitting(true);
       const res = await fetch("/api/medications", {
-        method: "POST",
+        method: editingItem ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(editingItem ? { id: editingItem.id, ...formData } : formData),
       });
 
       const json = await res.json();
       if (json.status === "success") {
-        toast.success("নতুন ওষুধ / ভ্যাকসিন শিডিউল সংরক্ষিত হয়েছে!", "সফল");
+        toast.success(editingItem ? "ওষুধ ও ভ্যাকসিন শিডিউল সফলভাবে আপডেট করা হয়েছে!" : "নতুন ওষুধ / ভ্যাকসিন শিডিউল সংরক্ষিত হয়েছে!", "সফল");
         setIsModalOpen(false);
+        setEditingItem(null);
         setFormData({
           medicine_name: "",
           target_type: "POULTRY",
@@ -267,7 +379,22 @@ export default function MedicationsPage() {
         </div>
 
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingItem(null);
+            setFormData({
+              medicine_name: "",
+              target_type: "POULTRY",
+              target_name: shedOptions[0]?.value || "",
+              disease: "নিয়মিত রোগ প্রতিরোধ ও ভিটামিন",
+              dosage: "১ মিলি প্রতি ২ লিটার পানিতে",
+              frequency: "DAILY",
+              time_of_day: "MORNING",
+              last_applied_date: new Date().toISOString().split("T")[0],
+              next_due_date: new Date().toISOString().split("T")[0],
+              note: "",
+            });
+            setIsModalOpen(true);
+          }}
           className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
@@ -461,14 +588,24 @@ export default function MedicationsPage() {
                       )}
                     </td>
                     <td className="text-center p-[10px]">
-                      <button
-                        type="button"
-                        onClick={() => setItemToDelete(item)}
-                        className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer mx-auto"
-                        title="শিডিউল মুছে ফেলুন"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(item)}
+                          className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center transition-colors cursor-pointer"
+                          title="শিডিউল সম্পাদনা করুন"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setItemToDelete(item)}
+                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                          title="শিডিউল মুছে ফেলুন"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -505,14 +642,24 @@ export default function MedicationsPage() {
                       {item.disease}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setItemToDelete(item)}
-                    className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                    title="শিডিউল মুছে ফেলুন"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(item)}
+                      className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center transition-colors cursor-pointer"
+                      title="শিডিউল সম্পাদনা করুন"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setItemToDelete(item)}
+                      className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                      title="শিডিউল মুছে ফেলুন"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Stats Grid: Target, Dosage, Frequency, Next Due Date */}
@@ -592,7 +739,7 @@ export default function MedicationsPage() {
               <div className="flex items-center gap-2">
                 <HeartPulse className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  নতুন ওষুধ / ভ্যাকসিন প্রয়োগ শিডিউল (New Schedule)
+                  {editingItem ? "ওষুধ ও ভ্যাকসিন শিডিউল সম্পাদনা (Edit Schedule)" : "নতুন ওষুধ / ভ্যাকসিন প্রয়োগ শিডিউল"}
                 </h3>
               </div>
               <button
@@ -633,7 +780,14 @@ export default function MedicationsPage() {
                       { value: "FISH", label: "মাছ / মৎস্য (Fisheries)" },
                     ]}
                     value={formData.target_type}
-                    onChange={(val) => setFormData({ ...formData, target_type: String(val) as any })}
+                    onChange={(val) => {
+                      const nextType = String(val) as "POULTRY" | "FISH";
+                      const defaultTarget =
+                        nextType === "FISH"
+                          ? pondOptions[0]?.value || ""
+                          : shedOptions[0]?.value || "";
+                      setFormData({ ...formData, target_type: nextType, target_name: defaultTarget });
+                    }}
                     placeholder="খাত নির্বাচন করুন..."
                   />
                 </div>
@@ -642,13 +796,16 @@ export default function MedicationsPage() {
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     শেড বা পুকুরের নাম <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="যেমন: শেড #১, পুকুর #২, সকল শেড"
+                  <CustomSelect
+                    options={targetLocationOptions}
                     value={formData.target_name}
-                    onChange={(e) => setFormData({ ...formData, target_name: e.target.value })}
-                    className="w-full h-[42px] px-3 text-xs bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    onChange={(val) => setFormData({ ...formData, target_name: String(val) })}
+                    placeholder={
+                      formData.target_type === "FISH"
+                        ? "পুকুর নির্বাচন করুন..."
+                        : "শেড নির্বাচন করুন..."
+                    }
+                    searchThreshold={0}
                   />
                 </div>
               </div>
@@ -763,7 +920,7 @@ export default function MedicationsPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>শিডিউল সংরক্ষণ</span>
+                  <span>{editingItem ? "শিডিউল আপডেট করুন" : "শিডিউল সংরক্ষণ"}</span>
                 </button>
               </div>
             </form>

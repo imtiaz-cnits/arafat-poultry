@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         module: "Poultry & Egg",
         description: `Recorded daily egg collection: ${total_collected} eggs (Breakage: ${rejected_breakage || 0}) for Flock #${flock_id}`,
       });
-    } catch {}
+    } catch { }
 
     return NextResponse.json({
       status: "success",
@@ -98,6 +98,90 @@ export async function POST(req: NextRequest) {
     console.error("Egg Collection POST Error:", error);
     return NextResponse.json(
       { status: "fail", message: error?.message || "Failed to record egg collection" },
+      { status: 400 }
+    );
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
+    const body = await req.json();
+    const {
+      id,
+      flock_id,
+      total_collected,
+      rejected_breakage,
+      allocated_expenses,
+      grades,
+      date,
+      note,
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { status: "fail", message: "Collection ID is required for editing" },
+        { status: 400 }
+      );
+    }
+
+    if (!flock_id || !total_collected || Number(total_collected) <= 0) {
+      return NextResponse.json(
+        { status: "fail", message: "ফ্লক এবং সংগৃহীত ডিমের সংখ্যা আবশ্যক" },
+        { status: 400 }
+      );
+    }
+
+    if (!grades || !Array.isArray(grades) || grades.length === 0) {
+      return NextResponse.json(
+        { status: "fail", message: "ন্যূনতম একটি গ্রেডের জন্য ডিম বণ্টন করুন" },
+        { status: 400 }
+      );
+    }
+
+    // 1. Reverse previous collection stock and allocation
+    await reverseEggCollection(BigInt(id), authResult.user.id, "Egg collection voucher update");
+
+    // 2. Re-record updated egg collection
+    const result = await recordEggCollection({
+      flockId: flock_id,
+      totalCollected: Number(total_collected),
+      rejectedBreakage: Number(rejected_breakage || 0),
+      allocatedExpenses: Number(allocated_expenses || 0),
+      grades: grades.map((g: any) => ({
+        productId: g.product_id,
+        gradeName: g.grade_name,
+        quantityPieces: Number(g.quantity_pieces || 0),
+        trayCapacity: Number(g.tray_capacity || 30),
+      })),
+      date: date ? new Date(date) : new Date(),
+      note: note ? `${note} (সম্পাদিত)` : "সম্পাদিত ডিম সংগ্রহ",
+      userId: authResult.user.id,
+    });
+
+    try {
+      await recordActivity({
+        req,
+        userId: authResult.user.id,
+        action: "UPDATE",
+        module: "Poultry & Egg",
+        description: `Updated egg collection voucher #${id}: ${total_collected} eggs for Flock #${flock_id}`,
+      });
+    } catch { }
+
+    return NextResponse.json({
+      status: "success",
+      message: "ডিম সংগ্রহের তথ্য সফলভাবে আপডেট করা হয়েছে",
+      data: result,
+    });
+  } catch (error: any) {
+    console.error("Egg Collection PUT Error:", error);
+    return NextResponse.json(
+      { status: "fail", message: error?.message || "Failed to update egg collection" },
       { status: 400 }
     );
   }
@@ -129,7 +213,7 @@ export async function DELETE(req: NextRequest) {
         module: "Poultry & Egg",
         description: `Cancelled egg collection voucher #${id} and reversed graded egg inventory`,
       });
-    } catch {}
+    } catch { }
 
     return NextResponse.json({
       status: "success",

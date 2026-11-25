@@ -214,6 +214,14 @@ export default function CustomersPage() {
     }
   };
 
+  const handleDeleteCustomer = (c: Customer) => {
+    if (c.previous_due_amount > 0) {
+      toast.error(`এই কাস্টমারের ৳${c.previous_due_amount} বকেয়া পাওনা বিদ্যমান থাকায় মুছে ফেলা সম্ভব নয়!`, "মুছে ফেলা যাবে না");
+      return;
+    }
+    setCustomerToDelete(c);
+  };
+
   async function confirmDeleteCustomer() {
     if (!customerToDelete) return;
     setDeleting(true);
@@ -221,14 +229,17 @@ export default function CustomersPage() {
       const res = await fetch(`/api/customers/${customerToDelete.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.status === "success") {
-        toast.success("Customer deleted successfully!");
+        toast.success("কাস্টমার সফলভাবে মুছে ফেলা হয়েছে!");
         setCustomerToDelete(null);
         setCurrentPage(1);
         loadCustomers();
       } else {
-        toast.error(data.message || "Failed to delete customer");
-        throw new Error(data.message || "Failed to delete customer");
+        toast.error(data.message || "কাস্টমার মুছে ফেলা সম্ভব নয়!", "ত্রুটি");
+        setCustomerToDelete(null);
       }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর: কাস্টমার মুছে ফেলা সম্ভব হয়নি!", "ত্রুটি");
+      setCustomerToDelete(null);
     } finally {
       setDeleting(false);
     }
@@ -401,6 +412,14 @@ export default function CustomersPage() {
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCustomer(c)}
+                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                          title="Delete Customer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -483,26 +502,34 @@ export default function CustomersPage() {
                 )}
               </div>
 
-              <div className="pt-1 grid grid-cols-2 gap-2">
+              <div className="pt-1 grid grid-cols-3 gap-1.5">
                 <button
                   type="button"
                   onClick={() => handleOpenCollect(c)}
-                  className={`h-[32px] w-full text-center px-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
+                  className={`h-[32px] w-full text-center px-1 rounded-lg font-bold text-xs flex items-center justify-center gap-1 cursor-pointer shadow-xs ${
                     c.previous_due_amount > 0
                       ? "bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white"
                       : "border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                   }`}
                 >
                   <Wallet className="w-3.5 h-3.5" />
-                  <span>বকেয়া আদায়</span>
+                  <span>বকেয়া</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(c)}
-                  className="h-[32px] w-full text-center px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="h-[32px] w-full text-center px-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                  <span>সম্পাদনা</span>
+                  <span>এডিট</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCustomer(c)}
+                  className="h-[32px] w-full text-center px-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>মুছুন</span>
                 </button>
               </div>
             </div>

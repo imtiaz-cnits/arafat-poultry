@@ -449,10 +449,10 @@ export default function InvoiceBillPage({
             border: none !important;
             box-shadow: none !important;
             margin: 0 !important;
-            padding: 0 !important;
+            padding: 0 0 16px 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            min-height: calc(297mm - 20mm) !important;
+            min-height: calc(297mm - 26mm) !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
@@ -470,7 +470,7 @@ export default function InvoiceBillPage({
           }
           @page {
             size: A4 portrait;
-            margin: 10px !important;
+            margin: 10px 10px 16px 10px !important;
           }
         }
       `}</style>

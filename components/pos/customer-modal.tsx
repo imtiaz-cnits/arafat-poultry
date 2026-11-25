@@ -60,10 +60,20 @@ export function CustomerModal({ isOpen, onClose, onCustomerCreated }: CustomerMo
         });
         onClose();
       } else {
-        setError(data.message || "কাস্টমার তৈরি করতে ব্যর্থ হয়েছে");
+        const rawMsg = data.message || "কাস্টমার তৈরি করতে ব্যর্থ হয়েছে";
+        if (rawMsg.includes("Can't reach database server") || rawMsg.includes("database server")) {
+          setError("ডাটাবেস সার্ভার চালু নেই। অনুগ্রহ করে Laragon / MySQL চালু আছে কিনা নিশ্চিত করুন।");
+        } else {
+          setError(rawMsg);
+        }
       }
     } catch (err: any) {
-      setError(err?.message || "সার্ভার যোগাযোগে ত্রুটি হয়েছে");
+      const rawMsg = err?.message || "সার্ভার যোগাযোগে ত্রুটি হয়েছে";
+      if (rawMsg.includes("Can't reach database server") || rawMsg.includes("database server")) {
+        setError("ডাটাবেস সার্ভার চালু নেই। অনুগ্রহ করে Laragon / MySQL চালু আছে কিনা নিশ্চিত করুন।");
+      } else {
+        setError(rawMsg);
+      }
     } finally {
       setLoading(false);
     }

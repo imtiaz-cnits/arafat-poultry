@@ -15,9 +15,10 @@ import {
   Home,
   CheckCircle2,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast, Pagination , PageSkeleton } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination, PageSkeleton, DeleteConfirmModal } from "@/components/ui";
 
 interface EggCollection {
   id: number;
@@ -69,6 +70,9 @@ export default function StockEggsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedFlockId, setSelectedFlockId] = useState<string>("");
+  const [editingCollection, setEditingCollection] = useState<EggCollection | null>(null);
+  const [collectionToDelete, setCollectionToDelete] = useState<EggCollection | null>(null);
+  const [deletingCollection, setDeletingCollection] = useState(false);
 
   // Add Shed Modal State
   const [isAddShedModalOpen, setIsAddShedModalOpen] = useState(false);
@@ -78,6 +82,43 @@ export default function StockEggsPage() {
   const [newInitialCount, setNewInitialCount] = useState("1000");
   const [newHousingDate, setNewHousingDate] = useState(new Date().toISOString().split("T")[0]);
   const [newShedNote, setNewShedNote] = useState("");
+
+  const handleOpenNewCollection = () => {
+    setEditingCollection(null);
+    setTotalCollected("1500");
+    setLargeCount("1000");
+    setSmallCount("470");
+    setBrokenCount("30");
+    setCollectionDate(new Date().toISOString().split("T")[0]);
+    setCollectionNote("");
+    if (data?.flocks?.length && !selectedFlockId) {
+      setSelectedFlockId(String(data.flocks[0].id));
+    }
+    setIsModalOpen(true);
+  };
+
+  
+  const confirmDeleteCollection = async () => {
+    if (!collectionToDelete) return;
+    try {
+      setDeletingCollection(true);
+      const res = await fetch(`/api/egg/collections?id=${collectionToDelete.id}`, {
+        method: "DELETE",
+      });
+      const resData = await res.json();
+      if (res.ok && resData.status === "success") {
+        toast.success(resData.message || "ডিম সংগ্রহ রেকর্ড সফলভাবে বাতিল ও স্টক রিভার্স করা হয়েছে!", "সফল");
+        setCollectionToDelete(null);
+        await loadData();
+      } else {
+        toast.error(resData.message || "মুছে ফেলা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setDeletingCollection(false);
+    }
+  };
 
   // Convert Egg to Product Modal State
   const [isConvertToProductOpen, setIsConvertToProductOpen] = useState(false);
@@ -119,6 +160,7 @@ export default function StockEggsPage() {
   }, []);
 
 
+  
   const handleOpenAddShedModal = () => {
     setNewShedName("");
     setNewBreed("লেয়ার (ব্রাউন)");
@@ -171,6 +213,38 @@ export default function StockEggsPage() {
     } finally {
       setAddShedSubmitting(false);
     }
+  };
+
+  const handleOpenCreateCollection = () => {
+    setEditingCollection(null);
+    if (data?.flocks?.length && data.flocks.length > 0 && !selectedFlockId) {
+      setSelectedFlockId(String(data.flocks[0].id));
+    }
+    setTotalCollected("1500");
+    setLargeCount("1000");
+    setSmallCount("470");
+    setBrokenCount("30");
+    setCollectionDate(new Date().toISOString().split("T")[0]);
+    setCollectionNote("");
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditCollection = (col: EggCollection) => {
+    setEditingCollection(col);
+    const grpA = col.grades?.find((g) => g.grade_name.toLowerCase().includes("grade a"));
+    const grpB = col.grades?.find((g) => g.grade_name.toLowerCase().includes("grade b"));
+    
+    const matchingFlock = data?.flocks?.find((f) => f.shed_name === col.flock_name || f.flock_code === col.flock_name);
+    if (matchingFlock) {
+      setSelectedFlockId(String(matchingFlock.id));
+    }
+    setTotalCollected(String(col.total_collected));
+    setLargeCount(grpA ? String(grpA.pieces) : "0");
+    setSmallCount(grpB ? String(grpB.pieces) : "0");
+    setBrokenCount(String(col.rejected_breakage || 0));
+    setCollectionDate(col.date || new Date().toISOString().split("T")[0]);
+    setCollectionNote("");
+    setIsModalOpen(true);
   };
 
   const handleOpenConvertModal = (col: EggCollection) => {
@@ -356,24 +430,32 @@ export default function StockEggsPage() {
         });
       }
 
-      const res = await fetch("/api/egg/collections", {
-        method: "POST",
+      const endpoint = "/api/egg/collections";
+      const method = editingCollection ? "PUT" : "POST";
+      const payload: any = {
+        flock_id: Number(selectedFlockId),
+        total_collected: tot,
+        rejected_breakage: brk,
+        allocated_expenses: 0,
+        grades: gradesPayload,
+        date: collectionDate,
+        note: collectionNote ? `${collectionNote} | নষ্ট/ফাটা: ${brk} টি` : `নষ্ট/ফাটা ডিম: ${brk} টি`,
+      };
+      if (editingCollection) {
+        payload.id = editingCollection.id;
+      }
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          flock_id: Number(selectedFlockId),
-          total_collected: tot,
-          rejected_breakage: brk,
-          allocated_expenses: 0,
-          grades: gradesPayload,
-          date: collectionDate,
-          note: collectionNote ? `${collectionNote} | নষ্ট/ফাটা: ${brk} টি` : `নষ্ট/ফাটা ডিম: ${brk} টি`,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
       if (json.status === "success") {
-        toast.success("দৈনিক ডিম সংগ্রহ ও স্টক সফলভাবে সংরক্ষিত হয়েছে!", "সফল");
+        toast.success(editingCollection ? "ডিম সংগ্রহের তথ্য সফলভাবে আপডেট করা হয়েছে!" : "দৈনিক ডিম সংগ্রহ ও স্টক সফলভাবে সংরক্ষিত হয়েছে!", "সফল");
         setIsModalOpen(false);
+        setEditingCollection(null);
         loadData();
       } else {
         toast.error(json.message || "সংরক্ষণ করতে ব্যর্থ হয়েছে", "ত্রুটি");
@@ -410,7 +492,16 @@ export default function StockEggsPage() {
         </div>
 
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingCollection(null);
+            setTotalCollected("1500");
+            setLargeCount("1000");
+            setSmallCount("470");
+            setBrokenCount("30");
+            setCollectionDate(new Date().toISOString().split("T")[0]);
+            setCollectionNote("");
+            setIsModalOpen(true);
+          }}
           className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
@@ -571,21 +662,76 @@ export default function StockEggsPage() {
                         {col.cost_per_accepted_egg > 0 ? `৳${col.cost_per_accepted_egg.toFixed(2)}` : "—"}
                       </td>
                       <td className="text-center p-[10px]">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenConvertModal(col)}
-                          className="h-[28px] px-2.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[11px] flex items-center gap-1.5 mx-auto transition-all cursor-pointer shadow-xs whitespace-nowrap"
-                          title="বিক্রয়যোগ্য পণ্য হিসেবে প্রোডাক্ট ইনভেন্টরিতে যোগ করুন"
-                        >
-                          <Boxes className="w-3 h-3" />
-                          <span>প্রোডাক্টে যোগ</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditCollection(col)}
+                            className="w-7 h-7 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 flex items-center justify-center transition-colors cursor-pointer"
+                            title="সম্পাদন করুন (Edit)"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCollectionToDelete(col)}
+                            className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 border border-rose-200 dark:border-rose-800 flex items-center justify-center transition-colors cursor-pointer"
+                            title="মুছে ফেলুন (Delete)"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
                 })
               )}
             </tbody>
+            {filteredCollections.length > 0 && (
+              <tfoot className="border-t-2 border-[#166534] bg-emerald-50/70 dark:bg-emerald-950/40 font-bold text-xs">
+                <tr>
+                  <td className="p-[10px] text-center font-black text-slate-700 dark:text-slate-200">
+                    সর্বমোট
+                  </td>
+                  <td className="p-[10px] font-bold text-slate-700 dark:text-slate-300">
+                    {filteredCollections.length} টি ভাউচার
+                  </td>
+                  <td className="p-[10px] text-slate-400 font-normal text-center">—</td>
+                  <td className="p-[10px] text-center font-black text-slate-900 dark:text-white text-sm">
+                    {filteredCollections.reduce((s, c) => s + c.total_collected, 0).toLocaleString()} টি
+                  </td>
+                  <td className="p-[10px] text-center font-black text-sky-700 dark:text-sky-400">
+                    {filteredCollections
+                      .reduce((s, c) => {
+                        const g = c.grades?.find((x) => x.grade_name.toLowerCase().includes("grade a"));
+                        return s + (g ? g.pieces : 0);
+                      }, 0)
+                      .toLocaleString()} পিস
+                  </td>
+                  <td className="p-[10px] text-center font-black text-amber-600 dark:text-amber-400">
+                    {filteredCollections
+                      .reduce((s, c) => {
+                        const g = c.grades?.find((x) => x.grade_name.toLowerCase().includes("grade b"));
+                        return s + (g ? g.pieces : 0);
+                      }, 0)
+                      .toLocaleString()} পিস
+                  </td>
+                  <td className="p-[10px] text-center font-black text-rose-600 dark:text-rose-400">
+                    {filteredCollections.reduce((s, c) => s + c.rejected_breakage, 0).toLocaleString()} টি
+                  </td>
+                  <td className="p-[10px] text-center font-black text-emerald-700 dark:text-emerald-400">
+                    {filteredCollections.reduce((s, c) => s + c.accepted_quantity, 0).toLocaleString()} পিস
+                  </td>
+                  <td className="p-[10px] text-right font-black text-slate-800 dark:text-slate-200">
+                    {(() => {
+                      const acc = filteredCollections.reduce((s, c) => s + c.accepted_quantity, 0);
+                      const costSum = filteredCollections.reduce((s, c) => s + (c.cost_per_accepted_egg * c.accepted_quantity), 0);
+                      return acc > 0 && costSum > 0 ? `৳${(costSum / acc).toFixed(2)}` : "—";
+                    })()}
+                  </td>
+                  <td className="p-[10px] text-center text-slate-400 font-normal">—</td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
 
@@ -620,9 +766,27 @@ export default function StockEggsPage() {
                         {col.collection_no}
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
-                      {col.flock_name}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
+                        {col.flock_name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditCollection(col)}
+                        className="w-7 h-7 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center cursor-pointer"
+                        title="সম্পাদন করুন"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCollectionToDelete(col)}
+                        className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center cursor-pointer"
+                        title="মুছে ফেলুন"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Card Grid Stats: Compact, with ample space for numbers so they never wrap */}
@@ -1141,6 +1305,18 @@ export default function StockEggsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Delete Collection Confirm Modal */}
+      {collectionToDelete && (
+        <DeleteConfirmModal
+          isOpen={!!collectionToDelete}
+          onClose={() => setCollectionToDelete(null)}
+          onConfirm={confirmDeleteCollection}
+          title="ডিম সংগ্রহের রেকর্ড মুছে ফেলা"
+          warningMessage={`আপনি কি নিশ্চিতভাবে ${collectionToDelete.date}-এর কালেকশন ভাউচার (${collectionToDelete.collection_no}) মুছে ফেলতে চান? এটি মুছে ফেললে ডিমের মজুদ পূর্বের অবস্থায় ফিরিয়ে নেওয়া হবে।`}
+          isLoading={deletingCollection}
+        />
       )}
 
     </div>

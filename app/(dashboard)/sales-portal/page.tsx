@@ -270,8 +270,8 @@ export default function SalesPortalPage() {
     try {
       setLoading(true);
       const [prodsRes, custsRes] = await Promise.all([
-        fetch("/api/products?page=1&limit=100"),
-        fetch("/api/customers?page=1&limit=100"),
+        fetch("/api/products?page=1&limit=100", { cache: "no-store" }),
+        fetch("/api/customers?page=1&limit=100", { cache: "no-store" }),
       ]);
 
       const [prodsData, custsData] = await Promise.all([
@@ -1527,12 +1527,32 @@ export default function SalesPortalPage() {
         isOpen={isExchangeModalOpen}
         onClose={() => setIsExchangeModalOpen(false)}
         subTotal={getSubTotal()}
+        initialCustomers={customers}
       />
 
       <AddProductModal
         isOpen={isAddProductModalOpen}
         onClose={() => setIsAddProductModalOpen(false)}
-        onProductCreated={() => {
+        onProductCreated={(newProd) => {
+          if (newProd && newProd.id) {
+            const formattedNewProd: Product = {
+              id: Number(newProd.id),
+              name: newProd.product_name || newProd.name,
+              product_name: newProd.product_name || newProd.name,
+              primary_code: newProd.primary_code || (Array.isArray(newProd.product_code) ? newProd.product_code[0] : newProd.product_code) || `PRD-${newProd.id}`,
+              display_codes: newProd.display_codes || (Array.isArray(newProd.product_code) ? newProd.product_code[0] : newProd.product_code) || `PRD-${newProd.id}`,
+              all_codes: Array.isArray(newProd.product_code) ? newProd.product_code : [newProd.product_code || `PRD-${newProd.id}`],
+              cost_price: parseFloat(newProd.cost_price || 0),
+              sell_price: parseFloat(newProd.sell_price || 0),
+              quantity: parseFloat(newProd.quantity || 0),
+              category_id: Number(newProd.category_id),
+              category: typeof newProd.category === "string" ? newProd.category : (newProd.category?.category_name || "General"),
+              brand: typeof newProd.brand === "string" ? newProd.brand : (newProd.brand?.name || "General"),
+              unit: typeof newProd.unit === "string" ? newProd.unit : (newProd.unit?.unit_name || "Piece"),
+              img_url: newProd.img_url,
+            };
+            setProducts((prev) => [formattedNewProd, ...prev.filter((p) => p.id !== formattedNewProd.id)]);
+          }
           loadInitialData();
           setIsAddProductModalOpen(false);
         }}

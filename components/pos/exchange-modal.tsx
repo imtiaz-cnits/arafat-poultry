@@ -24,6 +24,7 @@ interface ExchangeModalProps {
   isOpen: boolean;
   onClose: () => void;
   subTotal?: number;
+  initialCustomers?: any[];
 }
 
 interface PartyOption {
@@ -34,7 +35,7 @@ interface PartyOption {
   type: "CUSTOMER" | "SUPPLIER";
 }
 
-export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalProps) {
+export function ExchangeModal({ isOpen, onClose, subTotal = 0, initialCustomers }: ExchangeModalProps) {
   const { toast } = useToast();
   const {
     selectedCustomer,
@@ -44,10 +45,26 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
   } = usePosStore();
 
   const [saving, setSaving] = useState(false);
+  const [loadingParties, setLoadingParties] = useState(false);
   const [partyType, setPartyType] = useState<"CUSTOMER" | "SUPPLIER">("SUPPLIER");
   const [customers, setCustomers] = useState<PartyOption[]>([]);
   const [suppliers, setSuppliers] = useState<PartyOption[]>([]);
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
+
+  // Sync initial customers if provided
+  useEffect(() => {
+    if (initialCustomers && Array.isArray(initialCustomers) && initialCustomers.length > 0) {
+      setCustomers(
+        initialCustomers.map((c: any) => ({
+          id: Number(c.id),
+          name: c.customer_name || c.name || "Unknown",
+          phone: c.mobile || "",
+          dueAmount: parseFloat(c.previous_due_amount || "0"),
+          type: "CUSTOMER",
+        }))
+      );
+    }
+  }, [initialCustomers]);
 
   // Feed Side
   const [feedUnit, setFeedUnit] = useState<"bags" | "kg">("bags");
@@ -74,15 +91,16 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
   // Custom Note
   const [customNote, setCustomNote] = useState<string>("");
 
-  // Load Customers & Suppliers
+  // Load Customers & Suppliers (Live from DB)
   useEffect(() => {
     if (!isOpen) return;
 
     async function loadParties() {
       try {
+        setLoadingParties(true);
         const [cRes, sRes] = await Promise.all([
-          fetch("/api/customers?limit=100"),
-          fetch("/api/suppliers?limit=100"),
+          fetch("/api/customers?limit=100", { cache: "no-store" }),
+          fetch("/api/suppliers?limit=100", { cache: "no-store" }),
         ]);
         const cJson = await cRes.json();
         const sJson = await sRes.json();
@@ -116,6 +134,8 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
         }
       } catch (err) {
         console.error("Failed to load party list for exchange:", err);
+      } finally {
+        setLoadingParties(false);
       }
     }
 
@@ -352,7 +372,9 @@ export function ExchangeModal({ isOpen, onClose, subTotal = 0 }: ExchangeModalPr
               value={selectedPartyId ? String(selectedPartyId) : ""}
               onChange={(val) => setSelectedPartyId(val ? Number(val) : null)}
               placeholder={
-                partyType === "CUSTOMER"
+                loadingParties
+                  ? "ডাটা লোড হচ্ছে..."
+                  : partyType === "CUSTOMER"
                   ? "নাম বা মোবাইল দিয়ে কাস্টমার খুঁজুন..."
                   : "নাম বা মোবাইল দিয়ে সরবরাহকারী খুঁজুন..."
               }

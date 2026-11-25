@@ -135,3 +135,87 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function PUT(req: NextRequest) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+
+    const body = await req.json();
+    const { id, current_fish_count, fingerling_count, status, note } = body;
+    if (!id) {
+      return NextResponse.json({ status: "fail", message: "ব্যাচ আইডি আবশ্যক" }, { status: 400 });
+    }
+
+    const batchId = BigInt(id);
+    const existing = await prisma.fish_batches.findUnique({
+      where: { id: batchId },
+    });
+    if (!existing) {
+      return NextResponse.json({ status: "fail", message: "ব্যাচ পাওয়া যায়নি" }, { status: 404 });
+    }
+
+    const updated = await prisma.fish_batches.update({
+      where: { id: batchId },
+      data: {
+        current_fish_count: current_fish_count !== undefined ? Number(current_fish_count) : existing.current_fish_count,
+        fingerling_count: fingerling_count !== undefined ? Number(fingerling_count) : existing.fingerling_count,
+        status: status ?? existing.status,
+        note: note !== undefined ? note : existing.note,
+      },
+    });
+
+    return NextResponse.json({
+      status: "success",
+      message: "মাছের ব্যাচ সফলভাবে আপডেট করা হয়েছে",
+      data: {
+        id: Number(updated.id),
+      },
+    });
+  } catch (error: any) {
+    return NextResponse.json({ status: "fail", message: error?.message || "আপডেট করা যায়নি" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ status: "fail", message: "ব্যাচ আইডি আবশ্যক" }, { status: 400 });
+    }
+
+    const batchId = BigInt(id);
+    const batch = await prisma.fish_batches.findUnique({
+      where: { id: batchId },
+      include: { fish_harvests: true },
+    });
+
+    if (!batch) {
+      return NextResponse.json({ status: "fail", message: "ব্যাচ পাওয়া যায়নি" }, { status: 404 });
+    }
+
+    if (batch.fish_harvests && batch.fish_harvests.length > 0) {
+      return NextResponse.json({
+        status: "fail",
+        message: "এই ব্যাচে আহরণ (Harvest) বিদ্যমান থাকায় মুছে ফেলা সম্ভব নয়!",
+      }, { status: 400 });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.fish_mortalities.deleteMany({ where: { batch_id: batchId } });
+      await tx.fish_samplings.deleteMany({ where: { batch_id: batchId } });
+      await tx.fish_batches.delete({ where: { id: batchId } });
+    });
+
+    return NextResponse.json({
+      status: "success",
+      message: "মাছের ব্যাচ সফলভাবে মুছে ফেলা হয়েছে",
+    });
+  } catch (err: any) {
+    return NextResponse.json({ status: "fail", message: err?.message || "মুছে ফেলা যায়নি" }, { status: 500 });
+  }
+}

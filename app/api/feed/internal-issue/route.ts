@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { requireAuth } from "@/lib/auth";
 import { recordInternalFeedIssue, getFeedStockAndProfitability } from "@/lib/feed-service";
 import { recordActivity } from "@/lib/audit-service";
@@ -129,6 +130,104 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+
+    const body = await req.json();
+    const { id, product_id, destination_type, destination_id, destination_name, bags, bag_weight_kg, date, note } = body;
+    if (!id) {
+      return NextResponse.json({ status: "fail", message: "রেকর্ড আইডি আবশ্যক" }, { status: 400 });
+    }
+
+    const issueId = BigInt(id);
+    const existing = await prisma.internal_feed_issues.findUnique({
+      where: { id: issueId },
+    });
+    if (!existing) {
+      return NextResponse.json({ status: "fail", message: "হস্তান্তর রেকর্ড পাওয়া যায়নি" }, { status: 404 });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Revert previous stock deduction
+      const oldProd = await tx.products.findUnique({ where: { id: existing.product_id } });
+      if (oldProd) {
+        const curQty = parseFloat(oldProd.quantity || "0");
+        await tx.products.update({
+          where: { id: existing.product_id },
+          data: { quantity: (curQty + Number(existing.bags)).toString() },
+        });
+      }
+      if (existing.destination_type === "FISH_POND" && existing.destination_id) {
+        await tx.fish_batches.updateMany({
+          where: { id: existing.destination_id },
+          data: { accumulated_feed_cost: { decrement: existing.total_cost } },
+        });
+      }
+
+      // 2. Apply new values
+      const newProdId = product_id ? BigInt(product_id) : existing.product_id;
+      const targetProd = await tx.products.findUnique({ where: { id: newProdId } });
+      if (!targetProd) throw new Error("ফিড পণ্য পাওয়া যায়নি");
+
+      const newBags = bags ? Number(bags) : Number(existing.bags);
+      const bagWeight = bag_weight_kg ? Number(bag_weight_kg) : 50;
+      const totalKg = newBags * bagWeight;
+      const costPerBag = parseFloat(targetProd.cost_price || "0");
+      const totalCost = newBags * costPerBag;
+
+      const currentQty = parseFloat(targetProd.quantity || "0");
+      if (currentQty < newBags) {
+        throw new Error(`পর্যাপ্ত স্টক নেই! বর্তমান স্টক: ${currentQty} বস্তা`);
+      }
+
+      await tx.products.update({
+        where: { id: newProdId },
+        data: { quantity: (currentQty - newBags).toString() },
+      });
+
+      const destType = destination_type || existing.destination_type;
+      const destId = destination_id ? BigInt(destination_id) : existing.destination_id;
+      const destName = destination_name || existing.destination_name;
+
+      if (destType === "FISH_POND" && destId) {
+        await tx.fish_batches.updateMany({
+          where: { id: destId },
+          data: { accumulated_feed_cost: { increment: new Prisma.Decimal(totalCost.toFixed(2)) } },
+        });
+      }
+
+      await tx.internal_feed_issues.update({
+        where: { id: issueId },
+        data: {
+          product_id: newProdId,
+          destination_type: destType,
+          destination_id: destId,
+          destination_name: destName,
+          bags: new Prisma.Decimal(newBags.toFixed(2)),
+          total_kg: new Prisma.Decimal(totalKg.toFixed(2)),
+          unit_cost_per_kg: new Prisma.Decimal((bagWeight > 0 ? costPerBag / bagWeight : costPerBag).toFixed(2)),
+          total_cost: new Prisma.Decimal(totalCost.toFixed(2)),
+          date: date ? new Date(date) : existing.date,
+          note: note !== undefined ? note : existing.note,
+        },
+      });
+    });
+
+    return NextResponse.json({
+      status: "success",
+      message: "খাবার প্রদানের রেকর্ড সফলভাবে আপডেট করা হয়েছে",
+    });
+  } catch (error: any) {
+    console.error("Internal Feed Issue PUT Error:", error);
+    return NextResponse.json(
+      { status: "fail", message: error?.message || "রেকর্ড আপডেট করতে ব্যর্থ হয়েছে" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const authResult = await requireAuth(req);
@@ -207,4 +306,5 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
+
 

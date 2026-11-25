@@ -21,6 +21,7 @@ import {
   Egg,
   Eye,
   Trash2,
+  Pencil,
   Printer,
   Utensils,
 } from "lucide-react";
@@ -114,6 +115,7 @@ export default function FeedTradingPage() {
   // Action Modals State
   const [viewIssue, setViewIssue] = useState<InternalIssue | null>(null);
   const [deleteIssue, setDeleteIssue] = useState<InternalIssue | null>(null);
+  const [editingIssue, setEditingIssue] = useState<InternalIssue | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const loadData = async () => {
@@ -431,6 +433,7 @@ export default function FeedTradingPage() {
   };
 
   const handleOpenFeedingModal = (p?: FeedProduct) => {
+    setEditingIssue(null);
     const prod = p || (data?.feed_products && data.feed_products[0]) || null;
     if (prod) {
       setFeedingProductId(prod.id);
@@ -459,10 +462,35 @@ export default function FeedTradingPage() {
     setIsFeedingModalOpen(true);
   };
 
+  const handleOpenEditFeeding = (iss: InternalIssue) => {
+    setEditingIssue(iss);
+    const isFish = iss.destination_type === "FISH_POND";
+    setFeedingCategory(isFish ? "FISH" : "POULTRY");
+    setFeedingDestination(iss.destination || "");
+    setFeedingTime("সকাল (Morning)");
+    setFeedingUnit("bag");
+    setFeedingAmount(String(iss.bags || 1));
+    setFeedingDate(iss.date || new Date().toISOString().split("T")[0]);
+    setFeedingNote(iss.note || "");
+
+    const matchedProd = (data?.feed_products || []).find((p) => p.product_name === iss.product_name);
+    if (matchedProd) {
+      setFeedingProductId(matchedProd.id);
+    } else if (data?.feed_products && data.feed_products.length > 0) {
+      setFeedingProductId(data.feed_products[0].id);
+    }
+    setIsFeedingModalOpen(true);
+  };
+
   const selectedFeedingProduct = useMemo(() => {
-    if (!feedingProductId || !data?.feed_products) return null;
-    return data.feed_products.find((p) => p.id === Number(feedingProductId)) || null;
-  }, [feedingProductId, data]);
+    if (!data?.feed_products || data.feed_products.length === 0) return null;
+    if (feedingProductId) {
+      const match = data.feed_products.find((p) => p.id === Number(feedingProductId));
+      if (match) return match;
+    }
+    const catMatch = feedingFilteredProducts[0] || data.feed_products[0];
+    return catMatch || null;
+  }, [feedingProductId, data, feedingFilteredProducts]);
 
   const computedFeedingValues = useMemo(() => {
     const amountNum = parseFloat(feedingAmount) || 0;
@@ -489,8 +517,18 @@ export default function FeedTradingPage() {
 
   const handleFeedingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!feedingProductId) {
-      toast.error("ফিড পণ্য নির্বাচন করুন", "সতর্কতা");
+    const effectiveProdId =
+      feedingProductId ||
+      feedingFilteredProducts[0]?.id ||
+      data?.feed_products?.find((p) =>
+        feedingCategory === "FISH"
+          ? p.target_type === "FISH" || p.product_name.includes("মাছ")
+          : p.target_type === "POULTRY" || p.product_name.includes("মুরগি") || !p.product_name.includes("মাছ")
+      )?.id ||
+      data?.feed_products?.[0]?.id;
+
+    if (!effectiveProdId) {
+      toast.error("কোনো ফিড পণ্য পাওয়া যায়নি। অনুগ্রহ করে স্টক যোগ করুন।", "সতর্কতা");
       return;
     }
     if (!feedingDestination.trim()) {
@@ -504,27 +542,41 @@ export default function FeedTradingPage() {
 
     try {
       setFeedingSubmitting(true);
-      const res = await fetch("/api/feed/internal-issue", {
-        method: "POST",
+      const isEditing = Boolean(editingIssue);
+      const url = "/api/feed/internal-issue";
+      const method = isEditing ? "PUT" : "POST";
+
+      const payload: any = {
+        product_id: Number(effectiveProdId),
+        destination_type: feedingCategory === "FISH" ? "FISH_POND" : "POULTRY_FARM",
+        destination_id: feedingDestinationId || undefined,
+        destination_name: feedingDestination.trim(),
+        bags: computedFeedingValues.computedBags,
+        bag_weight_kg: selectedFeedingProduct?.bag_weight_kg || 50,
+        date: feedingDate,
+        note: feedingNote.trim()
+          ? `${feedingNote.trim()} | সময়: ${feedingTime} | ইনপুট: ${feedingAmount} ${feedingUnit === "bag" ? "বস্তা" : feedingUnit === "kg" ? "কেজি" : "গ্রাম"}`
+          : `সময়: ${feedingTime} | ইনপুট: ${feedingAmount} ${feedingUnit === "bag" ? "বস্তা" : feedingUnit === "kg" ? "কেজি" : "গ্রাম"}`,
+      };
+
+      if (isEditing && editingIssue) {
+        payload.id = editingIssue.id;
+      }
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          product_id: Number(feedingProductId),
-          destination_type: feedingCategory === "FISH" ? "FISH_POND" : "POULTRY_FARM",
-          destination_id: feedingDestinationId || undefined,
-          destination_name: feedingDestination.trim(),
-          bags: computedFeedingValues.computedBags,
-          bag_weight_kg: selectedFeedingProduct?.bag_weight_kg || 50,
-          date: feedingDate,
-          note: feedingNote.trim()
-            ? `${feedingNote.trim()} | সময়: ${feedingTime} | ইনপুট: ${feedingAmount} ${feedingUnit === "bag" ? "বস্তা" : feedingUnit === "kg" ? "কেজি" : "গ্রাম"}`
-            : `সময়: ${feedingTime} | ইনপুট: ${feedingAmount} ${feedingUnit === "bag" ? "বস্তা" : feedingUnit === "kg" ? "কেজি" : "গ্রাম"}`,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const resData = await res.json();
       if (resData.status === "success") {
-        toast.success("খাবার প্রদানের তথ্য সফলভাবে সংরক্ষিত হয়েছে!", "সফল");
+        toast.success(
+          isEditing ? "খাবার প্রদানের তথ্য সফলভাবে আপডেট হয়েছে!" : "খাবার প্রদানের তথ্য সফলভাবে সংরক্ষিত হয়েছে!",
+          "সফল"
+        );
         setIsFeedingModalOpen(false);
+        setEditingIssue(null);
         await loadData();
         setActiveTab("schedule");
       } else {
@@ -828,6 +880,14 @@ export default function FeedTradingPage() {
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             type="button"
+                            onClick={() => handleOpenEditFeeding(iss)}
+                            className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center justify-center hover:bg-amber-100 transition-colors cursor-pointer"
+                            title="খাবার রেকর্ড সম্পাদনা করুন"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setViewIssue(iss)}
                             className="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800 flex items-center justify-center hover:bg-sky-100 transition-colors cursor-pointer"
                             title="বিস্তারিত ভাউচার দেখুন"
@@ -879,6 +939,14 @@ export default function FeedTradingPage() {
                     </div>
                     {/* Action buttons: Icon Only! */}
                     <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditFeeding(iss)}
+                        className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center justify-center hover:bg-amber-100 transition-colors cursor-pointer"
+                        title="সম্পাদনা করুন"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => setViewIssue(iss)}
@@ -1167,13 +1235,20 @@ export default function FeedTradingPage() {
               <div className="flex items-center gap-2">
                 <Utensils className="w-5 h-5 text-emerald-200" />
                 <div>
-                  <h3 className="font-bold text-base leading-tight">খাবার প্রদানের বিবরণ এন্ট্রি (Record Feeding)</h3>
+                  <h3 className="font-bold text-base leading-tight">
+                    {editingIssue
+                      ? "খাবার প্রদানের বিবরণ সম্পাদনা (Edit Feeding Record)"
+                      : "খাবার প্রদানের বিবরণ এন্ট্রি (Record Feeding)"}
+                  </h3>
                   <p className="text-[11px] text-emerald-100 font-normal">খামার বা পুকুরে খাবার প্রদানের সময়সূচি, পরিমাণ ও বিবরণ সংরক্ষণ করুন</p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setIsFeedingModalOpen(false)}
+                onClick={() => {
+                  setIsFeedingModalOpen(false);
+                  setEditingIssue(null);
+                }}
                 className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-colors shadow-xs cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -1214,25 +1289,6 @@ export default function FeedTradingPage() {
                       <span>মাছের ফিড (Fish Feed)</span>
                     </button>
                   </div>
-                </div>
-
-                {/* Product Select */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                    ফিড পণ্য নির্বাচন করুন <span className="text-red-500">*</span>
-                  </label>
-                  <CustomSelect
-                    options={
-                      (feedingFilteredProducts.length > 0 ? feedingFilteredProducts : data?.feed_products || []).map((p) => ({
-                        value: p.id,
-                        label: p.product_name,
-                        subLabel: `বর্তমান মজুত: ${p.quantity} বস্তা (${(p.quantity * p.bag_weight_kg).toLocaleString()} কেজি) | দর: ৳${p.cost_price}`,
-                      }))
-                    }
-                    value={feedingProductId || ""}
-                    onChange={(v) => setFeedingProductId(Number(v))}
-                    placeholder="-- ফিড পণ্য বেছে নিন --"
-                  />
                 </div>
 
                 {/* Destination Dynamic Dropdown */}
@@ -1390,7 +1446,7 @@ export default function FeedTradingPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   {feedingSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  <span>খাবার প্রদান সংরক্ষণ করুন</span>
+                  <span>{editingIssue ? "পরিবর্তন সংরক্ষণ করুন" : "খাবার প্রদান সংরক্ষণ করুন"}</span>
                 </button>
               </div>
             </form>

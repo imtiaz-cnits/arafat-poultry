@@ -19,13 +19,15 @@ import {
   ArrowRight,
   Truck,
   RotateCcw,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import Link from "next/link";
 import { formatBdCurrency } from "@/lib/utils";
 import { formatBoxAndPcs, formatTileOrItemQty, formatOrderQty } from "@/lib/tiles-calculator";
 import { ThermalReceiptModal } from "@/components/pos/thermal-receipt";
 
-import { CustomSelect, Pagination, TableSkeleton , PageSkeleton } from "@/components/ui";
+import { CustomSelect, Pagination, TableSkeleton, PageSkeleton, DeleteConfirmModal } from "@/components/ui";
 import { useToast } from "@/components/ui/toast";
 
 interface Invoice {
@@ -105,6 +107,38 @@ export default function InvoicesPage() {
     note: "",
   });
   const [submittingDue, setSubmittingDue] = useState(false);
+
+  // Delete Invoice state
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
+  const [isDeletingInvoice, setIsDeletingInvoice] = useState(false);
+
+  const handleDeleteInvoice = (inv: Invoice) => {
+    if (Number(inv.paid_amount || 0) > 0) {
+      toast.error("এই চালানে লেনদেন/টাকা পরিশোধ বিদ্যমান থাকায় চালানটি মুছে ফেলা সম্ভব নয়!", "মুছে ফেলা অসম্ভব");
+      return;
+    }
+    setInvoiceToDelete(inv);
+  };
+
+  const confirmDeleteInvoice = async () => {
+    if (!invoiceToDelete) return;
+    try {
+      setIsDeletingInvoice(true);
+      const res = await fetch(`/api/invoices/${invoiceToDelete.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok && data.status === "success") {
+        toast.success(data.message || "চালান সফলভাবে মুছে ফেলা হয়েছে!", "সফল");
+        setInvoiceToDelete(null);
+        loadInvoices();
+      } else {
+        toast.error(data.message || "চালান মুছে ফেলা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setIsDeletingInvoice(false);
+    }
+  };
 
   const loadInvoices = async () => {
     try {
@@ -439,6 +473,16 @@ export default function InvoicesPage() {
 
 
 
+                        {/* Delete Invoice */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteInvoice(inv)}
+                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 border border-rose-200 dark:border-rose-800 flex items-center justify-center transition-colors cursor-pointer"
+                          title="চালান মুছে ফেলুন"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+
                         {/* Collect Due */}
                         {inv.due_amount > 0 && (
                           <button
@@ -542,6 +586,16 @@ export default function InvoicesPage() {
               </button>
 
 
+
+              {/* Delete Button */}
+              <button
+                type="button"
+                onClick={() => handleDeleteInvoice(inv)}
+                className="h-[30px] w-full px-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 border border-rose-200 dark:border-rose-800 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
 
               {/* View Button */}
               <Link
@@ -838,6 +892,17 @@ export default function InvoicesPage() {
       )}
 
       {/* 7. THERMAL RECEIPT MODAL */}
+      {invoiceToDelete && (
+        <DeleteConfirmModal
+          isOpen={!!invoiceToDelete}
+          onClose={() => setInvoiceToDelete(null)}
+          onConfirm={confirmDeleteInvoice}
+          title="চালান মুছে ফেলা"
+          warningMessage={`আপনি কি নিশ্চিতভাবে ${invoiceToDelete.order_no} মেমোটি মুছে ফেলতে চান? চালান মুছে ফেললে পণ্যের স্টক স্বয়ংক্রিয়ভাবে ফেরত যুক্ত হবে।`}
+          isLoading={isDeletingInvoice}
+        />
+      )}
+
       {thermalReceiptData && (
         <ThermalReceiptModal
           receiptData={thermalReceiptData}

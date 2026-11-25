@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
+import { calculateAgeInMonthsAndDays } from "@/lib/unit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
       unit, // "Pcs" | "Hali" | "Khacha" | "Kg" | "Gram"
       sell_price,
       cost_price,
+      metadata,
     } = body;
 
     const qtyNum = parseFloat(quantity);
@@ -58,18 +60,22 @@ export async function POST(req: NextRequest) {
           }
         }
       } else if (type === "CHICKEN") {
+        // Chicken remains in shed stock until sold from Sales Portal; validate shed & age stage
         if (source_id) {
           const flock = await tx.poultry_flocks.findUnique({
             where: { id: BigInt(source_id) },
           });
-          if (flock) {
-            const birdsToDeduct = unit === "Kg" ? Math.max(1, Math.round(qtyNum / 1.5)) : Math.round(qtyNum);
-            const currentBirds = flock.current_birds_count || 0;
-            const newBirds = Math.max(0, currentBirds - birdsToDeduct);
-            await tx.poultry_flocks.update({
-              where: { id: flock.id },
-              data: { current_birds_count: newBirds },
-            });
+          if (!flock) {
+            throw new Error("নির্বাচিত মুরগির শেড পাওয়া যায়নি!");
+          }
+          const age = calculateAgeInMonthsAndDays(flock.housing_date, new Date());
+          if (age.totalDays < 45) {
+            throw new Error("বাচ্চা মুরগি প্রোডাক্টে যুক্ত করা যাবে না! শুধুমাত্র মাঝারি ও বড় মুরগি যুক্ত করা যাবে।");
+          }
+          if (qtyNum > flock.current_birds_count) {
+            throw new Error(
+              `শেডে বর্তমান মুরগি আছে ${flock.current_birds_count} টি, এর বেশি প্রোডাক্টে যোগ করা সম্ভব নয়!`
+            );
           }
         }
       } else if (type === "FISH") {
@@ -124,23 +130,64 @@ export async function POST(req: NextRequest) {
       const addedCommercialQty = unit === "Gram" ? qtyNum / 1000 : qtyNum;
 
       // 3. Find or Create Product in commercial inventory
-      const existingProduct = await tx.products.findFirst({
-        where: {
-          product_name: { equals: product_name.trim() },
-        },
-      });
+      const flockTag = type === "CHICKEN" && source_id ? `FLOCK:${source_id}` : null;
+      const chickenSizeGroup =
+        type === "CHICKEN" ? String(metadata?.size_group || "LARGE") : null;
+      const chickenWeight =
+        type === "CHICKEN" && metadata?.weight ? String(metadata.weight).trim() : null;
+      const chickenImg =
+        type === "CHICKEN"
+          ? chickenSizeGroup === "MEDIUM"
+            ? "/images/products/chicken-medium.svg"
+            : "/images/products/chicken-large.svg"
+          : undefined;
+
+      let existingProduct = flockTag
+        ? await tx.products.findFirst({
+            where: {
+              surface_finish: flockTag,
+              status: { not: "deleted" },
+            },
+          })
+        : null;
+
+      if (!existingProduct) {
+        existingProduct = await tx.products.findFirst({
+          where: {
+            product_name: { equals: product_name.trim() },
+            status: { not: "deleted" },
+          },
+        });
+      }
+
+      let maxFlockBirds = Infinity;
+      if (type === "CHICKEN" && source_id) {
+        const f = await tx.poultry_flocks.findUnique({ where: { id: BigInt(source_id) } });
+        if (f) maxFlockBirds = f.current_birds_count;
+      }
 
       let productRecord;
       let finalStock = addedCommercialQty;
       if (existingProduct) {
         const currentQty = parseFloat(existingProduct.quantity || "0");
-        finalStock = currentQty + addedCommercialQty;
+        finalStock =
+          type === "CHICKEN"
+            ? Math.min(
+                maxFlockBirds,
+                metadata?.replace_qty ? addedCommercialQty : currentQty + addedCommercialQty
+              )
+            : currentQty + addedCommercialQty;
         productRecord = await tx.products.update({
           where: { id: existingProduct.id },
           data: {
+            product_name: product_name.trim(),
             quantity: String(finalStock),
             sell_price: String(sellPriceNum > 0 ? sellPriceNum : existingProduct.sell_price),
             cost_price: String(costPriceNum > 0 ? costPriceNum : existingProduct.cost_price),
+            ...(flockTag ? { surface_finish: flockTag } : {}),
+            ...(chickenSizeGroup ? { grade: chickenSizeGroup } : {}),
+            ...(chickenWeight ? { door_side: chickenWeight } : {}),
+            ...(chickenImg ? { img_url: chickenImg } : {}),
             status: "active",
             updated_at: new Date(),
           },
@@ -149,12 +196,13 @@ export async function POST(req: NextRequest) {
         const codeSuffix = Math.floor(1000 + Math.random() * 9000);
         const prefix = type === "EGG" ? "EGG" : type === "CHICKEN" ? "CHK" : "FSH";
         const generatedCode = [`PRD-${prefix}-${codeSuffix}`];
+        finalStock = type === "CHICKEN" ? Math.min(maxFlockBirds, addedCommercialQty) : addedCommercialQty;
 
         productRecord = await tx.products.create({
           data: {
             product_name: product_name.trim(),
             product_code: generatedCode,
-            quantity: String(addedCommercialQty),
+            quantity: String(finalStock),
             cost_price: String(costPriceNum),
             sell_price: String(sellPriceNum),
             status: "active",
@@ -162,6 +210,10 @@ export async function POST(req: NextRequest) {
             unit_id: targetUnitId,
             brand_id: brandId,
             user_id: userId,
+            ...(flockTag ? { surface_finish: flockTag } : {}),
+            ...(chickenSizeGroup ? { grade: chickenSizeGroup } : {}),
+            ...(chickenWeight ? { door_side: chickenWeight } : {}),
+            ...(chickenImg ? { img_url: chickenImg } : {}),
           },
         });
       }

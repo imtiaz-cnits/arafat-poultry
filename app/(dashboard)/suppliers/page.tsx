@@ -211,6 +211,14 @@ export default function SuppliersPage() {
 
   // Delete Supplier
   const handleDelete = (s: Supplier) => {
+    if (s.purchase_payable_amount > 0) {
+      toast.error(`এই সরবরাহকারীর ৳${s.purchase_payable_amount} বকেয়া দেনা বিদ্যমান থাকায় মুছে ফেলা সম্ভব নয়!`, "মুছে ফেলা যাবে না");
+      return;
+    }
+    if (s.total_purchases > 0) {
+      toast.error(`এই সরবরাহকারীর সাথে ক্রয় চালান বা মেমো যুক্ত থাকায় মুছে ফেলা সম্ভব নয়!`, "মুছে ফেলা যাবে না");
+      return;
+    }
     setSupplierToDelete(s);
   };
 
@@ -221,15 +229,17 @@ export default function SuppliersPage() {
       const res = await fetch(`/api/suppliers/${supplierToDelete.id}`, { method: "DELETE" });
       const data = await res.json().catch(() => null);
       if (res.ok && data?.status === "success") {
-        toast.success("Supplier deleted successfully!");
+        toast.success("সরবরাহকারী সফলভাবে মুছে ফেলা হয়েছে!");
         setSupplierToDelete(null);
         setCurrentPage(1);
         loadSuppliers();
       } else {
-        toast.error(data?.message || `Failed to delete supplier (Status ${res.status})`);
+        toast.error(data?.message || "সরবরাহকারী মুছে ফেলা সম্ভব নয়!", "ত্রুটি");
+        setSupplierToDelete(null);
       }
     } catch (err: any) {
-      toast.error(err?.message || "Communication error deleting supplier");
+      toast.error(err?.message || "সার্ভার এরর: সরবরাহকারী মুছে ফেলা সম্ভব হয়নি!", "ত্রুটি");
+      setSupplierToDelete(null);
     } finally {
       setDeleting(false);
     }
@@ -429,6 +439,16 @@ export default function SuppliersPage() {
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(s)}
+                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                          title="Delete Supplier"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -514,9 +534,19 @@ export default function SuppliersPage() {
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(s)}
-                  className="h-[30px] w-full px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center"
+                  className="h-[30px] w-full px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
                 >
-                  Edit
+                  <Edit2 className="w-3 h-3" />
+                  <span>Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDelete(s)}
+                  className="h-[30px] w-full px-2 rounded-lg bg-rose-50 text-rose-600 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Delete</span>
                 </button>
               </div>
             </div>

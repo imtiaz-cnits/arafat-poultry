@@ -11,6 +11,7 @@ import { recordStockMovement } from "@/lib/stock-service";
 import { recordPartyTransaction } from "@/lib/party-ledger-service";
 import { recordFinancialTransaction, getAccountByPaymentMethod } from "@/lib/financial-service";
 import { logAudit } from "@/lib/audit-service";
+import { calculateAgeInMonthsAndDays } from "@/lib/unit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,14 @@ function generateOrderNumber(): string {
   const dateStr = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
   const randomSuffix = Math.floor(1000 + Math.random() * 9000);
   return `ORD-${dateStr}-${randomSuffix}`;
+}
+
+function getBaseQuantity(rawQty: number, unit?: string): number {
+  const u = String(unit || "").trim().toLowerCase();
+  if (u === "hali" || u === "হালি") return rawQty * 4;
+  if (u === "tray" || u === "khacha" || u === "খাঁচা") return rawQty * 30;
+  if (u === "gram" || u === "গ্রাম") return rawQty / 1000;
+  return rawQty;
 }
 
 export async function POST(req: NextRequest) {
@@ -116,7 +125,13 @@ export async function POST(req: NextRequest) {
       // 3. Pre-validate stock availability for all items
       for (const item of validItems) {
         const catInfo = categoryMap.get(String(item.product_id));
-        const reqQty = parseFloat(String(item.quantity || "0"));
+        const rawQty = parseFloat(String(item.quantity || "0"));
+        const unitStr = String(item.unit || "").trim().toLowerCase();
+        const isEggHali = unitStr === "hali" || unitStr === "হালি";
+        const isEggTray = unitStr === "tray" || unitStr === "khacha" || unitStr === "খাঁচা";
+        const isGram = unitStr === "gram" || unitStr === "গ্রাম";
+        const unitMultiplier = isEggHali ? 4 : isEggTray ? 30 : isGram ? 0.001 : 1;
+        const reqQty = rawQty * unitMultiplier;
         const prodName = catInfo?.product?.product_name || `Product #${item.product_id}`;
 
         if (catInfo?.isTiles) {
@@ -170,7 +185,13 @@ export async function POST(req: NextRequest) {
         const catInfo = categoryMap.get(String(item.product_id));
         const isTiles = !!catInfo?.isTiles;
         const lineState = isTiles ? "PENDING_CHALLAN" : "DEDUCTED_AT_INVOICE";
-        const decrementQty = parseFloat(String(item.quantity || "0"));
+        const rawQty = parseFloat(String(item.quantity || "0"));
+        const unitStr = String(item.unit || "").trim().toLowerCase();
+        const isEggHali = unitStr === "hali" || unitStr === "হালি";
+        const isEggTray = unitStr === "tray" || unitStr === "khacha" || unitStr === "খাঁচা";
+        const isGram = unitStr === "gram" || unitStr === "গ্রাম";
+        const unitMultiplier = isEggHali ? 4 : isEggTray ? 30 : isGram ? 0.001 : 1;
+        const decrementQty = rawQty * unitMultiplier;
 
         await tx.order_details.create({
           data: {
@@ -201,6 +222,50 @@ export async function POST(req: NextRequest) {
             },
             tx
           );
+
+          // Sync Poultry Shed & Chicken Stock: Deduct ONLY Medium (মাঝারি) & Adult (বড় মুরগি) birds on sale
+          const prodRecord = catInfo?.product;
+          if (prodRecord) {
+            let targetFlock: any = null;
+            if (
+              typeof prodRecord.surface_finish === "string" &&
+              prodRecord.surface_finish.startsWith("FLOCK:")
+            ) {
+              const fid = prodRecord.surface_finish.slice(6).trim();
+              if (fid && !isNaN(Number(fid))) {
+                targetFlock = await tx.poultry_flocks.findUnique({
+                  where: { id: BigInt(fid) },
+                });
+              }
+            } else if (Number(prodRecord.category_id) === 4) {
+              const candidateFlocks = await tx.poultry_flocks.findMany({
+                where: { status: "ACTIVE" },
+              });
+              targetFlock =
+                candidateFlocks.find(
+                  (cf) =>
+                    cf.shed_name &&
+                    prodRecord.product_name &&
+                    prodRecord.product_name.includes(`(${cf.shed_name}`)
+                ) || null;
+            }
+
+            if (targetFlock) {
+              const flockAge = calculateAgeInMonthsAndDays(targetFlock.housing_date, new Date());
+              // Strictly deduct only Stage 2 (মাঝারি: 45-119d) & Stage 3 (বড় মুরগি: 120d+), never chicks (<45d)
+              if (flockAge.totalDays >= 45) {
+                const birdsSold =
+                  unitStr === "kg" || unitStr === "কেজি"
+                    ? Math.max(1, Math.round(decrementQty / 1.5))
+                    : Math.round(decrementQty);
+                const nextBirds = Math.max(0, targetFlock.current_birds_count - birdsSold);
+                await tx.poultry_flocks.update({
+                  where: { id: targetFlock.id },
+                  data: { current_birds_count: nextBirds },
+                });
+              }
+            }
+          }
         }
       }
 

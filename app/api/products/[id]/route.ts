@@ -56,6 +56,7 @@ export async function PUT(
         pcs_per_box: body.pcs_per_box !== undefined ? (body.pcs_per_box ? String(body.pcs_per_box).trim() : null) : undefined,
         grade: body.grade !== undefined ? (body.grade ? String(body.grade).trim() : null) : undefined,
         surface_finish: body.surface_finish !== undefined ? (body.surface_finish ? String(body.surface_finish).trim() : null) : undefined,
+        door_side: body.door_side !== undefined ? (body.door_side ? String(body.door_side).trim() : null) : undefined,
         brand_id: body.brand_id ? BigInt(body.brand_id) : undefined,
         category_id: body.category_id ? BigInt(body.category_id) : undefined,
         sub_category_id: body.sub_category_id ? BigInt(body.sub_category_id) : undefined,
@@ -105,6 +106,8 @@ export async function DELETE(
   try {
     const { id } = await params;
     const prodId = BigInt(id);
+    const { searchParams } = new URL(req.url);
+    const unlinkOnly = searchParams.get("unlink_only") === "1";
 
     const [orderCount, purchaseCount, returnCount, challanCount] = await Promise.all([
       prisma.order_details.count({ where: { product_id: prodId } }),
@@ -113,23 +116,40 @@ export async function DELETE(
       prisma.challan_items.count({ where: { product_id: prodId } }),
     ]);
 
-    if (orderCount > 0 || purchaseCount > 0 || returnCount > 0 || challanCount > 0) {
-      return NextResponse.json(
-        {
-          status: "fail",
-          message: `Cannot delete product because it has transaction history (${orderCount} sales, ${purchaseCount} purchases, ${returnCount} returns, ${challanCount} challans).`,
-        },
-        { status: 400 }
-      );
-    }
-
     const existingProduct = await prisma.products.findUnique({
       where: { id: prodId },
       select: { id: true, product_name: true, product_code: true },
     });
 
-    await prisma.products.delete({
-      where: { id: prodId },
+    if (orderCount > 0 || purchaseCount > 0 || returnCount > 0 || challanCount > 0) {
+      if (unlinkOnly) {
+        // Soft-remove from active products & unlink from shed stock while preserving past invoice references
+        await prisma.products.update({
+          where: { id: prodId },
+          data: {
+            status: "deleted",
+            surface_finish: null,
+            quantity: "0",
+          },
+        });
+        return NextResponse.json({
+          status: "success",
+          message: "প্রোডাক্ট তালিকা থেকে সফলভাবে মুছে ফেলা হয়েছে",
+        });
+      }
+
+      return NextResponse.json(
+        {
+          status: "fail",
+          message: `এই পণ্যের সাথে পূর্বের লেনদেন যুক্ত থাকায় মুছে ফেলা সম্ভব নয় (${orderCount} বিক্রয়, ${purchaseCount} ক্রয়)।`,
+        },
+        { status: 400 }
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.stock_movements.deleteMany({ where: { product_id: prodId } });
+      await tx.products.delete({ where: { id: prodId } });
     });
 
     try {

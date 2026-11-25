@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
+import { recordStockMovement } from "@/lib/stock-service";
+import { recordActivity } from "@/lib/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -135,5 +138,145 @@ export async function GET(
     });
   } catch (error: any) {
     return NextResponse.json({ status: "fail", message: error?.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) {
+      return authResult.errorResponse;
+    }
+
+    const { id } = await params;
+    const orderId = BigInt(id);
+
+    const order = await prisma.orders.findUnique({
+      where: { id: orderId },
+      include: {
+        order_details: true,
+        order_payment_details: true,
+        challans: true,
+      },
+    });
+
+    if (!order) {
+      return NextResponse.json(
+        { status: "fail", message: "ইনভয়েস বা চালানটি পাওয়া যায়নি।" },
+        { status: 404 }
+      );
+    }
+
+    // STRICT SAFETY CHECK: If any payments recorded or paid_amount > 0, BLOCK deletion
+    const totalPaid = Number(order.paid_amount || 0);
+    const hasRecordedPayments = order.order_payment_details.some(
+      (p) => Number(p.paid_amount || 0) > 0
+    );
+
+    if (totalPaid > 0 || hasRecordedPayments) {
+      return NextResponse.json(
+        {
+          status: "fail",
+          message: "এই চালানে লেনদেন/টাকা পরিশোধ বিদ্যমান থাকায় চালানটি মুছে ফেলা সম্ভব নয়!",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Unpaid Order Deletion with atomic stock replenishment
+    await prisma.$transaction(async (tx) => {
+      // 1. Revert inventory for items deducted at invoice time
+      for (const d of order.order_details) {
+        if (d.stock_lifecycle_state === "DEDUCTED_AT_INVOICE" || !d.stock_lifecycle_state) {
+          const qty = parseFloat(String(d.quantity || "0"));
+          if (qty > 0) {
+            await recordStockMovement(
+              {
+                productId: d.product_id,
+                movementType: "RETURN_INWARD",
+                quantity: qty,
+                unitPrice: parseFloat(String(d.price || "0")),
+                referenceType: "ORDER",
+                referenceId: order.id,
+                referenceNo: `CANCEL-${order.order_no}`,
+                date: new Date(),
+                note: `চালান #${order.order_no} বাতিল করায় স্টক পুনর্বহাল`,
+                userId: authResult.user.id,
+              },
+              tx
+            );
+
+            // Also restore linked poultry shed stock if this was a flock-linked chicken product
+            const prod = await tx.products.findUnique({
+              where: { id: d.product_id },
+              select: { surface_finish: true },
+            });
+            if (prod?.surface_finish && prod.surface_finish.startsWith("FLOCK:")) {
+              const fid = prod.surface_finish.slice(6).trim();
+              if (fid && !isNaN(Number(fid))) {
+                const flock = await tx.poultry_flocks.findUnique({ where: { id: BigInt(fid) } });
+                if (flock) {
+                  await tx.poultry_flocks.update({
+                    where: { id: flock.id },
+                    data: { current_birds_count: flock.current_birds_count + Math.round(qty) },
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Adjust customer due balance if due was recorded
+      const dueAmount = Number(order.due_amount || 0);
+      if (dueAmount > 0 && order.customer_id) {
+        const customer = await tx.customers.findUnique({ where: { id: order.customer_id } });
+        if (customer) {
+          const currentDue = parseFloat(customer.previous_due_amount || "0");
+          const newDue = Math.max(0, currentDue - dueAmount);
+          await tx.customers.update({
+            where: { id: order.customer_id },
+            data: { previous_due_amount: newDue.toFixed(2) },
+          });
+        }
+      }
+
+      // 3. Delete Challan records if any
+      if (order.challans) {
+        await tx.challan_items.deleteMany({ where: { challan_id: order.challans.id } });
+        await tx.challans.delete({ where: { id: order.challans.id } });
+      }
+
+      // 4. Delete Order Details & Payments
+      await tx.order_payment_details.deleteMany({ where: { order_id: order.id } });
+      await tx.order_details.deleteMany({ where: { order_id: order.id } });
+
+      // 5. Delete Order Record
+      await tx.orders.delete({ where: { id: order.id } });
+
+      try {
+        await recordActivity({
+          req,
+          userId: authResult.user.id,
+          action: "DELETE",
+          module: "Sales & Invoicing",
+          description: `Deleted unpaid invoice #${order.order_no} and restored stock`,
+        });
+      } catch {}
+    });
+
+    return NextResponse.json({
+      status: "success",
+      message: "চালানটি সফলভাবে মুছে ফেলা হয়েছে এবং পণ্যের স্টক পুনর্বহাল করা হয়েছে।",
+    });
+  } catch (error: any) {
+    console.error("Invoice DELETE Error:", error);
+    return NextResponse.json(
+      { status: "fail", message: error?.message || "চালান মুছে ফেলতে ব্যর্থ হয়েছে" },
+      { status: 500 }
+    );
   }
 }

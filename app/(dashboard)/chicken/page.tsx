@@ -21,10 +21,11 @@ import {
   Users,
   Eye,
   Trash2,
+  Pencil,
   Tag,
 } from "lucide-react";
 import { formatBdCurrency } from "@/lib/utils";
-import { CustomDatePicker, CustomSelect, useToast, Pagination , PageSkeleton } from "@/components/ui";
+import { CustomDatePicker, CustomSelect, useToast, Pagination, PageSkeleton, DeleteConfirmModal } from "@/components/ui";
 
 interface Flock {
   id: number;
@@ -34,10 +35,18 @@ interface Flock {
   current_birds: number;
   current_birds_count?: number;
   initial_chicks_count?: number;
+  chick_birds?: number;
+  medium_birds?: number;
+  adult_birds?: number;
+  age_stage?: 1 | 2 | 3;
+  age_stage_label?: string;
+  avg_weight_display?: string;
   mortality_count?: number;
   mortality_rate_percent?: number;
   age_display?: string;
   age_days?: number;
+  age_total_days?: number;
+  daily_feed_rate_g?: number;
   expected_daily_feed_kg?: number;
   actual_feed_consumed_kg?: number;
   total_expenses?: number;
@@ -45,6 +54,12 @@ interface Flock {
   housing_date?: string;
   avg_weight_g?: number;
   laying_birds_count?: number;
+  note?: string | null;
+  clean_note?: string;
+  init_weight_input?: string;
+  unit_price_input?: string;
+  payment_method_input?: string;
+  supplier_id_input?: string;
 }
 
 export default function ChickenManagementPage() {
@@ -176,10 +191,54 @@ export default function ChickenManagementPage() {
   // Modal: Record Mortality
   const [isMortalityModalOpen, setIsMortalityModalOpen] = useState(false);
   const [selectedFlock, setSelectedFlock] = useState<Flock | null>(null);
-  const [mortalityCount, setMortalityCount] = useState("1");
+  const [mortalityCount, setMortalityCount] = useState("");
   const [mortalityReason, setMortalityReason] = useState("স্বাভাবিক দুর্বলতা (Natural weakness)");
   const [mortalityDate, setMortalityDate] = useState(new Date().toISOString().split("T")[0]);
   const [savingMortality, setSavingMortality] = useState(false);
+
+  // Edit & Delete Flock States (Edit reuses the full Add Chicks to Shed modal)
+  const [editingFlock, setEditingFlock] = useState<Flock | null>(null);
+  const [deleteFlock, setDeleteFlock] = useState<Flock | null>(null);
+  const [isDeletingFlock, setIsDeletingFlock] = useState(false);
+
+  const handleOpenEditFlock = (f: Flock) => {
+    setEditingFlock(f);
+    setNewFlock({
+      shed_name: f.shed_name || "",
+      flock_code: f.flock_code || "",
+      breed: f.breed || "",
+      initial_chicks_count: String(f.initial_chicks_count ?? f.current_birds ?? 0),
+      housing_date: f.housing_date || new Date().toISOString().split("T")[0],
+      avg_weight_g: f.init_weight_input || (f.avg_weight_g ? String(f.avg_weight_g) : ""),
+      daily_feed_g: String(f.daily_feed_rate_g || 120),
+      supplier_id: f.supplier_id_input || "",
+      unit_price: f.unit_price_input || "",
+      paid_amount: "",
+      payment_method: f.payment_method_input || "Cash",
+      note: f.clean_note !== undefined ? f.clean_note : (f.note || ""),
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const confirmDeleteFlock = async () => {
+    if (!deleteFlock) return;
+    try {
+      setIsDeletingFlock(true);
+      const res = await fetch(`/api/egg/flocks/${deleteFlock.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok && json.status === "success") {
+        toast.success(json.message || "শেড সফলভাবে মুছে ফেলা হয়েছে!", "সফল");
+        setDeleteFlock(null);
+        loadData();
+      } else {
+        toast.error(json.message || "মুছে ফেলা যায়নি", "ব্যর্থ");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "সার্ভার এরর", "ত্রুটি");
+    } finally {
+      setIsDeletingFlock(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -236,7 +295,7 @@ export default function ChickenManagementPage() {
   // Adult layer daily feed (120g/bird/day) in kg = (total live * 120) / 1000
   const dailyFeedKg = Math.round((totalLiveBirds * 120) / 1000);
 
-  // Handle Add New Chicks / Flock Submit
+  // Handle Add or Edit Chicks / Flock Submit
   const handleAddFlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFlock.shed_name || !newFlock.breed || !newFlock.initial_chicks_count) {
@@ -244,30 +303,48 @@ export default function ChickenManagementPage() {
       return;
     }
 
+    const composedNote = [
+      newFlock.note ? newFlock.note.trim() : "",
+      newFlock.avg_weight_g ? `ওজন: ${String(newFlock.avg_weight_g).replace(/g$/i, "").trim()}g` : "",
+      newFlock.daily_feed_g ? `খাবার: ${newFlock.daily_feed_g}g/দিন` : "",
+      newFlock.unit_price ? `দর: ${newFlock.unit_price}` : "",
+      newFlock.payment_method ? `মাধ্যম: ${newFlock.payment_method}` : "",
+      newFlock.supplier_id ? `সাপ্লায়ার: ${newFlock.supplier_id}` : "",
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
     try {
       setAdding(true);
-      const res = await fetch("/api/egg/flocks", {
-        method: "POST",
+      const url = editingFlock ? `/api/egg/flocks/${editingFlock.id}` : "/api/egg/flocks";
+      const method = editingFlock ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           shed_name: newFlock.shed_name,
           breed: newFlock.breed,
           initial_chicks_count: Number(newFlock.initial_chicks_count),
           housing_date: newFlock.housing_date,
-          supplier_id: newFlock.supplier_id ? Number(newFlock.supplier_id) : undefined,
+          supplier_id: !editingFlock && newFlock.supplier_id ? Number(newFlock.supplier_id) : undefined,
           unit_price: Number(newFlock.unit_price || 0),
           paid_amount: Number(newFlock.paid_amount || 0),
           payment_method: newFlock.payment_method,
-          note: newFlock.note
-            ? `${newFlock.note} | ওজন: ${newFlock.avg_weight_g}g | খাবার: ${newFlock.daily_feed_g}g/দিন`
-            : `ওজন: ${newFlock.avg_weight_g}g | খাবার: ${newFlock.daily_feed_g}g/দিন`,
+          note: composedNote,
         }),
       });
 
       const json = await res.json();
       if (json.status === "success") {
-        toast.success("নতুন মুরগির বাচ্চা ও শেড সফলভাবে যুক্ত হয়েছে!", "সফল");
+        toast.success(
+          editingFlock
+            ? "মুরগির শেড ও ফ্লকের তথ্য সফলভাবে আপডেট হয়েছে!"
+            : "নতুন মুরগির বাচ্চা ও শেড সফলভাবে যুক্ত হয়েছে!",
+          "সফল"
+        );
         setIsAddModalOpen(false);
+        setEditingFlock(null);
         loadData();
       } else {
         toast.error(json.message || "সংরক্ষণ করতে ব্যর্থ হয়েছে", "ত্রুটি");
@@ -305,7 +382,7 @@ export default function ChickenManagementPage() {
         toast.success("মুরগির মৃত্যুর হিসাব সফলভাবে সংরক্ষিত হয়েছে!", "সফল");
         setIsMortalityModalOpen(false);
         setSelectedFlock(null);
-        setMortalityCount("1");
+        setMortalityCount("");
         loadData();
       } else {
         toast.error(json.message || "সংরক্ষণ ব্যর্থ হয়েছে", "ত্রুটি");
@@ -342,7 +419,24 @@ export default function ChickenManagementPage() {
         </div>
 
         <button
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={() => {
+            setEditingFlock(null);
+            setNewFlock({
+              shed_name: "",
+              flock_code: "",
+              breed: "",
+              initial_chicks_count: "",
+              housing_date: new Date().toISOString().split("T")[0],
+              avg_weight_g: "",
+              daily_feed_g: "120",
+              supplier_id: "",
+              unit_price: "",
+              paid_amount: "",
+              payment_method: "Cash",
+              note: "",
+            });
+            setIsAddModalOpen(true);
+          }}
           className="h-[38px] px-3.5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
@@ -430,8 +524,10 @@ export default function ChickenManagementPage() {
               <tr className="table-header-brand bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] text-white font-bold">
                 <th className="p-[10px] text-center w-12">ক্র: নং</th>
                 <th className="p-[10px]">শেডের নাম ও ব্যাচ কোড</th>
-                <th className="p-[10px]">মুরগির জাত</th>
                 <th className="p-[10px] text-center">বাচ্চা এন্ট্রি</th>
+                <th className="p-[10px] text-center">বাচ্চা মুরগি</th>
+                <th className="p-[10px] text-center">মাঝারি মুরগি</th>
+                <th className="p-[10px] text-center">বড় মুরগি</th>
                 <th className="p-[10px] text-center">বর্তমান মুরগি</th>
                 <th className="p-[10px] text-center">বয়স</th>
                 <th className="p-[10px] text-center">দৈনিক খাবার</th>
@@ -444,23 +540,39 @@ export default function ChickenManagementPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="p-[10px] py-10 text-center text-slate-400">
+                  <td colSpan={13} className="p-[10px] py-10 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                     <span>মুরগির শেড ডাটা লোড হচ্ছে...</span>
                   </td>
                 </tr>
               ) : filteredFlocks.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="p-[10px] py-10 text-center text-slate-400 font-bold">
-                    কোনো মুরগির শেড পাওয়া যায়নি। "নতুন মুরগি / বাচ্চা যুক্ত করুন" বাটনে ক্লিক করুন।
+                  <td colSpan={13} className="p-[10px] py-10 text-center text-slate-400 font-bold">
+                    কোনো মুরগির শেড পাওয়া যায়নি। &quot;নতুন মুরগি / বাচ্চা যুক্ত করুন&quot; বাটনে ক্লিক করুন।
                   </td>
                 </tr>
               ) : (
                 filteredFlocks
                   .slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize)
                   .map((flock, idx) => {
-                    const flockDailyFeedKg = Math.round(((flock.current_birds || 0) * 120) / 1000);
-                    const isAdult = (flock.age_days || 0) >= 120; // 4+ months
+                    const feedRateG = flock.daily_feed_rate_g || 120;
+                    const flockDailyFeedKg = Math.round(((flock.current_birds || 0) * feedRateG) / 1000);
+                    const totalDays = flock.age_total_days ?? flock.age_days ?? 0;
+                    const liveBirds = Number(flock.current_birds ?? flock.current_birds_count ?? 0);
+                    const stage = flock.age_stage || (totalDays >= 120 ? 3 : totalDays >= 45 ? 2 : 1);
+                    const chickBirds = flock.chick_birds ?? (stage === 1 ? liveBirds : 0);
+                    const mediumBirds = flock.medium_birds ?? (stage === 2 ? liveBirds : 0);
+                    const adultBirds = flock.adult_birds ?? (stage === 3 ? liveBirds : 0);
+                    const stageLabel =
+                      flock.age_stage_label ||
+                      (stage === 3
+                        ? "৩য় ধাপ (বড় মুরগি)"
+                        : stage === 2
+                        ? "২য় ধাপ (মাঝারি)"
+                        : "১ম ধাপ (বাচ্চা)");
+                    const weightDisplay =
+                      flock.avg_weight_display ||
+                      (stage === 3 ? "১.৬০ কেজি" : stage === 2 ? "৮৫০ গ্রাম" : "৫০ গ্রাম");
                     const actualIdx = (currentPage - 1) * pageSize + idx;
 
                     return (
@@ -481,38 +593,47 @@ export default function ChickenManagementPage() {
                               📅 আগমন: {flock.housing_date || "—"}
                             </span>
                           </div>
-                        </td>
-                        <td className="p-[10px] font-semibold text-slate-800 dark:text-slate-200">
-                          <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold">
-                            {flock.breed}
-                          </span>
-                        </td>
-                        <td className="p-[10px] text-center font-semibold text-slate-600 dark:text-slate-300">
-                          {Number(flock.initial_chicks_count || flock.current_birds || 0).toLocaleString("en-US")} পিস
-                        </td>
-                        <td className="p-[10px] text-center font-black text-emerald-700 dark:text-emerald-400 text-sm">
-                          {Number(flock.current_birds ?? flock.current_birds_count ?? 0).toLocaleString("en-US")}
-                        </td>
-                        <td className="p-[10px] text-center">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {flock.age_display || `${flock.age_days || 0} দিন`}
-                          </span>
-                          <div className="text-[10px] text-slate-400">
-                            {isAdult ? "প্রাপ্তবয়স্ক লেয়ার" : "বাচ্চা / গ্রোয়ার"}
+                          <div className="mt-1">
+                            <span className="whitespace-nowrap inline-flex items-center shrink-0 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10.5px] font-bold">
+                              জাত: {flock.breed}
+                            </span>
                           </div>
                         </td>
-                        <td className="p-[10px] text-center">
+                        <td className="p-[10px] text-center font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                          {Number(flock.initial_chicks_count || flock.current_birds || 0).toLocaleString("en-US")} পিস
+                        </td>
+                        <td className="p-[10px] text-center font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                          {chickBirds > 0 ? `${chickBirds.toLocaleString("en-US")} টি` : "0"}
+                        </td>
+                        <td className="p-[10px] text-center font-bold text-sky-700 dark:text-sky-400 whitespace-nowrap">
+                          {mediumBirds > 0 ? `${mediumBirds.toLocaleString("en-US")} টি` : "0"}
+                        </td>
+                        <td className="p-[10px] text-center font-bold text-orange-600 dark:text-orange-400 whitespace-nowrap">
+                          {adultBirds > 0 ? `${adultBirds.toLocaleString("en-US")} টি` : "0"}
+                        </td>
+                        <td className="p-[10px] text-center font-black text-emerald-700 dark:text-emerald-400 text-sm whitespace-nowrap">
+                          {liveBirds.toLocaleString("en-US")}
+                        </td>
+                        <td className="p-[10px] text-center whitespace-nowrap">
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {flock.age_display || `${totalDays} দিন`}
+                          </span>
+                          <div className="text-[10px] text-slate-400 font-semibold">
+                            {stageLabel}
+                          </div>
+                        </td>
+                        <td className="p-[10px] text-center whitespace-nowrap">
                           <span className="font-bold text-amber-600 dark:text-amber-400">
                             {flockDailyFeedKg} কেজি
                           </span>
-                          <div className="text-[10px] text-slate-400">১২০ গ্রাম/মুরগি/দিন</div>
+                          <div className="text-[10px] text-slate-400">{feedRateG} গ্রাম/মুরগি/দিন</div>
                         </td>
-                        <td className="p-[10px] text-center">
+                        <td className="p-[10px] text-center whitespace-nowrap">
                           <span className="font-bold text-slate-700 dark:text-slate-300">
-                            {isAdult ? "১.৬৫ - ১.৮৫ কেজি" : "৩৫০ - ৫৫০ গ্রাম"}
+                            {weightDisplay}
                           </span>
                         </td>
-                        <td className="p-[10px] text-center">
+                        <td className="p-[10px] text-center whitespace-nowrap">
                           <span className="font-bold text-rose-600 dark:text-rose-400">
                             {(flock.mortality_count || 0).toLocaleString("en-US")} টি
                           </span>
@@ -529,16 +650,32 @@ export default function ChickenManagementPage() {
                           <div className="flex items-center justify-center gap-1.5">
                             <button
                               type="button"
+                              onClick={() => handleOpenEditFlock(flock)}
+                              className="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center justify-center transition-colors cursor-pointer"
+                              title="শেড তথ্য সম্পাদনা করুন"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteFlock(flock)}
+                              className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center transition-colors cursor-pointer"
+                              title="শেড মুছে ফেলুন"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => {
                                 setSelectedFlock(flock);
-                                setMortalityCount("1");
+                                setMortalityCount("");
                                 setIsMortalityModalOpen(true);
                               }}
-                              className="h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                              className="h-7 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
                               title="মুরগির মৃত্যু এন্ট্রি করুন"
                             >
                               <HeartCrack className="w-3.5 h-3.5" />
-                              <span>মৃত্যু এন্ট্রি</span>
+                              <span>মৃত্যু</span>
                             </button>
                           </div>
                         </td>
@@ -587,16 +724,32 @@ export default function ChickenManagementPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold">
                           {flock.breed}
                         </span>
-                        {/* Action button: Icon only! */}
+                        {/* Action buttons: Icon only! */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditFlock(flock)}
+                          className="w-7 h-7 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center justify-center transition-colors cursor-pointer"
+                          title="সম্পাদনা করুন"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteFlock(flock)}
+                          className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center transition-colors cursor-pointer"
+                          title="শেড মুছে ফেলুন"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedFlock(flock);
-                            setMortalityCount("1");
+                            setMortalityCount("");
                             setIsMortalityModalOpen(true);
                           }}
                           className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center justify-center transition-colors cursor-pointer"
@@ -677,12 +830,17 @@ export default function ChickenManagementPage() {
               <div className="flex items-center gap-2">
                 <Egg className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold tracking-wide uppercase m-0 text-white">
-                  নতুন মুরগি / বাচ্চা এন্ট্রি (Add Chicks to Shed)
+                  {editingFlock
+                    ? "মুরগি / বাচ্চা এন্ট্রি সম্পাদনা (Edit Chicks / Shed)"
+                    : "নতুন মুরগি / বাচ্চা এন্ট্রি (Add Chicks to Shed)"}
                 </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setEditingFlock(null);
+                }}
                 className="w-[28px] h-[28px] rounded-full bg-[#dc2626] hover:bg-red-700 text-white flex items-center justify-center cursor-pointer transition-colors shadow-xs"
               >
                 <X className="w-4 h-4" />
@@ -875,7 +1033,10 @@ export default function ChickenManagementPage() {
               <div className="shrink-0 bg-slate-50 dark:bg-[#1e293b] px-5 py-3 border-t border-[#cbd5e1] dark:border-[#334155] flex justify-end gap-2.5 z-10">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    setEditingFlock(null);
+                  }}
                   disabled={adding}
                   className="h-[38px] px-4 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
                 >
@@ -887,7 +1048,11 @@ export default function ChickenManagementPage() {
                   className="h-[38px] px-5 rounded-xl bg-gradient-to-r from-[#14532d] via-[#166534] to-[#15803d] hover:from-[#0f3d21] hover:to-[#14532d] text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   {adding && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>বাচ্চা এন্ট্রি সংরক্ষণ করুন (Save)</span>
+                  <span>
+                    {editingFlock
+                      ? "পরিবর্তন সংরক্ষণ করুন (Update)"
+                      : "বাচ্চা এন্ট্রি সংরক্ষণ করুন (Save)"}
+                  </span>
                 </button>
               </div>
             </form>
@@ -936,6 +1101,7 @@ export default function ChickenManagementPage() {
                   min="1"
                   max={selectedFlock.current_birds}
                   required
+                  placeholder="যেমন: ৫"
                   value={mortalityCount}
                   onChange={(e) => setMortalityCount(e.target.value)}
                   className="w-full h-[42px] px-3 text-base bg-slate-50 dark:bg-[#1e293b] border border-[#cbd5e1] dark:border-[#334155] rounded-xl text-rose-600 font-black focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -1104,6 +1270,17 @@ export default function ChickenManagementPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Flock Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteFlock)}
+        onClose={() => setDeleteFlock(null)}
+        onConfirm={confirmDeleteFlock}
+        recordIdentifier={deleteFlock?.shed_name}
+        title="শেড মুছে ফেলার নিশ্চিতকরণ"
+        warningMessage={`আপনি কি নিশ্চিত যে শেড "${deleteFlock?.shed_name}" (${deleteFlock?.breed}) মুছে ফেলতে চান?`}
+        isLoading={isDeletingFlock}
+      />
     </div>
   );
 }

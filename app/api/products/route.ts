@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
     const limitParam = searchParams.get("limit");
     const limit = limitParam && limitParam !== "all" && !isNaN(Number(limitParam)) ? Number(limitParam) : undefined;
 
-    const where: any = {};
+    const where: any = {
+      status: { not: "deleted" },
+    };
     if (categoryId) where.category_id = BigInt(categoryId);
     if (brandId) where.brand_id = BigInt(brandId);
 
@@ -65,6 +67,7 @@ export async function GET(req: NextRequest) {
         pcs_per_box: p.pcs_per_box ? parseInt(p.pcs_per_box) : null,
         grade: p.grade || null,
         surface_finish: p.surface_finish || null,
+        door_side: p.door_side || null,
         status: p.status,
         img_url: p.img_url,
         brand_id: Number(p.brand_id),
@@ -124,6 +127,7 @@ export async function POST(req: NextRequest) {
       pcs_per_box,
       grade,
       surface_finish,
+      door_side,
       brand_id,
       category_id,
       sub_category_id,
@@ -208,6 +212,7 @@ export async function POST(req: NextRequest) {
         pcs_per_box: pcs_per_box ? String(pcs_per_box).trim() : null,
         grade: grade ? String(grade).trim() : null,
         surface_finish: surface_finish ? String(surface_finish).trim() : null,
+        door_side: door_side ? String(door_side).trim() : null,
         brand_id: finalBrandId,
         category_id: finalCategoryId,
         sub_category_id: sub_category_id ? BigInt(sub_category_id) : null,

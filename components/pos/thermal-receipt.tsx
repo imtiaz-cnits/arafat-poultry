@@ -308,22 +308,25 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
             </div>
           </div>
 
-          {/* Footer Branding & Copyright */}
+          {/* Footer Branding & Copyright (Single Copyright Line) */}
           <div className="text-center pt-3 text-[10px] text-slate-500 border-t border-slate-200 mt-2">
-            <div>আরাফাত পোল্ট্রি অ্যান্ড ফিশারিজের সাথে থাকার জন্য ধন্যবাদ</div>
-            <div className="text-[9px] text-slate-400 mt-0.5 font-medium">
-              © 2026 ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
+            <div className="text-[9px] text-slate-500 font-medium">
+              © {new Date().getFullYear()} ARAFAT POULTRY &amp; FISHERIES | Software By: CodeNext IT
             </div>
           </div>
         </div>
       </div>
 
-      {/* Media Print Style - Full Width A4 with 10px padding */}
+      {/* Media Print Style - Full Width A4 with 16px bottom gap */}
       <style jsx global>{`
         @media print {
           @page {
             size: A4 portrait;
-            margin: 10px;
+            margin: 10px 10px 16px 10px !important;
+          }
+          footer {
+            display: none !important;
+            visibility: hidden !important;
           }
           /* If challan is being printed, hide invoice completely */
           body:has(#printable-challan) .thermal-sheet,
@@ -345,11 +348,11 @@ export function ThermalReceiptModal({ receiptData, onClose, onOpenChallan }: Rec
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 !important;
-            padding: 10px !important;
+            padding: 10px 10px 16px 10px !important;
             background: white !important;
             color: black !important;
             box-sizing: border-box !important;
-            min-height: calc(297mm - 20mm) !important;
+            min-height: calc(297mm - 26mm) !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: space-between !important;
